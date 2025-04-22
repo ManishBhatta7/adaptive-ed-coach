@@ -1,32 +1,33 @@
+
 import { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
-import { createClient } from '@supabase/supabase-js';
+import { useAppContext } from '@/context/AppContext';
+import { supabase } from '@/lib/supabase';
 
 interface ReportUploaderProps {
   onProcessComplete: (data: Record<string, any>) => void;
 }
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL || '',
-  import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-);
-
 const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
   const { toast } = useToast();
+  const { state } = useAppContext();
   const [reportImage, setReportImage] = useState<File | null>(null);
   const [reportImageUrl, setReportImageUrl] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      setUploadError(null);
       
       if (!file.type.match('image.*')) {
+        setUploadError('Please upload an image file (JPEG, PNG)');
         toast({
           title: 'Invalid file type',
           description: 'Please upload an image file (JPEG, PNG)',
@@ -36,6 +37,7 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
       }
       
       if (file.size > 5 * 1024 * 1024) {
+        setUploadError('Maximum file size is 5MB');
         toast({
           title: 'File too large',
           description: 'Maximum file size is 5MB',
@@ -54,33 +56,63 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
     
     setIsProcessing(true);
     setProgressValue(0);
+    setUploadError(null);
     
     try {
+      // Get the current user's ID
+      const { data: { session } } = await supabase.auth.getSession();
+      const userId = session?.user?.id;
+      
+      if (!userId) {
+        throw new Error('User not authenticated');
+      }
+
       const formData = new FormData();
       formData.append('file', reportImage);
+      formData.append('userId', userId);
 
+      // Create a progress updater that simulates the analysis process
       const progressInterval = setInterval(() => {
         setProgressValue(prev => {
-          const newProgress = prev + Math.random() * 15;
-          return newProgress > 100 ? 100 : newProgress;
+          // More realistic progression that slows down at 70%
+          if (prev < 70) {
+            return prev + Math.random() * 10;
+          } else if (prev < 90) {
+            return prev + Math.random() * 3;
+          } else {
+            return prev + Math.random() * 1;
+          }
         });
-      }, 500);
+      }, 300);
 
+      // Get the Supabase JWT token for authentication
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      const authToken = currentSession?.access_token;
+      
+      if (!authToken) {
+        throw new Error('Authentication token not available');
+      }
+
+      // Call the Supabase Edge Function with authentication
       const response = await fetch('/functions/v1/analyze-report', {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        },
         body: formData
       });
 
       clearInterval(progressInterval);
+      setProgressValue(100);
 
       if (!response.ok) {
-        throw new Error('Failed to process report');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to process report');
       }
 
       const result = await response.json();
       
       onProcessComplete(result);
-      setIsProcessing(false);
       
       toast({
         title: 'Report processed',
@@ -91,12 +123,14 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
     } catch (error) {
       console.error('Report processing error:', error);
       
+      setUploadError(error.message || 'Error processing report');
+      
       toast({
         title: 'Processing Error',
-        description: 'Unable to process the report. Please try again.',
+        description: error.message || 'Unable to process the report. Please try again.',
         variant: 'destructive'
       });
-
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -125,6 +159,7 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
                 onClick={() => {
                   setReportImage(null);
                   setReportImageUrl(null);
+                  setUploadError(null);
                 }}
               >
                 Remove image
@@ -156,6 +191,12 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
           />
         </div>
         
+        {uploadError && (
+          <div className="text-red-500 text-sm mb-4 text-center">
+            {uploadError}
+          </div>
+        )}
+        
         {reportImage && !isProcessing && (
           <Button 
             className="w-full" 
@@ -169,7 +210,7 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span>Processing...</span>
-              <span>{progressValue}%</span>
+              <span>{Math.round(progressValue)}%</span>
             </div>
             <Progress value={progressValue} className="h-2" />
             <p className="text-xs text-center text-gray-500 mt-2">

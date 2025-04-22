@@ -1,3 +1,6 @@
 
 [functions]
-verify_jwt = false
+verify_jwt = true
+
+[storage]
+file_size_limit = "10MB"
