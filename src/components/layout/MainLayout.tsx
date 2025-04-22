@@ -4,8 +4,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import Header from './Header';
 import Footer from './Footer';
 import { useAppContext } from '@/context/AppContext';
-import { Book, ChartBar, FileText, Mic, User, Upload } from 'lucide-react';
+import { Book, ChartBar, FileText, Mic, User, Upload, Edit, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import LanguageSelector from '@/components/LanguageSelector';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -16,6 +17,11 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation();
   const { state } = useAppContext();
   const { isAuthenticated } = state;
+
+  const handleLanguageChange = (lang: string) => {
+    // In a real implementation, this would update the app's translations
+    console.log('Language changed to:', lang);
+  };
 
   const navItems = [
     {
@@ -29,6 +35,18 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       icon: <FileText className="h-5 w-5" />,
       href: '/submit',
       active: location.pathname === '/submit'
+    },
+    {
+      label: 'Essay Checker',
+      icon: <Edit className="h-5 w-5" />,
+      href: '/essay-checker',
+      active: location.pathname === '/essay-checker'
+    },
+    {
+      label: 'Answer Sheet',
+      icon: <MessageSquare className="h-5 w-5" />,
+      href: '/answer-sheet',
+      active: location.pathname === '/answer-sheet'
     },
     {
       label: 'Reading Practice',
@@ -63,9 +81,12 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         {isAuthenticated && (
           <aside className="md:w-64 bg-gray-50 border-r border-gray-200 md:min-h-[calc(100vh-4rem)]">
             <div className="p-4">
-              <div className="flex items-center mb-6 pl-2">
-                <Book className="h-6 w-6 text-edu-primary mr-2" />
-                <span className="font-semibold text-lg">AdaptiveEdCoach</span>
+              <div className="flex items-center justify-between mb-6 pl-2">
+                <div className="flex items-center">
+                  <Book className="h-6 w-6 text-edu-primary mr-2" />
+                  <span className="font-semibold text-lg">AdaptiveEdCoach</span>
+                </div>
+                <LanguageSelector onLanguageChange={handleLanguageChange} />
               </div>
               <nav className="space-y-1">
                 {navItems.map((item) => (

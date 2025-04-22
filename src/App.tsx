@@ -15,6 +15,8 @@ import SubmitAssignment from "./pages/SubmitAssignment";
 import ProgressPage from "./pages/ProgressPage";
 import VoiceReadingPage from "./pages/VoiceReadingPage";
 import ReportUploadPage from "./pages/ReportUploadPage";
+import EssayCheckerPage from "./pages/EssayCheckerPage";
+import AnswerSheetPage from "./pages/AnswerSheetPage";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +37,8 @@ const App = () => (
             <Route path="/progress" element={<ProgressPage />} />
             <Route path="/reading" element={<VoiceReadingPage />} />
             <Route path="/report-upload" element={<ReportUploadPage />} />
+            <Route path="/essay-checker" element={<EssayCheckerPage />} />
+            <Route path="/answer-sheet" element={<AnswerSheetPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
