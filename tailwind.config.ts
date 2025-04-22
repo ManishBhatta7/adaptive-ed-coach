@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,18 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// Custom colors for our education app
+				edu: {
+					primary: '#9b87f5',
+					secondary: '#7E69AB',
+					tertiary: '#6E59A5',
+					light: '#E5DEFF',
+					highlight: '#D946EF',
+					success: '#0EA5E9',
+					warning: '#F97316',
+					info: '#33C3F0',
+					background: '#F6F7FB'
 				}
 			},
 			borderRadius: {
