@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import MainLayout from '@/components/layout/MainLayout';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import VoiceRecorder from '@/components/voice-reading/VoiceRecorder';
 import ReadingPassage from '@/components/voice-reading/ReadingPassage';
 import ReadingAnalysis from '@/components/voice-reading/ReadingAnalysis';
@@ -92,7 +94,9 @@ const VoiceReadingPage = () => {
                 
                 <div className="space-y-6">
                   <Card>
-                    <CardTitle>{selectedPassage.title}</CardTitle>
+                    <CardHeader>
+                      <CardTitle>{selectedPassage.title}</CardTitle>
+                    </CardHeader>
                     <CardContent>
                       <div className="bg-gray-50 p-4 rounded-md">
                         <p className="text-gray-800 leading-relaxed">{selectedPassage.text}</p>
