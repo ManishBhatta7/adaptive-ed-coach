@@ -1,3 +1,4 @@
+
 import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -80,8 +81,18 @@ const PdfReportGenerator = ({ studentName = 'Student', data, reportType }: PdfRe
         });
       }
       
-      const lastTableY = doc.previousAutoTable?.finalY || 120;
-      let yPosition = lastTableY + 15;
+      // Fix: Get the final Y position of the table from the autotable plugin
+      // The jsPDF type definition doesn't include previousAutoTable, so we need to calculate Y position differently
+      let yPosition = 120; // Default position if no table
+      
+      // If the table was created, get its final Y position from the last call to autoTable
+      if (reportType === 'report-card' && data.subjects) {
+        // @ts-ignore - Access the property through doc object's internal state
+        const tableEndY = (doc as any).lastAutoTable?.finalY;
+        if (tableEndY) {
+          yPosition = tableEndY + 15;
+        }
+      }
       
       doc.text('AI Recommendations', 14, yPosition);
       yPosition += 7;
