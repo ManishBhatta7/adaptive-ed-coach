@@ -7,23 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import VoiceRecorder from '@/components/voice-reading/VoiceRecorder';
 import ReadingPassage from '@/components/voice-reading/ReadingPassage';
 import ReadingAnalysis from '@/components/voice-reading/ReadingAnalysis';
-import { Card, CardContent, CardTitle } from '@/components/ui/card';
-
-// Sample reading passages
-const samplePassages = [
-  {
-    title: "The Mysterious Garden",
-    text: "Behind the old house was a garden unlike any other. Tall trees with silver leaves whispered secrets to anyone who would listen. Flowers of every color imaginable lined the winding paths. In the center stood a small fountain where water danced and sparkled in the sunlight. Many people said the garden was magical, but only those with kind hearts could see its true beauty."
-  },
-  {
-    title: "Journey to the Stars",
-    text: "The spaceship was ready for its first journey to the distant planets. Captain Maya checked all the controls one last time before takeoff. The engines hummed with power as the countdown began. Five, four, three, two, one... blast off! The ship rose into the sky, leaving Earth behind. Through the window, Maya could see the blue planet getting smaller and smaller as they headed toward the stars."
-  },
-  {
-    title: "The Clever Fox",
-    text: "Once there was a fox who was known throughout the forest for his cleverness. One day, he found himself trapped in a hunter's net. Instead of panicking, he stayed calm and thought carefully. He noticed a sharp rock nearby and slowly pulled it closer with his paw. Using the rock, he cut through the net and escaped. The other animals watched in amazement as the fox trotted away, tail high in the air."
-  }
-];
+import { samplePassages } from '@/data/readingPassages';
+import { generateReadingFeedback } from '@/data/feedbackTemplates';
 
 const VoiceReadingPage = () => {
   const navigate = useNavigate();
@@ -45,19 +30,6 @@ const VoiceReadingPage = () => {
       navigate('/login');
     }
   }, [isAuthenticated, navigate]);
-  
-  const generateReadingFeedback = (text: string) => {
-    const wordCount = text.split(/\s+/).filter(Boolean).length;
-    const sentenceCount = text.split(/[.!?]+/).filter(Boolean).length;
-    
-    const feedbackTemplates = [
-      `Your reading included approximately ${wordCount} words across ${sentenceCount} sentences. Your pace was good, with clear articulation of most words. You demonstrated confidence in your reading, though there were a few hesitations. Continue practicing to improve fluency on longer passages.`,
-      `I noticed good expression in your reading, particularly with dialogue sections. Your pronunciation was generally accurate with only a few challenging words. For improvement, try varying your tone more to match the emotional content of the text.`,
-      `You read with good attention to punctuation, pausing appropriately at periods and commas. Your reading speed was appropriate for comprehension. To enhance your reading skills further, practice emphasizing key words in sentences to convey meaning more effectively.`
-    ];
-    
-    return feedbackTemplates[Math.floor(Math.random() * feedbackTemplates.length)];
-  };
 
   const analyzeReading = () => {
     if (!transcription) {
@@ -65,12 +37,15 @@ const VoiceReadingPage = () => {
       return;
     }
     
+    const wordCount = transcription.split(/\s+/).filter(Boolean).length;
+    const sentenceCount = transcription.split(/[.!?]+/).filter(Boolean).length;
+    
     setTimeout(() => {
       const mockAnalysis = {
         fluency: Math.floor(Math.random() * 31) + 70,
         pronunciation: Math.floor(Math.random() * 31) + 70,
         expression: Math.floor(Math.random() * 31) + 70,
-        feedback: generateReadingFeedback(transcription)
+        feedback: generateReadingFeedback(wordCount, sentenceCount)
       };
       
       setAnalysis(mockAnalysis);
