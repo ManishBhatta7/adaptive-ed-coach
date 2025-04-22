@@ -1,6 +1,1 @@
-
-[functions]
-verify_jwt = true
-
-[storage]
-file_size_limit = "10MB"
+project_id = "gwarmogcmeehajnevbmi"
