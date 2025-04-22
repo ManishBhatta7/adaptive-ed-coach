@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
@@ -6,6 +5,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import LearningStyleSummary from '@/components/dashboard/LearningStyleSummary';
 import ProgressChart from '@/components/dashboard/ProgressChart';
 import RecentSubmissions from '@/components/dashboard/RecentSubmissions';
+import OpenAITest from '@/components/OpenAITest';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Upload, Book, Users } from 'lucide-react';
@@ -15,7 +15,6 @@ const Dashboard = () => {
   const { state } = useAppContext();
   const { currentUser, isAuthenticated } = state;
   
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
@@ -26,7 +25,6 @@ const Dashboard = () => {
     return null;
   }
   
-  // Welcome message based on time of day
   const getWelcomeMessage = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
@@ -114,6 +112,10 @@ const Dashboard = () => {
               <RecentSubmissions performances={currentUser.performances} />
             </CardContent>
           </Card>
+        </div>
+        
+        <div className="mb-8">
+          <OpenAITest />
         </div>
       </div>
     </MainLayout>
