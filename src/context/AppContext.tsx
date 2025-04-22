@@ -1,6 +1,6 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { AppState, StudentProfile, Classroom } from '@/types';
+import { AppState, StudentProfile, Classroom, LearningStyle } from '@/types';
 
 // Mock data - in a real app this would come from a database
 const mockStudentProfile: StudentProfile = {
@@ -48,6 +48,7 @@ const initialState: AppState = {
 export const AppContext = createContext<{
   state: AppState;
   login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   updateUserProfile: (profile: Partial<StudentProfile>) => void;
   joinClassroom: (joinCode: string) => Promise<boolean>;
@@ -55,6 +56,7 @@ export const AppContext = createContext<{
 }>({
   state: initialState,
   login: () => Promise.resolve(false),
+  register: () => Promise.resolve(false),
   logout: () => {},
   updateUserProfile: () => {},
   joinClassroom: () => Promise.resolve(false),
@@ -105,6 +107,31 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem('classrooms', JSON.stringify(state.classrooms));
     }
   }, [state.currentUser, state.classrooms]);
+
+  // Register function - in a real app this would create a user in a database
+  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+    // Simple mock registration
+    if (name && email && password) {
+      const newUser: StudentProfile = {
+        id: `user-${Date.now()}`,
+        name,
+        email,
+        avatar: '/placeholder.svg',
+        joinedAt: new Date().toISOString(),
+        lastActive: new Date().toISOString(),
+        performances: []
+      };
+      
+      setState({
+        ...state,
+        currentUser: newUser,
+        isAuthenticated: true,
+        isTeacher: email.includes('teacher')
+      });
+      return true;
+    }
+    return false;
+  };
 
   // Login function - in a real app this would verify credentials with a server
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -203,6 +230,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
       value={{
         state,
         login,
+        register,
         logout,
         updateUserProfile,
         joinClassroom,
