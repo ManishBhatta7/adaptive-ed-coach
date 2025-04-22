@@ -1,14 +1,19 @@
-
 import { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
+import { createClient } from '@supabase/supabase-js';
 
 interface ReportUploaderProps {
   onProcessComplete: (data: Record<string, any>) => void;
 }
+
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL || '',
+  import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+);
 
 const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
   const { toast } = useToast();
@@ -50,99 +55,50 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
     setIsProcessing(true);
     setProgressValue(0);
     
-    const simulateProgress = () => {
-      let progress = 0;
-      const interval = setInterval(() => {
-        progress += Math.random() * 15;
-        if (progress > 100) progress = 100;
-        
-        setProgressValue(Math.round(progress));
-        
-        if (progress >= 100) {
-          clearInterval(interval);
-          
-          setTimeout(() => {
-            const mockResults = generateMockResults();
-            onProcessComplete(mockResults);
-            setIsProcessing(false);
-            
-            toast({
-              title: 'Report processed',
-              description: 'Your report has been successfully analyzed',
-              variant: 'default'
-            });
-          }, 500);
-        }
+    try {
+      const formData = new FormData();
+      formData.append('file', reportImage);
+
+      const progressInterval = setInterval(() => {
+        setProgressValue(prev => {
+          const newProgress = prev + Math.random() * 15;
+          return newProgress > 100 ? 100 : newProgress;
+        });
       }, 500);
-    };
-    
-    simulateProgress();
-  };
-  
-  const generateMockResults = () => {
-    const subjects = ['Mathematics', 'Science', 'English', 'Social Studies', 'Art'];
-    const results: Record<string, any> = {
-      studentName: 'Student',
-      schoolName: 'Springfield Elementary School',
-      grade: '5',
-      term: 'Spring 2025',
-      subjects: {}
-    };
-    
-    subjects.forEach(subject => {
-      const grade = Math.floor(Math.random() * 41) + 60;
-      const letterGrade = getLetterGrade(grade);
+
+      const response = await fetch('/functions/v1/analyze-report', {
+        method: 'POST',
+        body: formData
+      });
+
+      clearInterval(progressInterval);
+
+      if (!response.ok) {
+        throw new Error('Failed to process report');
+      }
+
+      const result = await response.json();
       
-      results.subjects[subject] = {
-        score: grade,
-        letterGrade,
-        comments: getRandomComment(subject, grade)
-      };
-    });
-    
-    const scores = Object.values(results.subjects).map((subject: any) => subject.score);
-    results.gpa = (scores.reduce((sum: number, score: number) => sum + score, 0) / scores.length).toFixed(1);
-    
-    return results;
-  };
-  
-  const getLetterGrade = (score: number) => {
-    if (score >= 90) return 'A';
-    if (score >= 80) return 'B';
-    if (score >= 70) return 'C';
-    if (score >= 60) return 'D';
-    return 'F';
-  };
-  
-  const getRandomComment = (subject: string, score: number) => {
-    const excellentComments = [
-      'Excellent work! Shows great understanding of the material.',
-      'Outstanding performance. Consistently exceeds expectations.',
-      'Demonstrates exceptional skills and knowledge in this area.'
-    ];
-    
-    const goodComments = [
-      'Good work. Shows solid understanding of key concepts.',
-      'Consistent performance. Meets all expectations.',
-      'Shows strong effort and good grasp of the material.'
-    ];
-    
-    const averageComments = [
-      'Satisfactory work. Basic understanding of the material.',
-      'Meeting basic requirements. More practice would be beneficial.',
-      'Shows effort but needs to strengthen understanding of concepts.'
-    ];
-    
-    const needsImprovementComments = [
-      'Needs improvement. Struggles with key concepts.',
-      'Additional practice and support needed in this area.',
-      'Showing effort but requires more focused attention.'
-    ];
-    
-    if (score >= 90) return excellentComments[Math.floor(Math.random() * excellentComments.length)];
-    if (score >= 80) return goodComments[Math.floor(Math.random() * goodComments.length)];
-    if (score >= 70) return averageComments[Math.floor(Math.random() * averageComments.length)];
-    return needsImprovementComments[Math.floor(Math.random() * needsImprovementComments.length)];
+      onProcessComplete(result);
+      setIsProcessing(false);
+      
+      toast({
+        title: 'Report processed',
+        description: 'Your report has been successfully analyzed',
+        variant: 'default'
+      });
+
+    } catch (error) {
+      console.error('Report processing error:', error);
+      
+      toast({
+        title: 'Processing Error',
+        description: 'Unable to process the report. Please try again.',
+        variant: 'destructive'
+      });
+
+      setIsProcessing(false);
+    }
   };
 
   return (
