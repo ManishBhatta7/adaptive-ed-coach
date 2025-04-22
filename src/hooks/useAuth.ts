@@ -10,6 +10,25 @@ export const useAuth = () => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      // For development when no Supabase credentials are available
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        console.warn('Using mock authentication (no Supabase credentials)');
+        // Use a mock user for testing
+        const mockUser: StudentProfile = {
+          id: 'mock-user-id',
+          name: 'Test User',
+          email,
+          avatar: '/placeholder.svg',
+          joinedAt: new Date().toISOString(),
+          lastActive: new Date().toISOString(),
+          performances: []
+        };
+        setCurrentUser(mockUser);
+        setIsAuthenticated(true);
+        setIsTeacher(email.includes('teacher'));
+        return true;
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password

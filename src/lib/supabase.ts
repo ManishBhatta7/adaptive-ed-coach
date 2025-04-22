@@ -10,5 +10,30 @@ if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Supabase credentials are missing. Please check your environment variables.');
 }
 
-// Initialize Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Initialize a mock client if credentials are missing (for development/testing)
+export const supabase = supabaseUrl && supabaseAnonKey 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : createMockClient();
+
+// Create a mock Supabase client for development/testing
+function createMockClient() {
+  console.warn('Using mock Supabase client. Authentication and database operations will not work.');
+  
+  // Return a mock client with the same interface
+  return {
+    auth: {
+      getSession: () => Promise.resolve({ data: { session: null } }),
+      signInWithPassword: () => Promise.resolve({ data: {}, error: new Error('Mock auth client') }),
+      signUp: () => Promise.resolve({ data: {}, error: new Error('Mock auth client') }),
+      signOut: () => Promise.resolve({ error: null })
+    },
+    from: () => ({
+      select: () => ({
+        eq: () => ({
+          single: () => Promise.resolve({ data: null, error: null })
+        }),
+        insert: () => Promise.resolve({ error: new Error('Mock database client') })
+      })
+    })
+  } as any;
+}
