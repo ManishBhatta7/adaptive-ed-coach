@@ -1,4 +1,3 @@
-
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
   resultIndex: number;
@@ -61,4 +60,4 @@ declare global {
   }
 }
 
-export {};
+export type { SpeechRecognition };

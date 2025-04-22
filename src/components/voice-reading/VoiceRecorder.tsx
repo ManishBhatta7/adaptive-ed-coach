@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Mic } from 'lucide-react';
 
+// Import the type from the speechRecognition.d.ts file
+import type { SpeechRecognition } from '@/types/speechRecognition';
+
 interface VoiceRecorderProps {
   onTranscriptionChange: (text: string) => void;
   onError: (error: string) => void;
