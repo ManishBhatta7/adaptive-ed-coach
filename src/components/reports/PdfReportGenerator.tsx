@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -18,7 +17,6 @@ const PdfReportGenerator = ({ studentName = 'Student', data, reportType }: PdfRe
   const [isJsPdfReady, setIsJsPdfReady] = useState(false);
 
   useEffect(() => {
-    // Check if jsPDF is available
     if (typeof jsPDF === 'object') {
       setIsJsPdfReady(true);
     }
@@ -37,12 +35,9 @@ const PdfReportGenerator = ({ studentName = 'Student', data, reportType }: PdfRe
     setIsGenerating(true);
     
     try {
-      // Create new PDF document
       const doc = new jsPDF.default();
       const timestamp = new Date().toLocaleString();
       
-      // Add school logo or app logo (placeholder)
-      // In a real implementation, you would add an actual logo
       doc.setFillColor(50, 100, 200);
       doc.rect(14, 10, 30, 10, 'F');
       doc.setTextColor(255, 255, 255);
@@ -50,12 +45,10 @@ const PdfReportGenerator = ({ studentName = 'Student', data, reportType }: PdfRe
       doc.setFontSize(12);
       doc.text('EduAI', 20, 17);
       
-      // Add report title
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(18);
       doc.text(getReportTitle(), 105, 20, { align: 'center' });
       
-      // Add student information
       doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
       doc.text(`Student: ${data.studentName || studentName}`, 14, 35);
@@ -65,11 +58,9 @@ const PdfReportGenerator = ({ studentName = 'Student', data, reportType }: PdfRe
       doc.text(`GPA: ${data.gpa || 'N/A'}`, 14, 63);
       doc.text(`Generated on: ${timestamp}`, 14, 70);
       
-      // Add divider line
       doc.setDrawColor(200, 200, 200);
       doc.line(14, 75, 196, 75);
       
-      // Add subject grades table
       if (reportType === 'report-card' && data.subjects) {
         doc.text('Subject Performance', 14, 85);
         
@@ -89,8 +80,8 @@ const PdfReportGenerator = ({ studentName = 'Student', data, reportType }: PdfRe
         });
       }
       
-      // Add recommendations
-      let yPosition = doc.lastAutoTable?.finalY + 15 || 120;
+      const lastTableY = doc.previousAutoTable?.finalY || 120;
+      let yPosition = lastTableY + 15;
       
       doc.text('AI Recommendations', 14, yPosition);
       yPosition += 7;
@@ -104,7 +95,6 @@ const PdfReportGenerator = ({ studentName = 'Student', data, reportType }: PdfRe
         doc.text('• No specific recommendations available', 14, yPosition);
       }
       
-      // Add footer
       const pageCount = doc.getNumberOfPages();
       doc.setFontSize(10);
       for (let i = 1; i <= pageCount; i++) {
@@ -113,7 +103,6 @@ const PdfReportGenerator = ({ studentName = 'Student', data, reportType }: PdfRe
         doc.text(`Page ${i} of ${pageCount}`, 196, 287, { align: 'right' });
       }
       
-      // Save PDF
       const fileName = `${studentName.replace(/\s+/g, '-')}-${reportType}-${new Date().toISOString().slice(0, 10)}.pdf`;
       doc.save(fileName);
       
