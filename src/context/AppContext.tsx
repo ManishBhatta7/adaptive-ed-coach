@@ -1,40 +1,11 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { AppState, StudentProfile, Classroom, LearningStyle } from '@/types';
+import { createClient } from '@supabase/supabase-js';
+import { AppState, StudentProfile, Classroom } from '@/types';
 
-// Mock data - in a real app this would come from a database
-const mockStudentProfile: StudentProfile = {
-  id: '1',
-  name: 'John Doe',
-  email: 'john.doe@example.com',
-  avatar: '/placeholder.svg',
-  joinedAt: new Date().toISOString(),
-  lastActive: new Date().toISOString(),
-  performances: []
-};
-
-const mockClassrooms: Classroom[] = [
-  {
-    id: '1',
-    name: 'Advanced Mathematics',
-    description: 'A class focused on advanced mathematical concepts',
-    teacherId: 'teacher1',
-    studentIds: ['1', '2', '3'],
-    assignments: [],
-    joinCode: 'MATH101',
-    createdAt: new Date().toISOString()
-  },
-  {
-    id: '2',
-    name: 'Introduction to Literature',
-    description: 'Exploring classic and contemporary literature',
-    teacherId: 'teacher2',
-    studentIds: ['1', '4', '5'],
-    assignments: [],
-    joinCode: 'LIT101',
-    createdAt: new Date().toISOString()
-  }
-];
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 // Initial state
 const initialState: AppState = {
@@ -44,12 +15,11 @@ const initialState: AppState = {
   isTeacher: false
 };
 
-// Create context
 export const AppContext = createContext<{
   state: AppState;
   login: (email: string, password: string) => Promise<boolean>;
   register: (name: string, email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUserProfile: (profile: Partial<StudentProfile>) => void;
   joinClassroom: (joinCode: string) => Promise<boolean>;
   createClassroom: (name: string, description?: string) => Promise<Classroom>;
@@ -57,109 +27,130 @@ export const AppContext = createContext<{
   state: initialState,
   login: () => Promise.resolve(false),
   register: () => Promise.resolve(false),
-  logout: () => {},
+  logout: () => Promise.resolve(),
   updateUserProfile: () => {},
   joinClassroom: () => Promise.resolve(false),
   createClassroom: () => Promise.resolve({} as Classroom)
 });
 
-// Context provider
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<AppState>(initialState);
 
-  // Simulate loading data from localStorage on mount
   useEffect(() => {
-    const savedUser = localStorage.getItem('currentUser');
-    const savedClassrooms = localStorage.getItem('classrooms');
-    
-    if (savedUser) {
-      try {
-        const user = JSON.parse(savedUser) as StudentProfile;
-        setState(prev => ({ 
-          ...prev, 
-          currentUser: user,
-          isAuthenticated: true 
-        }));
-      } catch (error) {
-        console.error('Error parsing saved user:', error);
+    // Check for existing session on load
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile) {
+          setState(prev => ({
+            ...prev,
+            currentUser: profile as StudentProfile,
+            isAuthenticated: true,
+            isTeacher: profile.role === 'teacher'
+          }));
+        }
       }
-    }
-    
-    if (savedClassrooms) {
-      try {
-        const classrooms = JSON.parse(savedClassrooms) as Classroom[];
-        setState(prev => ({ ...prev, classrooms }));
-      } catch (error) {
-        console.error('Error parsing saved classrooms:', error);
-      }
-    } else {
-      // Load mock data if no saved data exists
-      setState(prev => ({ ...prev, classrooms: mockClassrooms }));
-    }
+    };
+
+    checkSession();
   }, []);
 
-  // Save state changes to localStorage
-  useEffect(() => {
-    if (state.currentUser) {
-      localStorage.setItem('currentUser', JSON.stringify(state.currentUser));
-    }
-    if (state.classrooms.length > 0) {
-      localStorage.setItem('classrooms', JSON.stringify(state.classrooms));
-    }
-  }, [state.currentUser, state.classrooms]);
-
-  // Register function - in a real app this would create a user in a database
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
-    // Simple mock registration
-    if (name && email && password) {
-      const newUser: StudentProfile = {
-        id: `user-${Date.now()}`,
-        name,
-        email,
-        avatar: '/placeholder.svg',
-        joinedAt: new Date().toISOString(),
-        lastActive: new Date().toISOString(),
-        performances: []
-      };
-      
-      setState({
-        ...state,
-        currentUser: newUser,
-        isAuthenticated: true,
-        isTeacher: email.includes('teacher')
-      });
-      return true;
-    }
-    return false;
-  };
-
-  // Login function - in a real app this would verify credentials with a server
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simple mock authentication
-    if (email && password) {
-      setState({
-        ...state,
-        currentUser: mockStudentProfile,
-        isAuthenticated: true,
-        isTeacher: email.includes('teacher')
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
-      return true;
+
+      if (error) throw error;
+
+      if (data.session) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.session.user.id)
+          .single();
+
+        if (profile) {
+          setState(prev => ({
+            ...prev,
+            currentUser: profile as StudentProfile,
+            isAuthenticated: true,
+            isTeacher: profile.role === 'teacher'
+          }));
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-    return false;
   };
 
-  // Logout function
-  const logout = () => {
-    setState({
-      ...state,
-      currentUser: undefined,
-      isAuthenticated: false,
-      isTeacher: false
-    });
-    localStorage.removeItem('currentUser');
+  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        const newProfile: StudentProfile = {
+          id: data.user.id,
+          name,
+          email,
+          avatar: '/placeholder.svg',
+          joinedAt: new Date().toISOString(),
+          lastActive: new Date().toISOString(),
+          performances: []
+        };
+
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([newProfile]);
+
+        if (profileError) throw profileError;
+
+        setState(prev => ({
+          ...prev,
+          currentUser: newProfile,
+          isAuthenticated: true,
+          isTeacher: false
+        }));
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Registration error:', error);
+      return false;
+    }
   };
 
-  // Update user profile
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      setState(initialState);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   const updateUserProfile = (profile: Partial<StudentProfile>) => {
     if (state.currentUser) {
       const updatedUser = { ...state.currentUser, ...profile };
@@ -170,7 +161,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Join a classroom with a join code
   const joinClassroom = async (joinCode: string): Promise<boolean> => {
     const classroom = state.classrooms.find(c => c.joinCode === joinCode);
     
@@ -200,7 +190,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
-  // Create a new classroom (teacher only)
   const createClassroom = async (name: string, description?: string): Promise<Classroom> => {
     if (!state.currentUser || !state.isTeacher) {
       throw new Error('Only teachers can create classrooms');
@@ -242,5 +231,4 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Custom hook for using the app context
 export const useAppContext = () => useContext(AppContext);
