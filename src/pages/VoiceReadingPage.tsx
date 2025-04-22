@@ -9,6 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Mic } from 'lucide-react';
+// Import the types to ensure TypeScript recognizes SpeechRecognition
+import '../types/speechRecognition.d.ts';
 
 const VoiceReadingPage = () => {
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ const VoiceReadingPage = () => {
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
+  // Use the correct type for the recognitionRef
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   
   // Redirect to login if not authenticated
@@ -37,8 +40,8 @@ const VoiceReadingPage = () => {
   // Set up speech recognition
   useEffect(() => {
     if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
+      const SpeechRecognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognitionAPI();
       
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
