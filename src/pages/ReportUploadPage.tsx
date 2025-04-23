@@ -5,6 +5,8 @@ import { useAppContext } from '@/context/AppContext';
 import MainLayout from '@/components/layout/MainLayout';
 import ReportUploader from '@/components/reports/ReportUploader';
 import ReportResults from '@/components/reports/ReportResults';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const ReportUploadPage = () => {
   const navigate = useNavigate();
@@ -13,10 +15,14 @@ const ReportUploadPage = () => {
   const [extractedData, setExtractedData] = useState<Record<string, any> | null>(null);
   
   useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, navigate]);
+    // We'll let the component render even if not authenticated
+    // But will show a login prompt instead of redirecting immediately
+    // This allows the user to see what the feature offers before logging in
+  }, []);
+
+  const handleLogin = () => {
+    navigate('/login', { state: { returnTo: '/report-upload' } });
+  };
 
   return (
     <MainLayout>
@@ -28,6 +34,18 @@ const ReportUploadPage = () => {
               Upload a photo of your report card to automatically extract and analyze your grades
             </p>
           </div>
+          
+          {!isAuthenticated ? (
+            <Alert className="mb-6">
+              <AlertTitle>Authentication Required</AlertTitle>
+              <AlertDescription className="flex flex-col gap-4">
+                <p>You need to be logged in to use the report card analysis feature.</p>
+                <Button onClick={handleLogin} className="w-fit">
+                  Log in to continue
+                </Button>
+              </AlertDescription>
+            </Alert>
+          ) : null}
           
           <div className="grid md:grid-cols-2 gap-6">
             <ReportUploader onProcessComplete={setExtractedData} />

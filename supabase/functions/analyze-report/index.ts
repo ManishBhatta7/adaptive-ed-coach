@@ -3,6 +3,11 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { Configuration, OpenAIApi } from 'https://esm.sh/openai@3.2.1'
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
 const aiPrompt = `
 You are an AI designed to analyze student report cards. Extract the following information:
 - Student's full name
@@ -20,9 +25,17 @@ Format the response as a JSON object with these fields. If you cannot find certa
 `
 
 serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
   // Ensure only POST requests are handled
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), { 
+      status: 405,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
   }
 
   try {
@@ -31,6 +44,27 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
+
+    // Get JWT token from request headers
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Missing or invalid authorization header' }), { 
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Verify the JWT token by getting the user
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    
+    if (authError || !user) {
+      console.error('Auth error:', authError)
+      return new Response(JSON.stringify({ error: 'Unauthorized: Invalid token' }), { 
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
 
     // Initialize OpenAI API
     const configuration = new Configuration({
@@ -46,7 +80,15 @@ serve(async (req) => {
     if (!file) {
       return new Response(JSON.stringify({ error: 'No file uploaded' }), { 
         status: 400,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+    }
+
+    // Validate user ID
+    if (userId !== user.id) {
+      return new Response(JSON.stringify({ error: 'User ID mismatch' }), { 
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
@@ -64,10 +106,43 @@ serve(async (req) => {
 
     if (uploadError) {
       console.error('Storage upload error:', uploadError)
-      return new Response(JSON.stringify({ error: 'Failed to upload file' }), { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      
+      // Check if the error is because the bucket doesn't exist
+      if (uploadError.message.includes('bucket not found')) {
+        // Create the bucket
+        const { error: createBucketError } = await supabase.storage.createBucket('student-documents', {
+          public: true
+        })
+        
+        if (createBucketError) {
+          console.error('Create bucket error:', createBucketError)
+          return new Response(JSON.stringify({ error: 'Failed to create storage bucket' }), { 
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+        
+        // Try upload again
+        const { error: retryUploadError } = await supabase.storage
+          .from('student-documents')
+          .upload(filePath, fileBuffer, {
+            contentType: file.type,
+            cacheControl: '3600',
+          })
+          
+        if (retryUploadError) {
+          console.error('Retry upload error:', retryUploadError)
+          return new Response(JSON.stringify({ error: 'Failed to upload file after creating bucket' }), { 
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+      } else {
+        return new Response(JSON.stringify({ error: 'Failed to upload file' }), { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
     }
 
     // Get public URL for the uploaded file
@@ -145,13 +220,16 @@ serve(async (req) => {
 
       if (dbError) {
         console.error('Database insert error:', dbError)
+        
+        // If the table doesn't exist, we'll still return the analysis
+        console.log('Continuing despite database error - will return analysis to user')
       }
 
       return new Response(JSON.stringify({
         ...analysisResult,
         reportUrl: publicUrl
       }), {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     } catch (aiError) {
       console.error('AI processing error:', aiError)
@@ -160,7 +238,7 @@ serve(async (req) => {
       const fallbackResult = generateFallbackAnalysis(userId, publicUrl)
       
       return new Response(JSON.stringify(fallbackResult), {
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
     
@@ -168,7 +246,7 @@ serve(async (req) => {
     console.error('General error:', error)
     return new Response(JSON.stringify({ error: error.message }), { 
       status: 500,
-      headers: { 'Content-Type': 'application/json' }
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   }
 })

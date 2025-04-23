@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
 import { useAppContext } from '@/context/AppContext';
 import { supabase } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 interface ReportUploaderProps {
   onProcessComplete: (data: Record<string, any>) => void;
@@ -14,6 +15,7 @@ interface ReportUploaderProps {
 
 const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { state } = useAppContext();
   const [reportImage, setReportImage] = useState<File | null>(null);
   const [reportImageUrl, setReportImageUrl] = useState<string | null>(null);
@@ -54,17 +56,28 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
   const processReport = async () => {
     if (!reportImage) return;
     
+    // Check authentication first
+    if (!state.isAuthenticated || !state.currentUser) {
+      setUploadError('You must be logged in to process reports');
+      toast({
+        title: 'Authentication required',
+        description: 'Please log in to process report cards',
+        variant: 'destructive'
+      });
+      navigate('/login', { state: { returnTo: '/report-upload' } });
+      return;
+    }
+    
     setIsProcessing(true);
     setProgressValue(0);
     setUploadError(null);
     
     try {
-      // Get the current user's ID
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
+      // Get the current user's ID directly from the state
+      const userId = state.currentUser?.id;
       
       if (!userId) {
-        throw new Error('User not authenticated');
+        throw new Error('User ID not available');
       }
 
       const formData = new FormData();
@@ -197,10 +210,23 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
           </div>
         )}
         
+        {!state.isAuthenticated && (
+          <div className="text-amber-500 text-sm mb-4 text-center">
+            User not authenticated. Please <Button 
+              variant="link" 
+              className="p-0 h-auto text-amber-600" 
+              onClick={() => navigate('/login', { state: { returnTo: '/report-upload' } })}
+            >
+              log in
+            </Button> to process reports.
+          </div>
+        )}
+        
         {reportImage && !isProcessing && (
           <Button 
             className="w-full" 
             onClick={processReport}
+            disabled={!state.isAuthenticated}
           >
             Process Report Card
           </Button>
