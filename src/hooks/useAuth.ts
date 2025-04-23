@@ -1,12 +1,110 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import { Session, User } from '@supabase/supabase-js';
 import { StudentProfile } from '@/types';
 
 export const useAuth = () => {
   const [currentUser, setCurrentUser] = useState<StudentProfile | undefined>(undefined);
+  const [session, setSession] = useState<Session | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isTeacher, setIsTeacher] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Initialize auth state and set up listener
+  useEffect(() => {
+    // First set up the auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        console.log('Auth state changed:', event, currentSession?.user?.id);
+        setSession(currentSession);
+        
+        if (currentSession?.user) {
+          setIsAuthenticated(true);
+          
+          // Use setTimeout to avoid potential deadlocks with Supabase auth
+          setTimeout(async () => {
+            try {
+              // Get the user profile data
+              const { data: profile, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentSession.user.id)
+                .single();
+                
+              if (error) {
+                console.error('Error fetching profile:', error);
+                return;
+              }
+              
+              if (profile) {
+                setCurrentUser(profile as StudentProfile);
+                setIsTeacher(profile.role === 'teacher');
+                
+                // Update the last_active field in the database
+                const { error: updateError } = await supabase
+                  .from('profiles')
+                  .update({ last_active: new Date().toISOString() })
+                  .eq('id', currentSession.user.id);
+                  
+                if (updateError) {
+                  console.error('Error updating last_active:', updateError);
+                }
+              }
+            } catch (err) {
+              console.error('Error in auth state change handler:', err);
+            }
+          }, 0);
+        } else {
+          setIsAuthenticated(false);
+          setCurrentUser(undefined);
+          setIsTeacher(false);
+        }
+      }
+    );
+
+    // Then check for an existing session
+    const initializeAuth = async () => {
+      try {
+        setIsLoading(true);
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+
+        if (initialSession?.user) {
+          setSession(initialSession);
+          setIsAuthenticated(true);
+          
+          // Fetch the user profile
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', initialSession.user.id)
+            .single();
+            
+          if (profile) {
+            setCurrentUser(profile as StudentProfile);
+            setIsTeacher(profile.role === 'teacher');
+            
+            // Update last_active
+            await supabase
+              .from('profiles')
+              .update({ last_active: new Date().toISOString() })
+              .eq('id', initialSession.user.id);
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeAuth();
+
+    // Clean up the subscription when the component unmounts
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -29,26 +127,23 @@ export const useAuth = () => {
         return true;
       }
 
+      console.log('Attempting login with email:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Login error:', error);
+        throw error;
+      }
 
+      console.log('Login successful, session:', data.session);
+      
       if (data.session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.session.user.id)
-          .single();
-
-        if (profile) {
-          setCurrentUser(profile as StudentProfile);
-          setIsAuthenticated(true);
-          setIsTeacher(profile.role === 'teacher');
-          return true;
-        }
+        setSession(data.session);
+        // Actual user profile fetch is handled by the onAuthStateChange listener
+        return true;
       }
       return false;
     } catch (error) {
@@ -94,22 +189,14 @@ export const useAuth = () => {
         throw error;
       }
 
-      if (data.user) {
-        console.log('User created successfully:', data.user);
-        // let database trigger set up the profiles row, so fetch it
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        if (profile) {
-          setCurrentUser(profile as StudentProfile);
-          setIsAuthenticated(true);
-          setIsTeacher(role === 'teacher');
-          return true;
-        }
+      console.log('Registration successful:', data);
+      
+      if (data.session) {
+        setSession(data.session);
+        // Actual user profile fetch is handled by the onAuthStateChange listener
+        return true;
       }
+      
       return false;
     } catch (error) {
       console.error('Registration error:', error);
@@ -119,9 +206,8 @@ export const useAuth = () => {
 
   const logout = async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
+      await supabase.auth.signOut();
+      setSession(null);
       setCurrentUser(undefined);
       setIsAuthenticated(false);
       setIsTeacher(false);
@@ -130,17 +216,34 @@ export const useAuth = () => {
     }
   };
 
-  const updateUserProfile = (profile: Partial<StudentProfile>) => {
-    if (currentUser) {
-      const updatedUser = { ...currentUser, ...profile };
-      setCurrentUser(updatedUser);
+  const updateUserProfile = async (profile: Partial<StudentProfile>) => {
+    if (!currentUser || !session) return;
+    
+    try {
+      // Update the profile in the database
+      const { error } = await supabase
+        .from('profiles')
+        .update(profile)
+        .eq('id', currentUser.id);
+        
+      if (error) {
+        console.error('Error updating profile:', error);
+        return;
+      }
+      
+      // Update the local state
+      setCurrentUser({ ...currentUser, ...profile });
+    } catch (error) {
+      console.error('Error updating profile:', error);
     }
   };
 
   return {
     currentUser,
+    session,
     isAuthenticated,
     isTeacher,
+    isLoading,
     login,
     register,
     logout,

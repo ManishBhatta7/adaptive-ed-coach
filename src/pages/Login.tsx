@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,19 @@ import { Book } from 'lucide-react';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAppContext();
+  const { login, state } = useAppContext();
   const { toast } = useToast();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (state.isAuthenticated && !state.isLoading) {
+      navigate('/dashboard');
+    }
+  }, [state.isAuthenticated, state.isLoading, navigate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,6 +39,7 @@ const Login = () => {
     setIsLoading(true);
     
     try {
+      console.log('Attempting login with email:', email);
       const success = await login(email, password);
       
       if (success) {
@@ -48,15 +56,25 @@ const Login = () => {
         });
       }
     } catch (error) {
+      console.error('Login error details:', error);
       toast({
         title: 'Login error',
-        description: 'An error occurred during login',
+        description: error instanceof Error ? error.message : 'An error occurred during login',
         variant: 'destructive'
       });
     } finally {
       setIsLoading(false);
     }
   };
+  
+  // If still checking authentication status, show a loading state
+  if (state.isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Loading...</p>
+      </div>
+    );
+  }
   
   return (
     <div className="flex items-center justify-center min-h-screen bg-edu-background px-4">

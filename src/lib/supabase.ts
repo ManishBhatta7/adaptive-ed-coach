@@ -33,7 +33,7 @@ if (shouldUseIntegrationClient()) {
     console.error('Supabase credentials are missing. Please check your environment variables.');
     supabaseClient = createMockClient();
   } else {
-    // Create a proper client with the credentials
+    // Create a proper client with the credentials and ensure session persistence
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
@@ -56,7 +56,8 @@ function createMockClient() {
       getSession: () => Promise.resolve({ data: { session: null } }),
       signInWithPassword: () => Promise.resolve({ data: {}, error: new Error('Mock auth client') }),
       signUp: () => Promise.resolve({ data: {}, error: new Error('Mock auth client') }),
-      signOut: () => Promise.resolve({ error: null })
+      signOut: () => Promise.resolve({ error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
     },
     from: () => ({
       select: () => ({
