@@ -1,27 +1,9 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/context/AppContext";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Dashboard from "./pages/Dashboard";
-import LearningStylePage from "./pages/LearningStylePage";
-import SubmitAssignment from "./pages/SubmitAssignment";
-import ProgressPage from "./pages/ProgressPage";
-import VoiceReadingPage from "./pages/VoiceReadingPage";
-import ReportUploadPage from "./pages/ReportUploadPage";
-import EssayCheckerPage from "./pages/EssayCheckerPage";
-import AnswerSheetPage from "./pages/AnswerSheetPage";
-import Settings from "./pages/Settings";
-import Profile from "./pages/Profile";
-import Classrooms from "./pages/Classrooms";
-import Assignments from "./pages/Assignments";
-import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -49,7 +31,6 @@ const App = () => (
             <Route path="/classrooms" element={<Classrooms />} />
             <Route path="/assignments" element={<Assignments />} />
             <Route path="/notifications" element={<Notifications />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

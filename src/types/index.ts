@@ -1,18 +1,9 @@
 
-// Barrel exports for convenience
-export * from "./learningStyles";
-export * from "./subjects";
-export * from "./questions";
-export * from "./performance";
-export * from "./assignment";
-export * from "./classroom";
-export * from "./studentProfile";
-export * from "./appState";
-
-// AI Coach modes (not grouped above)
-export enum CoachingMode {
-  QUICK_FEEDBACK = "quick_feedback",
-  DETAILED_INSIGHT = "detailed_insight",
-  PROGRESS_ANALYSIS = "progress_analysis",
-  STYLE_SPECIFIC = "style_specific"
-}
+export * from './appState';
+export * from './assignment';
+export * from './classroom';
+export * from './learningStyles';
+export * from './performance';
+export * from './questions';
+export * from './studentProfile';
+export * from './subjects';
