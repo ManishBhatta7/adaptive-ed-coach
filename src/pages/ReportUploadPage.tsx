@@ -15,10 +15,15 @@ const ReportUploadPage = () => {
   const [extractedData, setExtractedData] = useState<Record<string, any> | null>(null);
   
   useEffect(() => {
-    // We'll let the component render even if not authenticated
-    // But will show a login prompt instead of redirecting immediately
-    // This allows the user to see what the feature offers before logging in
-  }, []);
+    // Check if user is coming back from login with the returnTo parameter
+    const searchParams = new URLSearchParams(window.location.search);
+    const hasReturnedFromLogin = searchParams.get('returned') === 'true';
+    
+    if (hasReturnedFromLogin && isAuthenticated) {
+      // Clear the query parameter to avoid showing the welcome back message on refresh
+      navigate('/report-upload', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleLogin = () => {
     navigate('/login', { state: { returnTo: '/report-upload' } });

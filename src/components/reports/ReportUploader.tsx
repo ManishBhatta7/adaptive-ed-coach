@@ -80,6 +80,13 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
         throw new Error('User ID not available');
       }
 
+      // First check if there's a valid session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !sessionData.session) {
+        throw new Error('No valid authentication session found');
+      }
+      
       const formData = new FormData();
       formData.append('file', reportImage);
       formData.append('userId', userId);
@@ -99,15 +106,12 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
       }, 300);
 
       // Get the Supabase JWT token for authentication
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      const authToken = currentSession?.access_token;
+      const authToken = sessionData.session.access_token;
       
-      if (!authToken) {
-        throw new Error('Authentication token not available');
-      }
-
+      console.log('Auth token available:', !!authToken);
+      
       // Call the Supabase Edge Function with authentication
-      const response = await fetch('/functions/v1/analyze-report', {
+      const response = await fetch('https://gwarmogcmeehajnevbmi.supabase.co/functions/v1/analyze-report', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${authToken}`
