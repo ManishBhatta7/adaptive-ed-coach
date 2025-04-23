@@ -1,33 +1,55 @@
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import MainLayout from '@/components/layout/MainLayout';
 import ReportUploader from '@/components/reports/ReportUploader';
 import ReportResults from '@/components/reports/ReportResults';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ReportUploadPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { state } = useAppContext();
-  const { isAuthenticated } = state;
+  const { isAuthenticated, isLoading } = state;
   const [extractedData, setExtractedData] = useState<Record<string, any> | null>(null);
   
   useEffect(() => {
     // Check if user is coming back from login with the returnTo parameter
-    const searchParams = new URLSearchParams(window.location.search);
+    const searchParams = new URLSearchParams(location.search);
     const hasReturnedFromLogin = searchParams.get('returned') === 'true';
     
     if (hasReturnedFromLogin && isAuthenticated) {
       // Clear the query parameter to avoid showing the welcome back message on refresh
       navigate('/report-upload', { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, location]);
 
   const handleLogin = () => {
+    // Save the current page to redirect back after login
     navigate('/login', { state: { returnTo: '/report-upload' } });
   };
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="container px-4 py-8">
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-8">
+              <Skeleton className="h-10 w-64 mb-2" />
+              <Skeleton className="h-5 w-96" />
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Skeleton className="h-80 w-full" />
+              <Skeleton className="h-80 w-full" />
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
 
   return (
     <MainLayout>
@@ -53,7 +75,10 @@ const ReportUploadPage = () => {
           ) : null}
           
           <div className="grid md:grid-cols-2 gap-6">
-            <ReportUploader onProcessComplete={setExtractedData} />
+            <ReportUploader 
+              onProcessComplete={setExtractedData} 
+              disabled={!isAuthenticated}
+            />
             <ReportResults data={extractedData} />
           </div>
         </div>

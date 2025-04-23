@@ -191,7 +191,7 @@ export enum CoachingMode {
 
 // App context state
 export interface AppState {
-  currentUser?: StudentProfile;
+  currentUser: StudentProfile | undefined;
   classrooms: Classroom[];
   isAuthenticated: boolean;
   isTeacher: boolean;

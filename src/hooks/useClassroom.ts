@@ -1,23 +1,83 @@
 
-import { useState } from 'react';
-import { Classroom } from '@/types';
+import { useState, useEffect } from 'react';
+import { Classroom, Assignment } from '@/types';
 import { supabase } from '@/lib/supabase';
+import { useAppContext } from '@/context/AppContext';
 
 export const useClassroom = () => {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const { state } = useAppContext();
+
+  // Initialize with mock data for development
+  useEffect(() => {
+    if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+      // Only set mock data if authenticated and we don't have classrooms yet
+      if (state.isAuthenticated && state.currentUser && classrooms.length === 0) {
+        const mockClassrooms = generateMockClassrooms(state.currentUser.id, state.isTeacher);
+        setClassrooms(mockClassrooms);
+      }
+    } else {
+      // Load classrooms from Supabase when authenticated
+      if (state.isAuthenticated && state.currentUser) {
+        fetchClassrooms(state.currentUser.id, state.isTeacher);
+      }
+    }
+  }, [state.isAuthenticated, state.currentUser, state.isTeacher]);
+
+  const fetchClassrooms = async (userId: string, isTeacher: boolean) => {
+    setIsLoading(true);
+    try {
+      let query;
+      if (isTeacher) {
+        query = supabase
+          .from('classrooms')
+          .select('*')
+          .eq('teacherId', userId);
+      } else {
+        query = supabase
+          .from('classroom_students')
+          .select('classroom_id')
+          .eq('student_id', userId);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching classrooms:', error);
+        return;
+      }
+      
+      // TODO: Implement actual data conversion
+      console.log('Fetched classrooms:', data);
+    } catch (error) {
+      console.error('Error in fetchClassrooms:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const joinClassroom = async (joinCode: string): Promise<boolean> => {
     // Check if we're using the mock client
     if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
       console.warn('Using mock classroom service (no Supabase credentials)');
+      
+      // Check if classroom with this join code exists
+      const existingClassroom = classrooms.find(c => c.joinCode === joinCode);
+      
+      if (existingClassroom) {
+        // Already joined this classroom
+        return true;
+      }
+      
       // Create a mock classroom for testing
       const mockClassroom: Classroom = {
         id: `mock-classroom-${Date.now()}`,
-        name: 'Mock Classroom',
+        name: `Class ${joinCode}`,
         description: 'This is a mock classroom for testing',
         teacherId: 'mock-teacher-id',
-        studentIds: [],
-        assignments: [],
+        studentIds: [state.currentUser?.id || 'mock-student-id'],
+        assignments: generateMockAssignments(),
         joinCode,
         createdAt: new Date().toISOString()
       };
@@ -26,6 +86,7 @@ export const useClassroom = () => {
       return true;
     }
     
+    // Find classroom with join code
     const classroom = classrooms.find(c => c.joinCode === joinCode);
     
     if (classroom) {
@@ -35,7 +96,7 @@ export const useClassroom = () => {
           if (c.id === classroom.id) {
             return {
               ...c,
-              studentIds: [...c.studentIds]
+              studentIds: [...c.studentIds, state.currentUser?.id || '']
             };
           }
           return c;
@@ -85,8 +146,82 @@ export const useClassroom = () => {
     return newClassroom;
   };
 
+  // Helper function to generate mock classrooms
+  const generateMockClassrooms = (userId: string, isTeacher: boolean): Classroom[] => {
+    if (isTeacher) {
+      return [
+        {
+          id: 'classroom-1',
+          name: 'Mathematics 101',
+          description: 'Introduction to basic mathematics concepts',
+          teacherId: userId,
+          studentIds: ['student-1', 'student-2', 'student-3'],
+          assignments: generateMockAssignments(),
+          joinCode: 'MAT101',
+          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: 'classroom-2',
+          name: 'Physics for Beginners',
+          description: 'Learn the fundamentals of physics',
+          teacherId: userId,
+          studentIds: ['student-2', 'student-4', 'student-5'],
+          assignments: generateMockAssignments(),
+          joinCode: 'PHY101',
+          createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      ];
+    } else {
+      return [
+        {
+          id: 'classroom-1',
+          name: 'Mathematics 101',
+          description: 'Introduction to basic mathematics concepts',
+          teacherId: 'teacher-1',
+          studentIds: [userId, 'student-2', 'student-3'],
+          assignments: generateMockAssignments(),
+          joinCode: 'MAT101',
+          createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        {
+          id: 'classroom-3',
+          name: 'Biology 201',
+          description: 'Advanced biological concepts and theories',
+          teacherId: 'teacher-2',
+          studentIds: [userId, 'student-6', 'student-7'],
+          assignments: generateMockAssignments(),
+          joinCode: 'BIO201',
+          createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+        }
+      ];
+    }
+  };
+
+  // Helper function to generate mock assignments
+  const generateMockAssignments = (): Assignment[] => {
+    return [
+      {
+        id: `assignment-${Date.now()}-1`,
+        title: 'Weekly Problem Set',
+        description: 'Complete the problem set from chapter 5',
+        dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        maxScore: 100
+      },
+      {
+        id: `assignment-${Date.now()}-2`,
+        title: 'Research Paper',
+        description: 'Write a 5-page paper on a topic of your choice',
+        dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        maxScore: 100
+      }
+    ];
+  };
+
   return {
     classrooms,
+    isLoading,
     joinClassroom,
     createClassroom
   };

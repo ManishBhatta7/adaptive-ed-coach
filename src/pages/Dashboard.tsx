@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
@@ -9,21 +10,18 @@ import OpenAITest from '@/components/OpenAITest';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Upload, Book, Users } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { state } = useAppContext();
-  const { currentUser, isAuthenticated } = state;
+  const { currentUser, isAuthenticated, isLoading } = state;
   
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isLoading && !isAuthenticated) {
       navigate('/login');
     }
-  }, [isAuthenticated, navigate]);
-  
-  if (!isAuthenticated || !currentUser) {
-    return null;
-  }
+  }, [isAuthenticated, isLoading, navigate]);
   
   const getWelcomeMessage = () => {
     const hour = new Date().getHours();
@@ -31,6 +29,37 @@ const Dashboard = () => {
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
   };
+  
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="container px-4 py-8">
+          <div className="flex flex-col md:flex-row items-start justify-between mb-8 gap-4">
+            <div>
+              <Skeleton className="h-10 w-64 mb-2" />
+              <Skeleton className="h-5 w-48" />
+            </div>
+            <div className="flex space-x-3">
+              <Skeleton className="h-10 w-36" />
+              <Skeleton className="h-10 w-40" />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="lg:col-span-1">
+              <Skeleton className="h-60 w-full" />
+            </div>
+            <div className="lg:col-span-2">
+              <Skeleton className="h-60 w-full" />
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+  
+  if (!isAuthenticated || !currentUser) {
+    return null;
+  }
   
   return (
     <MainLayout>
@@ -71,7 +100,7 @@ const Dashboard = () => {
           </div>
           
           <div className="lg:col-span-2">
-            <ProgressChart performances={currentUser.performances} />
+            <ProgressChart performances={currentUser.performances || []} />
           </div>
         </div>
         
@@ -95,9 +124,9 @@ const Dashboard = () => {
                 </a>
               </Button>
               <Button asChild variant="outline" className="w-full justify-start">
-                <a href="/chat">
+                <a href="/notifications">
                   <MessageSquare className="h-4 w-4 mr-2" />
-                  Ask AI Coach a Question
+                  Check Notifications
                 </a>
               </Button>
             </CardContent>
@@ -109,7 +138,7 @@ const Dashboard = () => {
               <CardDescription>Your latest submissions and feedback</CardDescription>
             </CardHeader>
             <CardContent>
-              <RecentSubmissions performances={currentUser.performances} />
+              <RecentSubmissions performances={currentUser.performances || []} />
             </CardContent>
           </Card>
         </div>
