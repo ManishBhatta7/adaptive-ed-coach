@@ -17,6 +17,11 @@ import VoiceReadingPage from "./pages/VoiceReadingPage";
 import ReportUploadPage from "./pages/ReportUploadPage";
 import EssayCheckerPage from "./pages/EssayCheckerPage";
 import AnswerSheetPage from "./pages/AnswerSheetPage";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
+import Classrooms from "./pages/Classrooms";
+import Assignments from "./pages/Assignments";
+import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +44,11 @@ const App = () => (
             <Route path="/report-upload" element={<ReportUploadPage />} />
             <Route path="/essay-checker" element={<EssayCheckerPage />} />
             <Route path="/answer-sheet" element={<AnswerSheetPage />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/classrooms" element={<Classrooms />} />
+            <Route path="/assignments" element={<Assignments />} />
+            <Route path="/notifications" element={<Notifications />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
