@@ -12,16 +12,17 @@ const Signup = () => {
   const navigate = useNavigate();
   const { register } = useAppContext();
   const { toast } = useToast();
-  
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name || !email || !password) {
       toast({
         title: 'Missing information',
@@ -30,7 +31,7 @@ const Signup = () => {
       });
       return;
     }
-    
+
     if (password !== confirmPassword) {
       toast({
         title: 'Password mismatch',
@@ -39,12 +40,13 @@ const Signup = () => {
       });
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
-      const success = await register(name, email, password);
-      
+      // Pass role as a parameter to register
+      const success = await register(name, email, password, role);
+
       if (success) {
         toast({
           title: 'Account created',
@@ -68,7 +70,7 @@ const Signup = () => {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-edu-background px-4">
       <div className="w-full max-w-md">
@@ -80,7 +82,7 @@ const Signup = () => {
           <h1 className="text-3xl font-bold text-gray-900">Get started today</h1>
           <p className="text-gray-600 mt-2">Create your account and begin your learning journey</p>
         </div>
-        
+
         <Card>
           <form onSubmit={handleSubmit}>
             <CardHeader>
@@ -102,7 +104,6 @@ const Signup = () => {
                   required
                 />
               </div>
-              
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium">
                   Email
@@ -116,7 +117,6 @@ const Signup = () => {
                   required
                 />
               </div>
-              
               <div className="space-y-2">
                 <label htmlFor="password" className="text-sm font-medium">
                   Password
@@ -130,7 +130,6 @@ const Signup = () => {
                   required
                 />
               </div>
-              
               <div className="space-y-2">
                 <label htmlFor="confirm-password" className="text-sm font-medium">
                   Confirm Password
@@ -144,12 +143,39 @@ const Signup = () => {
                   required
                 />
               </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Register as</label>
+                <div className="flex gap-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="student"
+                      checked={role === 'student'}
+                      onChange={() => setRole('student')}
+                      className="mr-2 accent-edu-primary"
+                    />
+                    Student
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="role"
+                      value="teacher"
+                      checked={role === 'teacher'}
+                      onChange={() => setRole('teacher')}
+                      className="mr-2 accent-edu-primary"
+                    />
+                    Teacher
+                  </label>
+                </div>
+              </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? 'Creating account...' : 'Create account'}
               </Button>
-              
+
               <div className="text-center text-sm">
                 Already have an account?{' '}
                 <a href="/login" className="text-edu-primary hover:underline font-medium">

@@ -9,7 +9,94 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar: string | null
+          email: string | null
+          id: string
+          joined_at: string | null
+          last_active: string | null
+          name: string
+          role: string
+        }
+        Insert: {
+          avatar?: string | null
+          email?: string | null
+          id: string
+          joined_at?: string | null
+          last_active?: string | null
+          name: string
+          role: string
+        }
+        Update: {
+          avatar?: string | null
+          email?: string | null
+          id?: string
+          joined_at?: string | null
+          last_active?: string | null
+          name?: string
+          role?: string
+        }
+        Relationships: []
+      }
+      student_profiles: {
+        Row: {
+          id: string
+          learning_style_strengths: Json | null
+          primary_learning_style: string | null
+          secondary_learning_style: string | null
+        }
+        Insert: {
+          id: string
+          learning_style_strengths?: Json | null
+          primary_learning_style?: string | null
+          secondary_learning_style?: string | null
+        }
+        Update: {
+          id?: string
+          learning_style_strengths?: Json | null
+          primary_learning_style?: string | null
+          secondary_learning_style?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_profiles: {
+        Row: {
+          bio: string | null
+          id: string
+          subjects: string[] | null
+          years_experience: number | null
+        }
+        Insert: {
+          bio?: string | null
+          id: string
+          subjects?: string[] | null
+          years_experience?: number | null
+        }
+        Update: {
+          bio?: string | null
+          id?: string
+          subjects?: string[] | null
+          years_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_profiles_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

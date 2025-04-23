@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { StudentProfile } from '@/types';
@@ -57,39 +56,34 @@ export const useAuth = () => {
     }
   };
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+  // Update register to accept role
+  const register = async (name: string, email: string, password: string, role: 'student' | 'teacher' = 'student'): Promise<boolean> => {
     try {
+      // Store role in user_metadata, so trigger/SQL works correctly
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { name }
+          data: { name, role }
         }
       });
 
       if (error) throw error;
 
       if (data.user) {
-        const newProfile: StudentProfile = {
-          id: data.user.id,
-          name,
-          email,
-          avatar: '/placeholder.svg',
-          joinedAt: new Date().toISOString(),
-          lastActive: new Date().toISOString(),
-          performances: []
-        };
-
-        const { error: profileError } = await supabase
+        // let database trigger set up the profiles row, so fetch it
+        const { data: profile } = await supabase
           .from('profiles')
-          .insert([newProfile]);
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
 
-        if (profileError) throw profileError;
-
-        setCurrentUser(newProfile);
-        setIsAuthenticated(true);
-        setIsTeacher(false);
-        return true;
+        if (profile) {
+          setCurrentUser(profile as StudentProfile);
+          setIsAuthenticated(true);
+          setIsTeacher(role === 'teacher');
+          return true;
+        }
       }
       return false;
     } catch (error) {
