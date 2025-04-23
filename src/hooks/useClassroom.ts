@@ -1,8 +1,9 @@
+
 import { useState, useEffect } from "react";
 import { Classroom } from "@/types";
 import { useAppContext } from "@/context/AppContext";
 import { fetchClassrooms } from "./useSupabaseClassroomService";
-import { generateMockClassrooms } from "./useClassroomMockUtils";
+import { generateMockAssignments, generateMockClassrooms } from "./useClassroomMockUtils";
 
 export const useClassroom = () => {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
