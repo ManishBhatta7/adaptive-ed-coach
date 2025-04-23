@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { StudentProfile } from '@/types';
@@ -56,7 +57,6 @@ export const useAuth = () => {
     }
   };
 
-  // Update register to accept role
   const register = async (name: string, email: string, password: string, role: 'student' | 'teacher' = 'student'): Promise<boolean> => {
     try {
       // Store role in user_metadata, so trigger/SQL works correctly
