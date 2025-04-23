@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { Classroom, Assignment } from '@/types';
+import { Classroom, Assignment, SubjectArea } from '@/types';
 import { supabase } from '@/lib/supabase';
 import { useAppContext } from '@/context/AppContext';
 
@@ -9,16 +8,13 @@ export const useClassroom = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { state } = useAppContext();
 
-  // Initialize with mock data for development
   useEffect(() => {
     if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-      // Only set mock data if authenticated and we don't have classrooms yet
       if (state.isAuthenticated && state.currentUser && classrooms.length === 0) {
         const mockClassrooms = generateMockClassrooms(state.currentUser.id, state.isTeacher);
         setClassrooms(mockClassrooms);
       }
     } else {
-      // Load classrooms from Supabase when authenticated
       if (state.isAuthenticated && state.currentUser) {
         fetchClassrooms(state.currentUser.id, state.isTeacher);
       }
@@ -48,7 +44,6 @@ export const useClassroom = () => {
         return;
       }
       
-      // TODO: Implement actual data conversion
       console.log('Fetched classrooms:', data);
     } catch (error) {
       console.error('Error in fetchClassrooms:', error);
@@ -58,19 +53,15 @@ export const useClassroom = () => {
   };
 
   const joinClassroom = async (joinCode: string): Promise<boolean> => {
-    // Check if we're using the mock client
     if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
       console.warn('Using mock classroom service (no Supabase credentials)');
       
-      // Check if classroom with this join code exists
       const existingClassroom = classrooms.find(c => c.joinCode === joinCode);
       
       if (existingClassroom) {
-        // Already joined this classroom
         return true;
       }
       
-      // Create a mock classroom for testing
       const mockClassroom: Classroom = {
         id: `mock-classroom-${Date.now()}`,
         name: `Class ${joinCode}`,
@@ -86,11 +77,9 @@ export const useClassroom = () => {
       return true;
     }
     
-    // Find classroom with join code
     const classroom = classrooms.find(c => c.joinCode === joinCode);
     
     if (classroom) {
-      // Update classrooms state with the joined classroom
       setClassrooms(prevClassrooms =>
         prevClassrooms.map(c => {
           if (c.id === classroom.id) {
@@ -112,10 +101,9 @@ export const useClassroom = () => {
     teacherId: string,
     description?: string
   ): Promise<Classroom> => {
-    // Check if we're using the mock client
     if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
       console.warn('Using mock classroom service (no Supabase credentials)');
-      // Create a mock classroom for testing
+      
       const mockClassroom: Classroom = {
         id: `mock-classroom-${Date.now()}`,
         name,
@@ -146,7 +134,6 @@ export const useClassroom = () => {
     return newClassroom;
   };
 
-  // Helper function to generate mock classrooms
   const generateMockClassrooms = (userId: string, isTeacher: boolean): Classroom[] => {
     if (isTeacher) {
       return [
@@ -197,13 +184,13 @@ export const useClassroom = () => {
     }
   };
 
-  // Helper function to generate mock assignments
   const generateMockAssignments = (): Assignment[] => {
     return [
       {
         id: `assignment-${Date.now()}-1`,
         title: 'Weekly Problem Set',
         description: 'Complete the problem set from chapter 5',
+        subjectArea: SubjectArea.MATH,
         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
         createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
         maxScore: 100
@@ -212,6 +199,7 @@ export const useClassroom = () => {
         id: `assignment-${Date.now()}-2`,
         title: 'Research Paper',
         description: 'Write a 5-page paper on a topic of your choice',
+        subjectArea: SubjectArea.LITERATURE,
         dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
         createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
         maxScore: 100
