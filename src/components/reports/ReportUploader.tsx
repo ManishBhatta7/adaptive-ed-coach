@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,9 @@ import { useToast } from '@/components/ui/use-toast';
 import { useAppContext } from '@/context/AppContext';
 import { supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import ReportImagePreview from './ReportImagePreview';
+import ReportUploadInput from './ReportUploadInput';
+import ProcessingProgress from './ProcessingProgress';
 
 interface ReportUploaderProps {
   onProcessComplete: (data: Record<string, any>) => void;
@@ -163,49 +165,17 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
       <CardContent>
         <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 mb-4">
           {reportImageUrl ? (
-            <div className="w-full">
-              <img 
-                src={reportImageUrl} 
-                alt="Report Card Preview" 
-                className="max-h-64 mx-auto object-contain rounded-md shadow-sm" 
-              />
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="mt-4"
-                onClick={() => {
-                  setReportImage(null);
-                  setReportImageUrl(null);
-                  setUploadError(null);
-                }}
-              >
-                Remove image
-              </Button>
-            </div>
+            <ReportImagePreview 
+              imageUrl={reportImageUrl}
+              onRemove={() => {
+                setReportImage(null);
+                setReportImageUrl(null);
+                setUploadError(null);
+              }}
+            />
           ) : (
-            <>
-              <Upload className="h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-sm text-gray-500 text-center mb-2">
-                Drag and drop your image here, or click to browse
-              </p>
-              <p className="text-xs text-gray-400 text-center mb-4">
-                Supports JPEG, PNG • Max size 5MB
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => document.getElementById('report-upload')?.click()}
-              >
-                Select File
-              </Button>
-            </>
+            <ReportUploadInput onSelectFile={handleFileChange} />
           )}
-          <input
-            id="report-upload"
-            type="file"
-            className="hidden"
-            accept="image/jpeg,image/png"
-            onChange={handleFileChange}
-          />
         </div>
         
         {uploadError && (
@@ -237,16 +207,7 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
         )}
         
         {isProcessing && (
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Processing...</span>
-              <span>{Math.round(progressValue)}%</span>
-            </div>
-            <Progress value={progressValue} className="h-2" />
-            <p className="text-xs text-center text-gray-500 mt-2">
-              Our AI is analyzing your report card
-            </p>
-          </div>
+          <ProcessingProgress progressValue={progressValue} />
         )}
       </CardContent>
     </Card>
