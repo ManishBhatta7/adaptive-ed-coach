@@ -59,6 +59,27 @@ export const useAuth = () => {
 
   const register = async (name: string, email: string, password: string, role: 'student' | 'teacher' = 'student'): Promise<boolean> => {
     try {
+      // For development when no Supabase credentials are available
+      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+        console.warn('Using mock authentication (no Supabase credentials)');
+        // Use a mock user for testing
+        const mockUser: StudentProfile = {
+          id: 'mock-user-id',
+          name,
+          email,
+          avatar: '/placeholder.svg',
+          joinedAt: new Date().toISOString(),
+          lastActive: new Date().toISOString(),
+          performances: []
+        };
+        setCurrentUser(mockUser);
+        setIsAuthenticated(true);
+        setIsTeacher(role === 'teacher');
+        return true;
+      }
+
+      console.log('Registering user with role:', role);
+
       // Store role in user_metadata, so trigger/SQL works correctly
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -68,9 +89,13 @@ export const useAuth = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Registration error:', error);
+        throw error;
+      }
 
       if (data.user) {
+        console.log('User created successfully:', data.user);
         // let database trigger set up the profiles row, so fetch it
         const { data: profile } = await supabase
           .from('profiles')

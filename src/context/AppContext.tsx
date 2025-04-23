@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,7 +14,7 @@ const initialState: AppState = {
 export const AppContext = createContext<{
   state: AppState;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, role?: 'student' | 'teacher') => Promise<boolean>;
   logout: () => Promise<void>;
   updateUserProfile: (profile: Partial<StudentProfile>) => void;
   joinClassroom: (joinCode: string) => Promise<boolean>;
@@ -44,7 +43,6 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { classrooms, joinClassroom, createClassroom } = useClassroom();
 
   useEffect(() => {
-    // Check for existing session on load
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {

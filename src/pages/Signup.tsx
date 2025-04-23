@@ -19,9 +19,11 @@ const Signup = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<'student' | 'teacher'>('student');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
 
     if (!name || !email || !password) {
       toast({
@@ -44,7 +46,7 @@ const Signup = () => {
     setIsLoading(true);
 
     try {
-      // Updated to pass role as the 4th argument
+      console.log(`Attempting to register with role: ${role}`);
       const success = await register(name, email, password, role);
 
       if (success) {
@@ -54,6 +56,7 @@ const Signup = () => {
         });
         navigate('/learning-style');
       } else {
+        setErrorMessage('Could not create your account. Please try again.');
         toast({
           title: 'Registration failed',
           description: 'Could not create your account. Please try again.',
@@ -61,6 +64,13 @@ const Signup = () => {
         });
       }
     } catch (error) {
+      console.error('Registration error details:', error);
+      if (error instanceof Error) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage('An unexpected error occurred during registration');
+      }
+      
       toast({
         title: 'Registration error',
         description: 'An error occurred during registration',
@@ -92,6 +102,11 @@ const Signup = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {errorMessage && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                  <span className="block sm:inline">{errorMessage}</span>
+                </div>
+              )}
               <div className="space-y-2">
                 <label htmlFor="name" className="text-sm font-medium">
                   Full Name
