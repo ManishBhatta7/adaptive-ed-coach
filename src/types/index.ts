@@ -1,4 +1,3 @@
-
 // Learning style types
 export enum LearningStyle {
   VISUAL = "visual",
@@ -196,4 +195,5 @@ export interface AppState {
   classrooms: Classroom[];
   isAuthenticated: boolean;
   isTeacher: boolean;
+  isLoading: boolean;
 }
