@@ -13,9 +13,10 @@ import ProcessingProgress from './ProcessingProgress';
 
 interface ReportUploaderProps {
   onProcessComplete: (data: Record<string, any>) => void;
+  disabled?: boolean;
 }
 
-const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
+const ReportUploader = ({ onProcessComplete, disabled = false }: ReportUploaderProps) => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { state } = useAppContext();
@@ -58,7 +59,6 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
   const processReport = async () => {
     if (!reportImage) return;
     
-    // Check authentication first
     if (!state.isAuthenticated || !state.currentUser) {
       setUploadError('You must be logged in to process reports');
       toast({
@@ -75,14 +75,12 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
     setUploadError(null);
     
     try {
-      // Get the current user's ID directly from the state
       const userId = state.currentUser?.id;
       
       if (!userId) {
         throw new Error('User ID not available');
       }
 
-      // First check if there's a valid session
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !sessionData.session) {
@@ -93,10 +91,8 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
       formData.append('file', reportImage);
       formData.append('userId', userId);
 
-      // Create a progress updater that simulates the analysis process
       const progressInterval = setInterval(() => {
         setProgressValue(prev => {
-          // More realistic progression that slows down at 70%
           if (prev < 70) {
             return prev + Math.random() * 10;
           } else if (prev < 90) {
@@ -107,12 +103,10 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
         });
       }, 300);
 
-      // Get the Supabase JWT token for authentication
       const authToken = sessionData.session.access_token;
       
       console.log('Auth token available:', !!authToken);
       
-      // Call the Supabase Edge Function with authentication
       const response = await fetch('https://gwarmogcmeehajnevbmi.supabase.co/functions/v1/analyze-report', {
         method: 'POST',
         headers: {
@@ -200,7 +194,7 @@ const ReportUploader = ({ onProcessComplete }: ReportUploaderProps) => {
           <Button 
             className="w-full" 
             onClick={processReport}
-            disabled={!state.isAuthenticated}
+            disabled={!state.isAuthenticated || disabled}
           >
             Process Report Card
           </Button>

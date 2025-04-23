@@ -156,6 +156,7 @@ export interface Assignment {
   dueDate: string;
   createdAt: string;
   attachments?: string[];
+  maxScore?: number;
 }
 
 export interface Submission {
