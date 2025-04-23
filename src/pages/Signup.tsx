@@ -44,7 +44,7 @@ const Signup = () => {
     setIsLoading(true);
 
     try {
-      // Pass role as a parameter to register
+      // Updated to pass role as the 4th argument
       const success = await register(name, email, password, role);
 
       if (success) {
