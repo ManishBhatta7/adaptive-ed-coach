@@ -375,3 +375,4 @@ const AcademicProgressTimeline = ({
 };
 
 export default AcademicProgressTimeline;
+

@@ -20,3 +20,4 @@ export interface ProgressTrend {
   timeSpan: string;
   subjectArea?: string;
 }
+
