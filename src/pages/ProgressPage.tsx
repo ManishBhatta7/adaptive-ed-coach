@@ -4,11 +4,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import MainLayout from '@/components/layout/MainLayout';
 import ProgressChart from '@/components/dashboard/ProgressChart';
+import AcademicProgressTimeline from '@/components/progress/AcademicProgressTimeline';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { SubjectArea } from '@/types';
-import { Upload } from 'lucide-react';
+import { Upload, LineChart, BarChart3 } from 'lucide-react';
 
 const ProgressPage = () => {
   const navigate = useNavigate();
@@ -60,23 +61,46 @@ const ProgressPage = () => {
         </div>
         
         <div className="mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Overall Performance</CardTitle>
-              <CardDescription>
-                Your progress across all subject areas
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[400px]">
-                <ProgressChart 
-                  performances={currentUser.performances}
-                  title="All Subjects Performance" 
-                  description="Track your scores across all academic areas"
-                />
-              </div>
-            </CardContent>
-          </Card>
+          <Tabs defaultValue="overview">
+            <TabsList>
+              <TabsTrigger value="overview" className="flex items-center">
+                <LineChart className="h-4 w-4 mr-2" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="timeline" className="flex items-center">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Progress Timeline
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="overview" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Overall Performance</CardTitle>
+                  <CardDescription>
+                    Your progress across all subject areas
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[400px]">
+                    <ProgressChart 
+                      performances={currentUser.performances}
+                      title="All Subjects Performance" 
+                      description="Track your scores across all academic areas"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="timeline" className="mt-6">
+              <AcademicProgressTimeline 
+                performances={currentUser.performances}
+                title="Academic Progress Over Time"
+                description="Track your performance trends and improvement over time"
+              />
+            </TabsContent>
+          </Tabs>
         </div>
         
         {uniqueSubjects.length > 0 ? (
