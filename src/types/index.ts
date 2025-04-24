@@ -8,6 +8,7 @@ export * from "./assignment";
 export * from "./classroom";
 export * from "./studentProfile";
 export * from "./appState";
+export * from "./coachingMode"; // Add this export
 
 // AI Coach modes (not grouped above)
 export enum CoachingMode {
