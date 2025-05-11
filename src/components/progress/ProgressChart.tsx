@@ -15,6 +15,10 @@ interface ProgressChartProps {
 }
 
 const ProgressChart = ({ data, uniqueSubjects, type, subjectColors }: ProgressChartProps) => {
+  const formatSubjectName = (subject: string) => {
+    return subject.toString().replace('_', ' ');
+  };
+
   if (type === 'line') {
     return (
       <ResponsiveContainer width="100%" height="100%">
@@ -25,8 +29,10 @@ const ProgressChart = ({ data, uniqueSubjects, type, subjectColors }: ProgressCh
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis dataKey="date" />
           <YAxis domain={[0, 100]} />
-          <RechartsTooltip />
-          <Legend />
+          <RechartsTooltip 
+            formatter={(value, name) => [`${value}%`, formatSubjectName(name)]}
+          />
+          <Legend formatter={(value) => formatSubjectName(value)} />
           {uniqueSubjects.map((subject) => (
             <Line
               key={subject}
@@ -34,7 +40,7 @@ const ProgressChart = ({ data, uniqueSubjects, type, subjectColors }: ProgressCh
               dataKey={subject}
               stroke={subjectColors[subject as SubjectArea]}
               activeDot={{ r: 8 }}
-              name={subject.toString().replace('_', ' ')}
+              name={formatSubjectName(subject.toString())}
             />
           ))}
         </RechartsLineChart>
@@ -51,14 +57,16 @@ const ProgressChart = ({ data, uniqueSubjects, type, subjectColors }: ProgressCh
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="date" />
         <YAxis domain={[0, 100]} />
-        <RechartsTooltip />
-        <Legend />
+        <RechartsTooltip 
+          formatter={(value, name) => [`${value}%`, formatSubjectName(name)]}
+        />
+        <Legend formatter={(value) => formatSubjectName(value)} />
         {uniqueSubjects.map((subject) => (
           <Bar
             key={subject}
             dataKey={subject}
             fill={subjectColors[subject as SubjectArea]}
-            name={subject.toString().replace('_', ' ')}
+            name={formatSubjectName(subject.toString())}
           />
         ))}
       </BarChart>

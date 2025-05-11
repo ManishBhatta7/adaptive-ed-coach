@@ -11,8 +11,22 @@ interface TrendCardProps {
 }
 
 const ProgressTrendCard = ({ title, trend }: TrendCardProps) => {
+  // Get feedback message in the appropriate language (placeholder for future translation)
+  const getFeedbackMessage = () => {
+    const displayTitle = title.replace('_', ' ');
+    
+    switch(trend.trendType) {
+      case 'improving':
+        return `You've shown great improvement in ${displayTitle}!`;
+      case 'declining':
+        return `Your performance in ${displayTitle} has decreased. Let's focus on this area.`;
+      case 'stable':
+        return `Your performance in ${displayTitle} has been consistent.`;
+    }
+  };
+  
   return (
-    <div className="border rounded-lg p-4">
+    <div className="border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex justify-between items-center mb-2">
         <h4 className="font-medium capitalize">{title.replace('_', ' ')}</h4>
         <div className={`flex items-center text-sm ${
@@ -34,14 +48,7 @@ const ProgressTrendCard = ({ title, trend }: TrendCardProps) => {
         <span>{trend.timeSpan}</span>
       </div>
       
-      <p className="text-sm">
-        {trend.trendType === 'improving' && 
-          `You've shown great improvement in ${title.replace('_', ' ')}!`}
-        {trend.trendType === 'declining' && 
-          `Your performance in ${title.replace('_', ' ')} has decreased. Let's focus on this area.`}
-        {trend.trendType === 'stable' && 
-          `Your performance in ${title.replace('_', ' ')} has been consistent.`}
-      </p>
+      <p className="text-sm">{getFeedbackMessage()}</p>
     </div>
   );
 };
