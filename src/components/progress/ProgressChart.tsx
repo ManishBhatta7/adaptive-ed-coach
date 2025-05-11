@@ -15,7 +15,8 @@ interface ProgressChartProps {
 }
 
 const ProgressChart = ({ data, uniqueSubjects, type, subjectColors }: ProgressChartProps) => {
-  const formatSubjectName = (subject: string) => {
+  // Updated to handle any input type
+  const formatSubjectName = (subject: string | number) => {
     return subject.toString().replace('_', ' ');
   };
 
@@ -30,9 +31,9 @@ const ProgressChart = ({ data, uniqueSubjects, type, subjectColors }: ProgressCh
           <XAxis dataKey="date" />
           <YAxis domain={[0, 100]} />
           <RechartsTooltip 
-            formatter={(value, name) => [`${value}%`, formatSubjectName(name)]}
+            formatter={(value, name) => [`${value}%`, formatSubjectName(name as string)]}
           />
-          <Legend formatter={(value) => formatSubjectName(value)} />
+          <Legend formatter={(value) => formatSubjectName(value as string)} />
           {uniqueSubjects.map((subject) => (
             <Line
               key={subject}
@@ -58,9 +59,9 @@ const ProgressChart = ({ data, uniqueSubjects, type, subjectColors }: ProgressCh
         <XAxis dataKey="date" />
         <YAxis domain={[0, 100]} />
         <RechartsTooltip 
-          formatter={(value, name) => [`${value}%`, formatSubjectName(name)]}
+          formatter={(value, name) => [`${value}%`, formatSubjectName(name as string)]}
         />
-        <Legend formatter={(value) => formatSubjectName(value)} />
+        <Legend formatter={(value) => formatSubjectName(value as string)} />
         {uniqueSubjects.map((subject) => (
           <Bar
             key={subject}

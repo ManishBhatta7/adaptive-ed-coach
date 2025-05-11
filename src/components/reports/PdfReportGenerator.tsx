@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useEffect, useState } from 'react';
-import * as jsPDF from 'jspdf';
+import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 interface PdfReportGeneratorProps {
@@ -18,7 +18,8 @@ const PdfReportGenerator = ({ studentName = 'Student', data, reportType }: PdfRe
   const [isJsPdfReady, setIsJsPdfReady] = useState(false);
 
   useEffect(() => {
-    if (typeof jsPDF === 'object') {
+    // Check if jsPDF is available
+    if (typeof jsPDF === 'function') {
       setIsJsPdfReady(true);
     }
   }, []);
@@ -36,7 +37,7 @@ const PdfReportGenerator = ({ studentName = 'Student', data, reportType }: PdfRe
     setIsGenerating(true);
     
     try {
-      const doc = new jsPDF.default();
+      const doc = new jsPDF();
       const timestamp = new Date().toLocaleString();
       
       doc.setFillColor(50, 100, 200);
@@ -81,14 +82,12 @@ const PdfReportGenerator = ({ studentName = 'Student', data, reportType }: PdfRe
         });
       }
       
-      // Fix: Get the final Y position of the table from the autotable plugin
-      // The jsPDF type definition doesn't include previousAutoTable, so we need to calculate Y position differently
       let yPosition = 120; // Default position if no table
       
-      // If the table was created, get its final Y position from the last call to autoTable
+      // If the table was created, get its final Y position
       if (reportType === 'report-card' && data.subjects) {
         // @ts-ignore - Access the property through doc object's internal state
-        const tableEndY = (doc as any).lastAutoTable?.finalY;
+        const tableEndY = doc.lastAutoTable?.finalY;
         if (tableEndY) {
           yPosition = tableEndY + 15;
         }
