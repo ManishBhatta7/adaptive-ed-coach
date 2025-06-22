@@ -3,21 +3,32 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { Book } from 'lucide-react';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import LoadingScreen from '@/components/loading/LoadingScreen';
+import { ValidatedInput } from '@/components/ui/validated-input';
+import { emailSchema } from '@/utils/validation';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, 'Password is required')
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const navigate = useNavigate();
   const { login, state } = useAppContext();
   const { toast } = useToast();
   
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState<LoginFormData>({
+    email: '',
+    password: ''
+  });
   
   // Redirect if already authenticated
   useEffect(() => {
@@ -25,24 +36,20 @@ const Login = () => {
       navigate('/dashboard');
     }
   }, [state.isAuthenticated, state.isLoading, navigate]);
-  
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast({
-        title: 'Missing information',
-        description: 'Please provide both email and password',
-        variant: 'destructive'
-      });
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      console.log('Attempting login with email:', email);
-      const success = await login(email, password);
+
+  const {
+    errors,
+    isSubmitting,
+    hasErrors,
+    validateField,
+    handleSubmit,
+    markTouched,
+    getFieldError
+  } = useFormValidation({
+    schema: loginSchema,
+    onSubmit: async (data) => {
+      console.log('Attempting login with email:', data.email);
+      const success = await login(data.email, data.password);
       
       if (success) {
         toast({
@@ -57,16 +64,21 @@ const Login = () => {
           variant: 'destructive'
         });
       }
-    } catch (error) {
-      console.error('Login error details:', error);
-      toast({
-        title: 'Login error',
-        description: error instanceof Error ? error.message : 'An error occurred during login',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoading(false);
     }
+  });
+
+  const handleInputChange = (field: keyof LoginFormData) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, [field]: value }));
+    validateField(field, value);
+  };
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    Object.keys(formData).forEach(key => markTouched(key));
+    handleSubmit(formData);
   };
   
   // If still checking authentication status, show a loading state
@@ -87,7 +99,7 @@ const Login = () => {
         </div>
         
         <Card>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={onSubmit}>
             <CardHeader>
               <CardTitle className="text-xl">Sign in</CardTitle>
               <CardDescription>
@@ -95,20 +107,28 @@ const Login = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
+              <ValidatedInput
+                id="email"
+                type="email"
+                label="Email"
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={handleInputChange('email')}
+                onBlur={() => markTouched('email')}
+                validator={(value) => {
+                  try {
+                    emailSchema.parse(value);
+                    return null;
+                  } catch (error) {
+                    if (error instanceof z.ZodError) {
+                      return error.errors[0]?.message || 'Invalid email';
+                    }
+                    return 'Invalid email';
+                  }
+                }}
+                required
+                disabled={isSubmitting}
+              />
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -119,20 +139,30 @@ const Login = () => {
                     Forgot password?
                   </a>
                 </div>
-                <Input
+                <ValidatedInput
                   id="password"
                   type="password"
                   placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formData.password}
+                  onChange={handleInputChange('password')}
+                  onBlur={() => markTouched('password')}
+                  validator={(value) => {
+                    if (!value) return 'Password is required';
+                    return null;
+                  }}
+                  showValidation={false} // Don't show validation for password on login
                   required
-                  disabled={isLoading}
+                  disabled={isSubmitting}
                 />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isSubmitting || hasErrors}
+              >
+                {isSubmitting ? (
                   <>
                     <LoadingSpinner size="sm" className="mr-2" />
                     Signing in...

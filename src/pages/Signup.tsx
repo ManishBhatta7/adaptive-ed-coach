@@ -3,51 +3,53 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { Book } from 'lucide-react';
+import { ValidatedInput } from '@/components/ui/validated-input';
+import { emailSchema, passwordSchema, nameSchema } from '@/utils/validation';
+import { useFormValidation } from '@/hooks/useFormValidation';
+import { z } from 'zod';
+
+const signupSchema = z.object({
+  name: nameSchema,
+  email: emailSchema,
+  password: passwordSchema,
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
+  role: z.enum(['student', 'teacher'])
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type SignupFormData = z.infer<typeof signupSchema>;
 
 const Signup = () => {
   const navigate = useNavigate();
   const { register } = useAppContext();
   const { toast } = useToast();
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<'student' | 'teacher'>('student');
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [formData, setFormData] = useState<SignupFormData>({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    role: 'student'
+  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage(null);
-
-    if (!name || !email || !password) {
-      toast({
-        title: 'Missing information',
-        description: 'Please fill in all required fields',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast({
-        title: 'Password mismatch',
-        description: 'Passwords do not match',
-        variant: 'destructive'
-      });
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      console.log(`Attempting to register with role: ${role}`);
-      const success = await register(name, email, password, role);
+  const {
+    errors,
+    isSubmitting,
+    hasErrors,
+    validateField,
+    handleSubmit,
+    markTouched,
+    getFieldError
+  } = useFormValidation({
+    schema: signupSchema,
+    onSubmit: async (data) => {
+      console.log(`Attempting to register with role: ${data.role}`);
+      const success = await register(data.name, data.email, data.password, data.role);
 
       if (success) {
         toast({
@@ -56,29 +58,32 @@ const Signup = () => {
         });
         navigate('/learning-style');
       } else {
-        setErrorMessage('Could not create your account. Please try again.');
         toast({
           title: 'Registration failed',
           description: 'Could not create your account. Please try again.',
           variant: 'destructive'
         });
       }
-    } catch (error) {
-      console.error('Registration error details:', error);
-      if (error instanceof Error) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage('An unexpected error occurred during registration');
-      }
-      
-      toast({
-        title: 'Registration error',
-        description: 'An error occurred during registration',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsLoading(false);
     }
+  });
+
+  const handleInputChange = (field: keyof SignupFormData) => (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, [field]: value }));
+    validateField(field, value);
+  };
+
+  const handleRoleChange = (role: 'student' | 'teacher') => {
+    setFormData(prev => ({ ...prev, role }));
+    validateField('role', role);
+  };
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    Object.keys(formData).forEach(key => markTouched(key));
+    handleSubmit(formData);
   };
 
   return (
@@ -94,7 +99,7 @@ const Signup = () => {
         </div>
 
         <Card>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={onSubmit}>
             <CardHeader>
               <CardTitle className="text-xl">Create an account</CardTitle>
               <CardDescription>
@@ -102,62 +107,91 @@ const Signup = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {errorMessage && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
-                  <span className="block sm:inline">{errorMessage}</span>
-                </div>
-              )}
-              <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium">
-                  Full Name
-                </label>
-                <Input
-                  id="name"
-                  placeholder="John Doe"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium">
-                  Password
-                </label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="confirm-password" className="text-sm font-medium">
-                  Confirm Password
-                </label>
-                <Input
-                  id="confirm-password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-              </div>
+              <ValidatedInput
+                id="name"
+                label="Full Name"
+                placeholder="John Doe"
+                value={formData.name}
+                onChange={handleInputChange('name')}
+                onBlur={() => markTouched('name')}
+                validator={(value) => {
+                  try {
+                    nameSchema.parse(value);
+                    return null;
+                  } catch (error) {
+                    if (error instanceof z.ZodError) {
+                      return error.errors[0]?.message || 'Invalid name';
+                    }
+                    return 'Invalid name';
+                  }
+                }}
+                required
+                disabled={isSubmitting}
+              />
+
+              <ValidatedInput
+                id="email"
+                type="email"
+                label="Email"
+                placeholder="you@example.com"
+                value={formData.email}
+                onChange={handleInputChange('email')}
+                onBlur={() => markTouched('email')}
+                validator={(value) => {
+                  try {
+                    emailSchema.parse(value);
+                    return null;
+                  } catch (error) {
+                    if (error instanceof z.ZodError) {
+                      return error.errors[0]?.message || 'Invalid email';
+                    }
+                    return 'Invalid email';
+                  }
+                }}
+                required
+                disabled={isSubmitting}
+              />
+
+              <ValidatedInput
+                id="password"
+                type="password"
+                label="Password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleInputChange('password')}
+                onBlur={() => markTouched('password')}
+                validator={(value) => {
+                  try {
+                    passwordSchema.parse(value);
+                    return null;
+                  } catch (error) {
+                    if (error instanceof z.ZodError) {
+                      return error.errors[0]?.message || 'Invalid password';
+                    }
+                    return 'Invalid password';
+                  }
+                }}
+                required
+                disabled={isSubmitting}
+              />
+
+              <ValidatedInput
+                id="confirm-password"
+                type="password"
+                label="Confirm Password"
+                placeholder="••••••••"
+                value={formData.confirmPassword}
+                onChange={handleInputChange('confirmPassword')}
+                onBlur={() => markTouched('confirmPassword')}
+                validator={(value) => {
+                  if (!value) return 'Please confirm your password';
+                  if (value !== formData.password) return "Passwords don't match";
+                  return null;
+                }}
+                required
+                disabled={isSubmitting}
+              />
+
               <div className="space-y-2">
                 <label className="text-sm font-medium">Register as</label>
                 <div className="flex gap-4">
@@ -166,9 +200,10 @@ const Signup = () => {
                       type="radio"
                       name="role"
                       value="student"
-                      checked={role === 'student'}
-                      onChange={() => setRole('student')}
+                      checked={formData.role === 'student'}
+                      onChange={() => handleRoleChange('student')}
                       className="mr-2 accent-edu-primary"
+                      disabled={isSubmitting}
                     />
                     Student
                   </label>
@@ -177,9 +212,10 @@ const Signup = () => {
                       type="radio"
                       name="role"
                       value="teacher"
-                      checked={role === 'teacher'}
-                      onChange={() => setRole('teacher')}
+                      checked={formData.role === 'teacher'}
+                      onChange={() => handleRoleChange('teacher')}
                       className="mr-2 accent-edu-primary"
+                      disabled={isSubmitting}
                     />
                     Teacher
                   </label>
@@ -187,8 +223,12 @@ const Signup = () => {
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? 'Creating account...' : 'Create account'}
+              <Button 
+                type="submit" 
+                className="w-full" 
+                disabled={isSubmitting || hasErrors}
+              >
+                {isSubmitting ? 'Creating account...' : 'Create account'}
               </Button>
 
               <div className="text-center text-sm">
