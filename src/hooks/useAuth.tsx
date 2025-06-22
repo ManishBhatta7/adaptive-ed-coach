@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import { StudentProfile, LearningStyle } from '@/types';
+import { StudentProfile, LearningStyle, SubjectArea } from '@/types';
 
 export const useAuth = () => {
   const [currentUser, setCurrentUser] = useState<StudentProfile | undefined>(undefined);
@@ -134,7 +135,7 @@ export const useAuth = () => {
         {
           id: 'perf-1',
           date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          subjectArea: 'mathematics',
+          subjectArea: SubjectArea.MATH,
           title: 'Math Quiz',
           score: 85,
           feedback: 'Good work on algebra!',
@@ -145,7 +146,7 @@ export const useAuth = () => {
         {
           id: 'perf-2',
           date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-          subjectArea: 'science',
+          subjectArea: SubjectArea.SCIENCE,
           title: 'Science Report',
           score: 90,
           feedback: 'Excellent analysis!',
