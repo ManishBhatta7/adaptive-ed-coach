@@ -11,6 +11,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { MessageSquare, Upload, Book, Users } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import LoadingScreen from '@/components/loading/LoadingScreen';
+import ErrorBoundary from '@/components/error/ErrorBoundary';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -33,26 +35,7 @@ const Dashboard = () => {
   if (isLoading) {
     return (
       <MainLayout>
-        <div className="container px-4 py-8">
-          <div className="flex flex-col md:flex-row items-start justify-between mb-8 gap-4">
-            <div>
-              <Skeleton className="h-10 w-64 mb-2" />
-              <Skeleton className="h-5 w-48" />
-            </div>
-            <div className="flex space-x-3">
-              <Skeleton className="h-10 w-36" />
-              <Skeleton className="h-10 w-40" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div className="lg:col-span-1">
-              <Skeleton className="h-60 w-full" />
-            </div>
-            <div className="lg:col-span-2">
-              <Skeleton className="h-60 w-full" />
-            </div>
-          </div>
-        </div>
+        <LoadingScreen message="Loading your dashboard..." />
       </MainLayout>
     );
   }
@@ -90,19 +73,25 @@ const Dashboard = () => {
           </div>
         </div>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <div className="lg:col-span-1">
-            <LearningStyleSummary 
-              primaryStyle={currentUser.primaryLearningStyle}
-              secondaryStyle={currentUser.secondaryLearningStyle}
-              styleStrengths={currentUser.learningStyleStrengths}
-            />
+        <ErrorBoundary fallback={
+          <div className="text-center p-8">
+            <p className="text-gray-600">Unable to load learning style summary. Please refresh the page.</p>
           </div>
-          
-          <div className="lg:col-span-2">
-            <ProgressChart performances={currentUser.performances || []} />
+        }>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+            <div className="lg:col-span-1">
+              <LearningStyleSummary 
+                primaryStyle={currentUser.primaryLearningStyle}
+                secondaryStyle={currentUser.secondaryLearningStyle}
+                styleStrengths={currentUser.learningStyleStrengths}
+              />
+            </div>
+            
+            <div className="lg:col-span-2">
+              <ProgressChart performances={currentUser.performances || []} />
+            </div>
           </div>
-        </div>
+        </ErrorBoundary>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <Card>
@@ -138,13 +127,27 @@ const Dashboard = () => {
               <CardDescription>Your latest submissions and feedback</CardDescription>
             </CardHeader>
             <CardContent>
-              <RecentSubmissions performances={currentUser.performances || []} />
+              <ErrorBoundary fallback={
+                <div className="text-center p-4">
+                  <p className="text-gray-600">Unable to load recent submissions.</p>
+                </div>
+              }>
+                <RecentSubmissions performances={currentUser.performances || []} />
+              </ErrorBoundary>
             </CardContent>
           </Card>
         </div>
         
         <div className="mb-8">
-          <OpenAITest />
+          <ErrorBoundary fallback={
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-center text-gray-600">OpenAI test component unavailable.</p>
+              </CardContent>
+            </Card>
+          }>
+            <OpenAITest />
+          </ErrorBoundary>
         </div>
       </div>
     </MainLayout>
