@@ -57,20 +57,26 @@ const SubmissionForm = ({ onSubmit }: SubmissionFormProps) => {
   } = useFormValidation({
     schema: submissionSchema,
     onSubmit: async (data) => {
-      onSubmit({
-        ...data,
-        file
-      });
-      
-      // Reset form
-      setFormData({
-        title: '',
-        content: '',
-        subjectArea: SubjectArea.OTHER,
-        coachingMode: CoachingMode.QUICK_FEEDBACK
-      });
-      setFile(undefined);
-      setFileError(null);
+      // Ensure all required fields are present before calling onSubmit
+      if (data.title && data.content && data.subjectArea && data.coachingMode) {
+        onSubmit({
+          title: data.title,
+          content: data.content,
+          subjectArea: data.subjectArea,
+          coachingMode: data.coachingMode,
+          file
+        });
+        
+        // Reset form
+        setFormData({
+          title: '',
+          content: '',
+          subjectArea: SubjectArea.OTHER,
+          coachingMode: CoachingMode.QUICK_FEEDBACK
+        });
+        setFile(undefined);
+        setFileError(null);
+      }
     }
   });
 

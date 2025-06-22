@@ -22,16 +22,18 @@ export const useFormValidation = <T extends Record<string, any>>({
 
   const validateField = useCallback((name: string, value: any) => {
     try {
-      // Create a partial schema for the specific field
-      const fieldSchema = schema.shape[name as keyof typeof schema.shape];
-      if (fieldSchema) {
-        fieldSchema.parse(value);
-        setErrors(prev => {
-          const newErrors = { ...prev };
-          delete newErrors[name];
-          return newErrors;
-        });
-        return null;
+      // For object schemas, extract the field schema
+      if (schema instanceof z.ZodObject) {
+        const fieldSchema = schema.shape[name as keyof typeof schema.shape];
+        if (fieldSchema) {
+          fieldSchema.parse(value);
+          setErrors(prev => {
+            const newErrors = { ...prev };
+            delete newErrors[name];
+            return newErrors;
+          });
+          return null;
+        }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
