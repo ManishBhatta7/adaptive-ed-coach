@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { StudentProfile } from '@/types';
+import { StudentProfile, SubjectArea } from '@/types';
 import { 
   generateEdgeCaseStudentProfiles, 
   generateBulkTestData,
@@ -52,7 +52,7 @@ export const useTestDataMode = () => {
         profile.performances = Array.from({ length: 100 }, (_, i) => ({
           id: `stress-${i}`,
           date: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-          subjectArea: 'math' as const,
+          subjectArea: SubjectArea.MATH,
           title: `Stress Test Performance ${i}`,
           score: rng.randomInt(0, 100),
           feedback: 'Generated for stress testing. '.repeat(10),
@@ -97,7 +97,7 @@ export const useTestDataMode = () => {
         : 'This is a test submission generated for edge case testing. '.repeat(
             testMode.scenario === 'stress-test' ? 50 : 5
           ),
-      subjectArea: 'math' as const,
+      subjectArea: SubjectArea.MATH,
       coachingMode: 'quick_feedback' as const
     };
   };
