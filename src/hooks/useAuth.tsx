@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import { StudentProfile } from '@/types';
+import { StudentProfile, LearningStyle } from '@/types';
 
 export const useAuth = () => {
   const [currentUser, setCurrentUser] = useState<StudentProfile | undefined>(undefined);
@@ -120,27 +119,39 @@ export const useAuth = () => {
       joinedAt: new Date().toISOString(),
       lastActive: new Date().toISOString(),
       role: role as 'student' | 'teacher',
-      primaryLearningStyle: 'visual',
-      secondaryLearningStyle: 'auditory',
-      learningStyleStrengths: { visual: 80, auditory: 60, reading: 40, kinesthetic: 30 },
+      primaryLearningStyle: LearningStyle.VISUAL,
+      secondaryLearningStyle: LearningStyle.AUDITORY,
+      learningStyleStrengths: { 
+        [LearningStyle.VISUAL]: 80, 
+        [LearningStyle.AUDITORY]: 60, 
+        [LearningStyle.READING_WRITING]: 40, 
+        [LearningStyle.KINESTHETIC]: 30,
+        [LearningStyle.LOGICAL]: 50,
+        [LearningStyle.SOCIAL]: 45,
+        [LearningStyle.SOLITARY]: 35
+      },
       performances: [
         {
           id: 'perf-1',
+          date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+          subjectArea: 'mathematics',
           title: 'Math Quiz',
           score: 85,
-          maxScore: 100, 
           feedback: 'Good work on algebra!',
-          submittedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          type: 'quiz'
+          strengths: ['Problem solving', 'Algebraic thinking'],
+          weaknesses: ['Time management'],
+          recommendations: ['Practice more complex problems']
         },
         {
           id: 'perf-2',
+          date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+          subjectArea: 'science',
           title: 'Science Report',
           score: 90,
-          maxScore: 100,
           feedback: 'Excellent analysis!',
-          submittedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-          type: 'assignment'
+          strengths: ['Research skills', 'Critical thinking'],
+          weaknesses: ['Presentation format'],
+          recommendations: ['Work on visual presentation']
         }
       ]
     };
