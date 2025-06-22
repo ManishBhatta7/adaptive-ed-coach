@@ -1,156 +1,208 @@
 
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
-import MainLayout from '@/components/layout/MainLayout';
-import LearningStyleSummary from '@/components/dashboard/LearningStyleSummary';
+import { useTestDataMode } from '@/hooks/useTestDataMode';
 import ProgressChart from '@/components/dashboard/ProgressChart';
 import RecentSubmissions from '@/components/dashboard/RecentSubmissions';
-import OpenAITest from '@/components/OpenAITest';
+import LearningStyleSummary from '@/components/dashboard/LearningStyleSummary';
+import TestDataControls from '@/components/debug/TestDataControls';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, Upload, Book, Users } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import LoadingScreen from '@/components/loading/LoadingScreen';
-import ErrorBoundary from '@/components/error/ErrorBoundary';
+import { BookOpen, FileText, TrendingUp, Users } from 'lucide-react';
 
 const Dashboard = () => {
-  const navigate = useNavigate();
   const { state } = useAppContext();
-  const { currentUser, isAuthenticated, isLoading } = state;
-  
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isAuthenticated, isLoading, navigate]);
-  
-  const getWelcomeMessage = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
-  
+  const { testMode } = useTestDataMode();
+  const { currentUser, isLoading } = state;
+
+  // Use test data if available, otherwise use real user data
+  const displayUser = testMode.enabled && testMode.studentProfile ? testMode.studentProfile : currentUser;
+
   if (isLoading) {
     return (
-      <MainLayout>
-        <LoadingScreen message="Loading your dashboard..." />
-      </MainLayout>
-    );
-  }
-  
-  if (!isAuthenticated || !currentUser) {
-    return null;
-  }
-  
-  return (
-    <MainLayout>
-      <div className="container px-4 py-8">
-        <div className="flex flex-col md:flex-row items-start justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {getWelcomeMessage()}, {currentUser.name.split(' ')[0]}
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Here's an overview of your learning journey
-            </p>
-          </div>
-          
-          <div className="flex space-x-3">
-            <Button asChild variant="outline">
-              <a href="/classrooms">
-                <Users className="h-4 w-4 mr-2" />
-                My Classrooms
-              </a>
-            </Button>
-            <Button asChild>
-              <a href="/submit">
-                <Upload className="h-4 w-4 mr-2" />
-                Submit Assignment
-              </a>
-            </Button>
-          </div>
-        </div>
-        
-        <ErrorBoundary fallback={
-          <div className="text-center p-8">
-            <p className="text-gray-600">Unable to load learning style summary. Please refresh the page.</p>
-          </div>
-        }>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-            <div className="lg:col-span-1">
-              <LearningStyleSummary 
-                primaryStyle={currentUser.primaryLearningStyle}
-                secondaryStyle={currentUser.secondaryLearningStyle}
-                styleStrengths={currentUser.learningStyleStrengths}
-              />
-            </div>
-            
-            <div className="lg:col-span-2">
-              <ProgressChart performances={currentUser.performances || []} />
-            </div>
-          </div>
-        </ErrorBoundary>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Common tasks you can perform</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button asChild variant="outline" className="w-full justify-start">
-                <a href="/submit">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Submit New Assignment
-                </a>
-              </Button>
-              <Button asChild variant="outline" className="w-full justify-start">
-                <a href="/learning-style">
-                  <Book className="h-4 w-4 mr-2" />
-                  Review Learning Style
-                </a>
-              </Button>
-              <Button asChild variant="outline" className="w-full justify-start">
-                <a href="/notifications">
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Check Notifications
-                </a>
-              </Button>
-            </CardContent>
-          </Card>
-          
-          <Card className="md:col-span-2 lg:col-span-2">
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Your latest submissions and feedback</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ErrorBoundary fallback={
-                <div className="text-center p-4">
-                  <p className="text-gray-600">Unable to load recent submissions.</p>
-                </div>
-              }>
-                <RecentSubmissions performances={currentUser.performances || []} />
-              </ErrorBoundary>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <div className="mb-8">
-          <ErrorBoundary fallback={
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-center text-gray-600">OpenAI test component unavailable.</p>
-              </CardContent>
-            </Card>
-          }>
-            <OpenAITest />
-          </ErrorBoundary>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-edu-primary mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading dashboard...</p>
         </div>
       </div>
-    </MainLayout>
+    );
+  }
+
+  if (!displayUser) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-edu-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to AdaptiveEdCoach</h1>
+          <p className="text-gray-600 mb-6">Please log in to access your dashboard</p>
+          <Button asChild>
+            <a href="/login">Login</a>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-edu-background">
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome back, {displayUser.name || 'Student'}!
+          </h1>
+          <p className="text-gray-600">
+            Track your progress and continue your learning journey
+          </p>
+          {testMode.enabled && (
+            <div className="mt-2 px-3 py-1 bg-orange-100 text-orange-800 text-sm rounded-full inline-block">
+              Test Mode Active: {testMode.scenario}
+            </div>
+          )}
+        </div>
+
+        {/* Test Data Controls - Only show in development */}
+        {import.meta.env.DEV && (
+          <div className="mb-8">
+            <TestDataControls />
+          </div>
+        )}
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-edu-light rounded-lg">
+                  <FileText className="h-6 w-6 text-edu-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Submit Work</h3>
+                  <p className="text-sm text-gray-600">Upload assignments</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-edu-light rounded-lg">
+                  <TrendingUp className="h-6 w-6 text-edu-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">View Progress</h3>
+                  <p className="text-sm text-gray-600">Track performance</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-edu-light rounded-lg">
+                  <BookOpen className="h-6 w-6 text-edu-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Reading Practice</h3>
+                  <p className="text-sm text-gray-600">Voice analysis</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow cursor-pointer">
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-edu-light rounded-lg">
+                  <Users className="h-6 w-6 text-edu-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Classrooms</h3>
+                  <p className="text-sm text-gray-600">Join classes</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+          {/* Left Column - Progress Chart */}
+          <div className="xl:col-span-2">
+            <ProgressChart 
+              performances={displayUser.performances || []} 
+              title="Academic Progress"
+              description="Your performance across different subjects over time"
+            />
+          </div>
+
+          {/* Right Column - Learning Style Summary */}
+          <div>
+            <LearningStyleSummary
+              primaryStyle={displayUser.primaryLearningStyle}
+              secondaryStyle={displayUser.secondaryLearningStyle}
+              styleStrengths={displayUser.learningStyleStrengths}
+            />
+          </div>
+        </div>
+
+        {/* Recent Submissions */}
+        <div className="mt-8">
+          <RecentSubmissions 
+            performances={displayUser.performances || []} 
+            limit={5}
+          />
+        </div>
+
+        {/* Performance Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Total Submissions</CardTitle>
+              <CardDescription>All time</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-edu-primary">
+                {displayUser.performances?.length || 0}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Average Score</CardTitle>
+              <CardDescription>Last 10 submissions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-edu-primary">
+                {displayUser.performances?.length ? 
+                  Math.round(
+                    displayUser.performances
+                      .slice(-10)
+                      .filter(p => p.score !== undefined)
+                      .reduce((sum, p) => sum + (p.score || 0), 0) / 
+                    Math.max(1, displayUser.performances.slice(-10).filter(p => p.score !== undefined).length)
+                  ) : 0}%
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Active Subjects</CardTitle>
+              <CardDescription>Currently studying</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-edu-primary">
+                {displayUser.performances ? 
+                  new Set(displayUser.performances.map(p => p.subjectArea)).size : 0}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
   );
 };
 

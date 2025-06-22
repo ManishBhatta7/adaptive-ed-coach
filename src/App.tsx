@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppProvider } from "@/context/AppContext";
 import ErrorBoundary from "@/components/error/ErrorBoundary";
 import AsyncErrorBoundary from "@/components/error/AsyncErrorBoundary";
+import TestDataControls from "@/components/debug/TestDataControls";
 
 // Import all page components
 import Index from "./pages/Index";
@@ -48,6 +49,12 @@ const App = () => (
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            {/* Global Test Data Controls - Only in development */}
+            {import.meta.env.DEV && (
+              <div className="fixed bottom-4 right-4 z-50 max-w-sm">
+                <TestDataControls />
+              </div>
+            )}
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<Index />} />

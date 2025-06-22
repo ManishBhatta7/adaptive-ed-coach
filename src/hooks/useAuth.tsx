@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { StudentProfile, LearningStyle, SubjectArea } from '@/types';
+import { useTestDataMode } from '@/hooks/useTestDataMode';
 
 export const useAuth = () => {
   const [currentUser, setCurrentUser] = useState<StudentProfile | undefined>(undefined);
@@ -9,9 +10,20 @@ export const useAuth = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isTeacher, setIsTeacher] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const { testMode } = useTestDataMode();
 
   // Initialize auth state and set up listener
   useEffect(() => {
+    // If test mode is enabled and has a profile, use it instead of real auth
+    if (testMode.enabled && testMode.studentProfile) {
+      setCurrentUser(testMode.studentProfile);
+      setIsAuthenticated(true);
+      setIsTeacher(false);
+      setIsLoading(false);
+      console.log('Using test data profile:', testMode.studentProfile.name);
+      return;
+    }
+
     // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
@@ -106,7 +118,7 @@ export const useAuth = () => {
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [testMode.enabled, testMode.studentProfile]);
 
   // Mock authentication for development
   const mockAuth = (email: string, role: string = 'student') => {
