@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
@@ -119,7 +118,6 @@ export const useAuth = () => {
       avatar: '/placeholder.svg',
       joinedAt: new Date().toISOString(),
       lastActive: new Date().toISOString(),
-      role: role as 'student' | 'teacher',
       primaryLearningStyle: LearningStyle.VISUAL,
       secondaryLearningStyle: LearningStyle.AUDITORY,
       learningStyleStrengths: { 
