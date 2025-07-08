@@ -2,31 +2,33 @@
 import { Link } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Book, Upload, MessageSquare, Users, GraduationCap } from 'lucide-react';
+import { Book, Upload, MessageSquare, Users, GraduationCap, Target, BookOpen, Brain, TrendingUp } from 'lucide-react';
 
 const Index = () => {
   const { state } = useAppContext();
   const { isAuthenticated } = state;
   
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <header className="w-full py-4 px-6 flex justify-between items-center bg-white border-b">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
+      {/* Header */}
+      <header className="w-full py-4 px-6 flex justify-between items-center bg-white/80 backdrop-blur-sm border-b border-pink-100">
         <div className="flex items-center gap-2">
-          <Book className="h-6 w-6 text-edu-primary" />
-          <span className="text-xl font-bold">AdaptiveEdCoach</span>
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center">
+            <Book className="h-5 w-5 text-white" />
+          </div>
+          <span className="text-xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">AdaptiveEdCoach</span>
         </div>
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <Button asChild>
-              <Link to="/dashboard">Go to Dashboard</Link>
+            <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700" asChild>
+              <Link to="/dashboard">Dashboard</Link>
             </Button>
           ) : (
             <>
-              <Button variant="outline" asChild>
+              <Button variant="outline" className="border-pink-200 text-pink-600 hover:bg-pink-50" asChild>
                 <Link to="/login">Log in</Link>
               </Button>
-              <Button asChild>
+              <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700" asChild>
                 <Link to="/signup">Sign up</Link>
               </Button>
             </>
@@ -34,131 +36,215 @@ const Index = () => {
         </div>
       </header>
       
-      <section className="relative bg-edu-background py-20">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center">
-            <div className="md:w-1/2 mb-10 md:mb-0">
-              <h1 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
-                Personalized Learning for Odisha Students
-              </h1>
-              <p className="text-xl mb-8 text-gray-700 max-w-md">
-                Get AI-powered feedback tailored to Odisha state curriculum that adapts to your learning style and helps you excel in your studies.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" asChild>
-                  <Link to={isAuthenticated ? "/dashboard" : "/signup"}>
-                    Get Started
-                  </Link>
-                </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <Link to="/learning-style">
-                    Discover Your Learning Style
-                  </Link>
-                </Button>
+      {/* Hero Section */}
+      <section className="py-20 px-6">
+        <div className="container mx-auto text-center">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+            <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">LIVE & self-paced</span>
+            <br />
+            <span className="text-gray-800">AI coaching</span>
+          </h1>
+          
+          <h2 className="text-3xl md:text-4xl font-bold mb-8">
+            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">AI learning</span>
+            <span className="text-gray-800"> bootcamps</span>
+          </h2>
+          
+          <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
+            For (1) students, (2) teachers, (3) parents and (4) schools
+          </p>
+          
+          {/* Circular Icons */}
+          <div className="flex justify-center items-center mb-16">
+            <div className="relative">
+              {/* Center AI circle */}
+              <div className="w-32 h-32 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold text-2xl mx-auto mb-8">
+                AI
+                <br />
+                for all
+              </div>
+              
+              {/* Surrounding circles */}
+              <div className="absolute -top-12 -left-24 w-24 h-24 rounded-full bg-pink-200 flex flex-col items-center justify-center text-pink-800 text-sm font-medium">
+                <Users className="h-6 w-6 mb-1" />
+                Schools
+              </div>
+              <div className="absolute -top-12 -right-24 w-24 h-24 rounded-full bg-purple-200 flex flex-col items-center justify-center text-purple-800 text-sm font-medium">
+                <GraduationCap className="h-6 w-6 mb-1" />
+                Students
+              </div>
+              <div className="absolute -bottom-12 -left-24 w-24 h-24 rounded-full bg-blue-200 flex flex-col items-center justify-center text-blue-800 text-sm font-medium">
+                <BookOpen className="h-6 w-6 mb-1" />
+                Teachers
+              </div>
+              <div className="absolute -bottom-12 -right-24 w-24 h-24 rounded-full bg-green-200 flex flex-col items-center justify-center text-green-800 text-sm font-medium">
+                <Users className="h-6 w-6 mb-1" />
+                Parents
               </div>
             </div>
-            <div className="md:w-1/2 md:pl-10">
-              <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
-                <div className="mb-4 flex items-center text-edu-primary font-semibold">
-                  <GraduationCap className="mr-2 h-5 w-5" />
-                  <span>Odisha Education Enhancement</span>
+          </div>
+          
+          <p className="text-2xl font-bold text-gray-800 mb-4">Our singular mission: To make AI accessible for all!</p>
+          <p className="text-lg text-pink-600 font-medium mb-12">By experts in Adaptive Education</p>
+        </div>
+      </section>
+      
+      {/* For Students Section */}
+      <section className="py-16 bg-white/60 backdrop-blur-sm">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center gap-12">
+            <div className="md:w-1/2">
+              <div className="w-48 h-48 mx-auto bg-gradient-to-r from-pink-200 to-purple-200 rounded-full flex items-center justify-center mb-8">
+                <div className="text-center">
+                  <GraduationCap className="h-16 w-16 text-purple-600 mx-auto mb-2" />
+                  <p className="text-purple-800 font-bold text-lg">Student</p>
                 </div>
-                <h3 className="text-2xl font-bold mb-3">How It Helps Odisha Students</h3>
-                <ul className="space-y-4">
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-edu-light flex items-center justify-center text-edu-primary font-bold mr-3">1</div>
-                    <p>Aligned with Odisha state board curriculum and educational standards</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-edu-light flex items-center justify-center text-edu-primary font-bold mr-3">2</div>
-                    <p>Multi-language support including Odia, English, and Hindi</p>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-edu-light flex items-center justify-center text-edu-primary font-bold mr-3">3</div>
-                    <p>Designed to work with limited internet connectivity for rural areas</p>
-                  </li>
-                </ul>
+              </div>
+            </div>
+            <div className="md:w-1/2">
+              <h2 className="text-4xl font-bold text-gray-800 mb-6">For Students</h2>
+              <div className="space-y-4 mb-8">
+                <p className="flex items-start text-gray-700">
+                  <span className="text-pink-500 mr-2">→</span>
+                  We offer both LIVE and self-paced AI coaching sessions.
+                </p>
+                <p className="flex items-start text-gray-700">
+                  <span className="text-pink-500 mr-2">→</span>
+                  Our adaptive learning program that adjusts to your learning style.
+                </p>
+                <p className="flex items-start text-gray-700">
+                  <span className="text-pink-500 mr-2">→</span>
+                  Progress tracking and personalized feedback for better academic performance.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-4">
+                <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700" asChild>
+                  <Link to="/learning-style">Discover Learning Style</Link>
+                </Button>
+                <Button variant="outline" className="border-pink-200 text-pink-600 hover:bg-pink-50" asChild>
+                  <Link to="/progress">Track Progress</Link>
+                </Button>
               </div>
             </div>
           </div>
         </div>
       </section>
       
-      {/* Features Section */}
-      <section className="py-16 bg-white">
+      {/* For Teachers Section */}
+      <section className="py-16">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold mb-4">Supporting Odisha's Educational Goals</h2>
-            <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-              Our AI coach helps students achieve academic excellence while honoring Odisha's rich cultural heritage
-            </p>
+          <div className="flex flex-col md:flex-row-reverse items-center gap-12">
+            <div className="md:w-1/2">
+              <div className="w-48 h-48 mx-auto bg-gradient-to-r from-blue-200 to-cyan-200 rounded-full flex items-center justify-center mb-8">
+                <div className="text-center">
+                  <BookOpen className="h-16 w-16 text-blue-600 mx-auto mb-2" />
+                  <p className="text-blue-800 font-bold text-lg">Teacher</p>
+                </div>
+              </div>
+            </div>
+            <div className="md:w-1/2">
+              <h2 className="text-4xl font-bold text-gray-800 mb-6">For Teachers</h2>
+              <div className="space-y-4 mb-8">
+                <p className="flex items-start text-gray-700">
+                  <span className="text-blue-500 mr-2">→</span>
+                  Classroom management tools and student progress analytics.
+                </p>
+                <p className="flex items-start text-gray-700">
+                  <span className="text-blue-500 mr-2">→</span>
+                  AI-powered assignment creation and automated feedback generation.
+                </p>
+                <p className="flex items-start text-gray-700">
+                  <span className="text-blue-500 mr-2">→</span>
+                  Professional development resources for modern teaching methods.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-4">
+                <Button className="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700" asChild>
+                  <Link to="/classrooms">Manage Classrooms</Link>
+                </Button>
+                <Button variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50" asChild>
+                  <Link to="/assignments">Create Assignments</Link>
+                </Button>
+              </div>
+            </div>
           </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-edu-background p-6 rounded-lg">
-              <div className="w-12 h-12 rounded-lg bg-edu-light flex items-center justify-center mb-4">
-                <Book className="h-6 w-6 text-edu-primary" />
+        </div>
+      </section>
+      
+      {/* For Schools Section */}
+      <section className="py-16 bg-white/60 backdrop-blur-sm">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center gap-12">
+            <div className="md:w-1/2">
+              <div className="w-48 h-48 mx-auto bg-gradient-to-r from-green-200 to-emerald-200 rounded-full flex items-center justify-center mb-8">
+                <div className="text-center">
+                  <Users className="h-16 w-16 text-green-600 mx-auto mb-2" />
+                  <p className="text-green-800 font-bold text-lg">School</p>
+                </div>
               </div>
-              <h3 className="text-xl font-bold mb-3">State Board Curriculum</h3>
-              <p className="text-gray-700">
-                Content specially tailored to match the Odisha State Board curriculum requirements and exam patterns.
-              </p>
             </div>
-            
-            <div className="bg-edu-background p-6 rounded-lg">
-              <div className="w-12 h-12 rounded-lg bg-edu-light flex items-center justify-center mb-4">
-                <Upload className="h-6 w-6 text-edu-primary" />
+            <div className="md:w-1/2">
+              <h2 className="text-4xl font-bold text-gray-800 mb-6">For Schools</h2>
+              <div className="space-y-4 mb-8">
+                <p className="flex items-start text-gray-700">
+                  <span className="text-green-500 mr-2">→</span>
+                  Institution-wide analytics and performance insights.
+                </p>
+                <p className="flex items-start text-gray-700">
+                  <span className="text-green-500 mr-2">→</span>
+                  Curriculum alignment with Odisha state board standards.
+                </p>
+                <p className="flex items-start text-gray-700">
+                  <span className="text-green-500 mr-2">→</span>
+                  Teacher training programs and administrative tools.
+                </p>
               </div>
-              <h3 className="text-xl font-bold mb-3">Regional Focus</h3>
-              <p className="text-gray-700">
-                Examples and case studies relevant to Odisha's culture, geography, and economic context.
-              </p>
-            </div>
-            
-            <div className="bg-edu-background p-6 rounded-lg">
-              <div className="w-12 h-12 rounded-lg bg-edu-light flex items-center justify-center mb-4">
-                <MessageSquare className="h-6 w-6 text-edu-primary" />
+              <div className="flex flex-wrap gap-4">
+                <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700" asChild>
+                  <Link to="/dashboard">School Dashboard</Link>
+                </Button>
+                <Button variant="outline" className="border-green-200 text-green-600 hover:bg-green-50" asChild>
+                  <Link to="/settings">Settings</Link>
+                </Button>
               </div>
-              <h3 className="text-xl font-bold mb-3">Language Support</h3>
-              <p className="text-gray-700">
-                Multi-language support including Odia, ensuring all students can learn in their preferred language.
-              </p>
             </div>
           </div>
         </div>
       </section>
       
       {/* CTA Section */}
-      <section className="py-16 bg-edu-primary bg-opacity-10">
+      <section className="py-20 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600">
         <div className="container mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold mb-6">Ready to transform education in Odisha?</h2>
-          <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
-            Join students across Odisha who are using adaptive AI coaching to achieve academic excellence and prepare for a brighter future.
+          <h2 className="text-4xl font-bold text-white mb-6">Ready to transform education with AI?</h2>
+          <p className="text-xl text-pink-100 mb-8 max-w-2xl mx-auto">
+            Join educators and students who are using adaptive AI coaching to achieve academic excellence.
           </p>
-          <Button size="lg" asChild>
+          <Button size="lg" className="bg-white text-purple-600 hover:bg-gray-50 hover:text-purple-700 font-semibold px-8 py-4" asChild>
             <Link to={isAuthenticated ? "/dashboard" : "/signup"}>
-              Join the Revolution
+              Start Your AI Journey
             </Link>
           </Button>
         </div>
       </section>
       
       {/* Footer */}
-      <footer className="bg-white border-t py-12">
+      <footer className="bg-gray-900 text-white py-12">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row md:justify-between items-center">
             <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <Book className="h-6 w-6 text-edu-primary" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center">
+                <Book className="h-5 w-5 text-white" />
+              </div>
               <span className="text-xl font-bold">AdaptiveEdCoach</span>
             </div>
             <div className="flex gap-8">
-              <Link to="/about" className="text-gray-600 hover:text-edu-primary text-sm">About</Link>
-              <Link to="/contact" className="text-gray-600 hover:text-edu-primary text-sm">Contact</Link>
-              <Link to="/privacy" className="text-gray-600 hover:text-edu-primary text-sm">Privacy</Link>
-              <Link to="/terms" className="text-gray-600 hover:text-edu-primary text-sm">Terms</Link>
+              <Link to="/about" className="text-gray-300 hover:text-pink-400 text-sm">About</Link>
+              <Link to="/contact" className="text-gray-300 hover:text-pink-400 text-sm">Contact</Link>
+              <Link to="/privacy" className="text-gray-300 hover:text-pink-400 text-sm">Privacy</Link>
+              <Link to="/terms" className="text-gray-300 hover:text-pink-400 text-sm">Terms</Link>
             </div>
           </div>
-          <div className="text-center mt-8 text-sm text-gray-600">
+          <div className="text-center mt-8 text-sm text-gray-400">
             &copy; {new Date().getFullYear()} AdaptiveEdCoach. All rights reserved.
           </div>
         </div>
