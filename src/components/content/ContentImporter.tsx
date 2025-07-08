@@ -196,12 +196,12 @@ const ContentImporter = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="subject">Subject Area Filter</Label>
-              <Select onValueChange={(value) => setFilters(prev => ({ ...prev, subject_area: value }))}>
+              <Select onValueChange={(value) => setFilters(prev => ({ ...prev, subject_area: value === 'all' ? undefined : value }))}>
                 <SelectTrigger className="border-pink-200 focus:border-pink-500">
                   <SelectValue placeholder="All subjects" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All subjects</SelectItem>
+                  <SelectItem value="all">All subjects</SelectItem>
                   <SelectItem value="mathematics">Mathematics</SelectItem>
                   <SelectItem value="science">Science</SelectItem>
                   <SelectItem value="history">History</SelectItem>
@@ -212,12 +212,12 @@ const ContentImporter = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="grade">Grade Level Filter</Label>
-              <Select onValueChange={(value) => setFilters(prev => ({ ...prev, grade_level: value }))}>
+              <Select onValueChange={(value) => setFilters(prev => ({ ...prev, grade_level: value === 'all' ? undefined : value }))}>
                 <SelectTrigger className="border-pink-200 focus:border-pink-500">
                   <SelectValue placeholder="All grades" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All grades</SelectItem>
+                  <SelectItem value="all">All grades</SelectItem>
                   <SelectItem value="6th">6th Grade</SelectItem>
                   <SelectItem value="7th">7th Grade</SelectItem>
                   <SelectItem value="8th">8th Grade</SelectItem>
@@ -228,12 +228,12 @@ const ContentImporter = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="difficulty">Difficulty Level</Label>
-              <Select onValueChange={(value) => setFilters(prev => ({ ...prev, difficulty_level: value }))}>
+              <Select onValueChange={(value) => setFilters(prev => ({ ...prev, difficulty_level: value === 'all' ? undefined : value }))}>
                 <SelectTrigger className="border-pink-200 focus:border-pink-500">
                   <SelectValue placeholder="All levels" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All levels</SelectItem>
+                  <SelectItem value="all">All levels</SelectItem>
                   <SelectItem value="beginner">Beginner</SelectItem>
                   <SelectItem value="intermediate">Intermediate</SelectItem>
                   <SelectItem value="advanced">Advanced</SelectItem>
