@@ -2,35 +2,31 @@
 import { Link } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Book, Upload, MessageSquare, Users, GraduationCap, Target, BookOpen, TrendingUp, Star } from 'lucide-react';
+import { Book, Upload, MessageSquare, Users, GraduationCap } from 'lucide-react';
 
 const Index = () => {
   const { state } = useAppContext();
   const { isAuthenticated } = state;
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50">
-      {/* Header */}
-      <header className="w-full py-4 px-6 flex justify-between items-center bg-white/80 backdrop-blur-md border-b border-purple-100">
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <header className="w-full py-4 px-6 flex justify-between items-center bg-white border-b">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-            <Book className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            AdaptiveEdCoach
-          </span>
+          <Book className="h-6 w-6 text-edu-primary" />
+          <span className="text-xl font-bold">AdaptiveEdCoach</span>
         </div>
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" asChild>
+            <Button asChild>
               <Link to="/dashboard">Go to Dashboard</Link>
             </Button>
           ) : (
             <>
-              <Button variant="outline" className="border-purple-200 text-purple-600 hover:bg-purple-50" asChild>
+              <Button variant="outline" asChild>
                 <Link to="/login">Log in</Link>
               </Button>
-              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700" asChild>
+              <Button asChild>
                 <Link to="/signup">Sign up</Link>
               </Button>
             </>
@@ -38,211 +34,112 @@ const Index = () => {
         </div>
       </header>
       
-      {/* Hero Section */}
-      <section className="relative py-20">
+      <section className="relative bg-edu-background py-20">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h1 className="text-5xl md:text-7xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                LIVE & self-paced
-              </span>
-              <br />
-              <span className="text-gray-800">AI education</span>
-            </h1>
-            <h2 className="text-3xl md:text-4xl font-bold text-blue-600 mb-8">
-              AI learning bootcamps
-            </h2>
-            <p className="text-lg text-gray-600 mb-8">
-              For (1) college students, (2) industry professionals, (3) school students and (4) teachers
-            </p>
-            
-            {/* University Logos */}
-            <div className="flex justify-center items-center gap-8 mb-12 opacity-70">
-              <div className="text-red-600 font-bold text-sm">MIT</div>
-              <div className="text-yellow-600 font-bold text-sm">PURDUE</div>
-              <div className="text-blue-600 font-bold text-sm">IIT MADRAS</div>
-            </div>
-            
-            <div className="bg-white/80 backdrop-blur-md rounded-2xl p-8 shadow-xl border border-purple-100 max-w-md mx-auto mb-12">
-              <h3 className="text-xl font-bold text-purple-600 mb-4">Our singular mission:</h3>
-              <p className="text-lg font-semibold text-gray-800">To make AI accessible for all!</p>
-              <p className="text-sm text-purple-600 mt-2">By MIT, Purdue AI PhDs</p>
-            </div>
-            
-            {/* AI for All Diagram */}
-            <div className="relative max-w-2xl mx-auto mb-16">
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20 rounded-full blur-3xl"></div>
-              <div className="relative grid grid-cols-3 gap-8 items-center">
-                <div className="space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mx-auto">
-                    <GraduationCap className="h-8 w-8 text-white" />
-                  </div>
-                  <p className="text-sm font-medium text-purple-600">Schools</p>
-                </div>
-                
-                <div className="text-center">
-                  <div className="text-6xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                    AI
-                  </div>
-                  <p className="text-lg font-medium text-gray-600">for all</p>
-                </div>
-                
-                <div className="space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full flex items-center justify-center mx-auto">
-                    <Users className="h-8 w-8 text-white" />
-                  </div>
-                  <p className="text-sm font-medium text-blue-600">Colleges</p>
-                </div>
+          <div className="flex flex-col md:flex-row items-center">
+            <div className="md:w-1/2 mb-10 md:mb-0">
+              <h1 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
+                Personalized Learning for Odisha Students
+              </h1>
+              <p className="text-xl mb-8 text-gray-700 max-w-md">
+                Get AI-powered feedback tailored to Odisha state curriculum that adapts to your learning style and helps you excel in your studies.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" asChild>
+                  <Link to={isAuthenticated ? "/dashboard" : "/signup"}>
+                    Get Started
+                  </Link>
+                </Button>
+                <Button variant="outline" size="lg" asChild>
+                  <Link to="/learning-style">
+                    Discover Your Learning Style
+                  </Link>
+                </Button>
               </div>
-              
-              <div className="grid grid-cols-2 gap-8 mt-8">
-                <div className="space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center mx-auto">
-                    <BookOpen className="h-8 w-8 text-white" />
-                  </div>
-                  <p className="text-sm font-medium text-green-600">School teachers</p>
+            </div>
+            <div className="md:w-1/2 md:pl-10">
+              <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
+                <div className="mb-4 flex items-center text-edu-primary font-semibold">
+                  <GraduationCap className="mr-2 h-5 w-5" />
+                  <span>Odisha Education Enhancement</span>
                 </div>
-                
-                <div className="space-y-4">
-                  <div className="w-20 h-20 bg-gradient-to-r from-orange-400 to-red-400 rounded-full flex items-center justify-center mx-auto">
-                    <TrendingUp className="h-8 w-8 text-white" />
-                  </div>
-                  <p className="text-sm font-medium text-orange-600">Industry professionals</p>
-                </div>
+                <h3 className="text-2xl font-bold mb-3">How It Helps Odisha Students</h3>
+                <ul className="space-y-4">
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-edu-light flex items-center justify-center text-edu-primary font-bold mr-3">1</div>
+                    <p>Aligned with Odisha state board curriculum and educational standards</p>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-edu-light flex items-center justify-center text-edu-primary font-bold mr-3">2</div>
+                    <p>Multi-language support including Odia, English, and Hindi</p>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-edu-light flex items-center justify-center text-edu-primary font-bold mr-3">3</div>
+                    <p>Designed to work with limited internet connectivity for rural areas</p>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
         </div>
       </section>
       
-      {/* Target Audience Sections */}
-      <section className="py-16">
+      {/* Features Section */}
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-6">
-          {/* College Students */}
-          <div className="mb-20">
-            <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">For college students</h2>
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="text-center">
-                <div className="w-32 h-32 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <GraduationCap className="h-16 w-16 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">College student</h3>
-                <div className="space-y-4">
-                  <Button 
-                    variant="outline" 
-                    className="border-purple-300 text-purple-600 hover:bg-purple-50 rounded-full px-8"
-                    asChild
-                  >
-                    <Link to="/learning-style">LIVE courses</Link>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="border-pink-300 text-pink-600 hover:bg-pink-50 rounded-full px-8"
-                    asChild
-                  >
-                    <Link to="/assignments">Scientific ML</Link>
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <p className="text-lg">➜ We offer both LIVE and self-paced AI/ML courses.</p>
-                <p className="text-lg">➜ Our popular SciML researcher program for publishing impactful research papers at conferences like ICML, NeurIPS, etc.</p>
-                <p className="text-lg">➜ Videsh is our grad-school (MS/PhD) application program.</p>
-                <p className="text-sm text-gray-600 mt-6">
-                  Click one of the buttons below to take you to the respective program page.
-                </p>
-                <div className="grid grid-cols-2 gap-4 mt-6">
-                  <Button className="bg-blue-600 hover:bg-blue-700" asChild>
-                    <Link to="/learning-style">LIVE AI/ML courses</Link>
-                  </Button>
-                  <Button variant="outline" className="border-blue-300 text-blue-600" asChild>
-                    <Link to="/submit">Self-paced courses</Link>
-                  </Button>
-                  <Button className="bg-purple-600 hover:bg-purple-700" asChild>
-                    <Link to="/progress">SciML bootcamp</Link>
-                  </Button>
-                  <Button variant="outline" className="border-purple-300 text-purple-600" asChild>
-                    <Link to="/classrooms">MS/PhD application</Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold mb-4">Supporting Odisha's Educational Goals</h2>
+            <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+              Our AI coach helps students achieve academic excellence while honoring Odisha's rich cultural heritage
+            </p>
           </div>
           
-          {/* Industry Professionals */}
-          <div className="mb-20">
-            <h2 className="text-4xl font-bold text-center mb-12 text-gray-800">For industry professionals</h2>
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="space-y-4">
-                <p className="text-lg">➜ We offer both LIVE and self-paced AI/ML courses.</p>
-                <p className="text-lg">➜ Our popular SciML researcher program for publishing impactful research papers at conferences like ICML, NeurIPS, etc.</p>
-                <p className="text-lg">➜ Videsh is our grad-school (MS/PhD) application program.</p>
-                <p className="text-sm text-gray-600 mt-6">
-                  Click one of the buttons below to take you to the respective program page.
-                </p>
-                <div className="grid grid-cols-2 gap-4 mt-6">
-                  <Button className="bg-green-600 hover:bg-green-700" asChild>
-                    <Link to="/essay-checker">LIVE AI/ML courses</Link>
-                  </Button>
-                  <Button variant="outline" className="border-green-300 text-green-600" asChild>
-                    <Link to="/reading">Self-paced courses</Link>
-                  </Button>
-                  <Button className="bg-orange-600 hover:bg-orange-700" asChild>
-                    <Link to="/answer-sheet">SciML bootcamp</Link>
-                  </Button>
-                  <Button variant="outline" className="border-orange-300 text-orange-600" asChild>
-                    <Link to="/report-upload">MS/PhD application</Link>
-                  </Button>
-                </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-edu-background p-6 rounded-lg">
+              <div className="w-12 h-12 rounded-lg bg-edu-light flex items-center justify-center mb-4">
+                <Book className="h-6 w-6 text-edu-primary" />
               </div>
-              
-              <div className="text-center">
-                <div className="w-32 h-32 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <TrendingUp className="h-16 w-16 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-4">Industry professional</h3>
-                <div className="space-y-4">
-                  <Button 
-                    variant="outline" 
-                    className="border-green-300 text-green-600 hover:bg-green-50 rounded-full px-8"
-                    asChild
-                  >
-                    <Link to="/dashboard">Professional Track</Link>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="border-blue-300 text-blue-600 hover:bg-blue-50 rounded-full px-8"
-                    asChild
-                  >
-                    <Link to="/notifications">Career Boost</Link>
-                  </Button>
-                </div>
+              <h3 className="text-xl font-bold mb-3">State Board Curriculum</h3>
+              <p className="text-gray-700">
+                Content specially tailored to match the Odisha State Board curriculum requirements and exam patterns.
+              </p>
+            </div>
+            
+            <div className="bg-edu-background p-6 rounded-lg">
+              <div className="w-12 h-12 rounded-lg bg-edu-light flex items-center justify-center mb-4">
+                <Upload className="h-6 w-6 text-edu-primary" />
               </div>
+              <h3 className="text-xl font-bold mb-3">Regional Focus</h3>
+              <p className="text-gray-700">
+                Examples and case studies relevant to Odisha's culture, geography, and economic context.
+              </p>
+            </div>
+            
+            <div className="bg-edu-background p-6 rounded-lg">
+              <div className="w-12 h-12 rounded-lg bg-edu-light flex items-center justify-center mb-4">
+                <MessageSquare className="h-6 w-6 text-edu-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Language Support</h3>
+              <p className="text-gray-700">
+                Multi-language support including Odia, ensuring all students can learn in their preferred language.
+              </p>
             </div>
           </div>
         </div>
       </section>
       
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-purple-600 to-pink-600">
+      <section className="py-16 bg-edu-primary bg-opacity-10">
         <div className="container mx-auto px-6 text-center">
-          <h2 className="text-3xl font-bold mb-6 text-white">Ready to start your AI learning journey?</h2>
-          <p className="text-lg text-purple-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of students and professionals who are advancing their careers with AI education designed for everyone.
+          <h2 className="text-3xl font-bold mb-6">Ready to transform education in Odisha?</h2>
+          <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
+            Join students across Odisha who are using adaptive AI coaching to achieve academic excellence and prepare for a brighter future.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="outline" className="bg-white text-purple-600 hover:bg-purple-50" asChild>
-              <Link to={isAuthenticated ? "/dashboard" : "/signup"}>
-                Start Learning Today
-              </Link>
-            </Button>
-            <Button size="lg" className="bg-purple-800 hover:bg-purple-900 text-white" asChild>
-              <Link to="/learning-style">
-                Explore Programs
-              </Link>
-            </Button>
-          </div>
+          <Button size="lg" asChild>
+            <Link to={isAuthenticated ? "/dashboard" : "/signup"}>
+              Join the Revolution
+            </Link>
+          </Button>
         </div>
       </section>
       
@@ -251,18 +148,14 @@ const Index = () => {
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row md:justify-between items-center">
             <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                <Book className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                AdaptiveEdCoach
-              </span>
+              <Book className="h-6 w-6 text-edu-primary" />
+              <span className="text-xl font-bold">AdaptiveEdCoach</span>
             </div>
             <div className="flex gap-8">
-              <Link to="/about" className="text-gray-600 hover:text-purple-600 text-sm">About</Link>
-              <Link to="/contact" className="text-gray-600 hover:text-purple-600 text-sm">Contact</Link>
-              <Link to="/privacy" className="text-gray-600 hover:text-purple-600 text-sm">Privacy</Link>
-              <Link to="/terms" className="text-gray-600 hover:text-purple-600 text-sm">Terms</Link>
+              <Link to="/about" className="text-gray-600 hover:text-edu-primary text-sm">About</Link>
+              <Link to="/contact" className="text-gray-600 hover:text-edu-primary text-sm">Contact</Link>
+              <Link to="/privacy" className="text-gray-600 hover:text-edu-primary text-sm">Privacy</Link>
+              <Link to="/terms" className="text-gray-600 hover:text-edu-primary text-sm">Terms</Link>
             </div>
           </div>
           <div className="text-center mt-8 text-sm text-gray-600">
