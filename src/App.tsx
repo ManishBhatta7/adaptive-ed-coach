@@ -27,6 +27,7 @@ import Profile from "./pages/Profile";
 import Classrooms from "./pages/Classrooms";
 import Assignments from "./pages/Assignments";
 import Notifications from "./pages/Notifications";
+import ContentManagementPage from "./pages/ContentManagementPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,6 +74,7 @@ const App = () => (
                 <Route path="/classrooms" element={<Classrooms />} />
                 <Route path="/assignments" element={<Assignments />} />
                 <Route path="/notifications" element={<Notifications />} />
+                <Route path="/content-management" element={<ContentManagementPage />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

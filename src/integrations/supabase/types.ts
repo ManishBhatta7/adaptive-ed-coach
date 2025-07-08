@@ -14,6 +14,140 @@ export type Database = {
   }
   public: {
     Tables: {
+      content_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_import_logs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          error_details: Json | null
+          failed_imports: number | null
+          id: string
+          import_source: string
+          processed_items: number | null
+          started_at: string
+          status: string
+          successful_imports: number | null
+          total_items: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_details?: Json | null
+          failed_imports?: number | null
+          id?: string
+          import_source: string
+          processed_items?: number | null
+          started_at?: string
+          status: string
+          successful_imports?: number | null
+          total_items?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          error_details?: Json | null
+          failed_imports?: number | null
+          id?: string
+          import_source?: string
+          processed_items?: number | null
+          started_at?: string
+          status?: string
+          successful_imports?: number | null
+          total_items?: number | null
+        }
+        Relationships: []
+      }
+      educational_content: {
+        Row: {
+          category_id: string | null
+          content_data: Json | null
+          content_type: string
+          created_at: string
+          description: string | null
+          difficulty_level: string | null
+          grade_level: string | null
+          id: string
+          imported_at: string
+          is_active: boolean | null
+          source_id: string | null
+          source_url: string | null
+          subject_area: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category_id?: string | null
+          content_data?: Json | null
+          content_type: string
+          created_at?: string
+          description?: string | null
+          difficulty_level?: string | null
+          grade_level?: string | null
+          id?: string
+          imported_at?: string
+          is_active?: boolean | null
+          source_id?: string | null
+          source_url?: string | null
+          subject_area?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string | null
+          content_data?: Json | null
+          content_type?: string
+          created_at?: string
+          description?: string | null
+          difficulty_level?: string | null
+          grade_level?: string | null
+          id?: string
+          imported_at?: string
+          is_active?: boolean | null
+          source_id?: string | null
+          source_url?: string | null
+          subject_area?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "educational_content_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "content_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar: string | null
@@ -43,6 +177,56 @@ export type Database = {
           role?: string
         }
         Relationships: []
+      }
+      quiz_questions: {
+        Row: {
+          content_id: string | null
+          correct_answer: string | null
+          created_at: string
+          difficulty_level: string | null
+          explanation: string | null
+          id: string
+          options: Json | null
+          points: number | null
+          question_text: string
+          question_type: string
+          updated_at: string
+        }
+        Insert: {
+          content_id?: string | null
+          correct_answer?: string | null
+          created_at?: string
+          difficulty_level?: string | null
+          explanation?: string | null
+          id?: string
+          options?: Json | null
+          points?: number | null
+          question_text: string
+          question_type: string
+          updated_at?: string
+        }
+        Update: {
+          content_id?: string | null
+          correct_answer?: string | null
+          created_at?: string
+          difficulty_level?: string | null
+          explanation?: string | null
+          id?: string
+          options?: Json | null
+          points?: number | null
+          question_text?: string
+          question_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "educational_content"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_profiles: {
         Row: {
