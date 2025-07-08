@@ -8,6 +8,7 @@ import TestDataControls from '@/components/debug/TestDataControls';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen, FileText, TrendingUp, Users } from 'lucide-react';
+import PageLayout from '@/components/layout/PageLayout';
 
 const Dashboard = () => {
   const { state } = useAppContext();
@@ -43,8 +44,12 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-edu-background">
-      <div className="container mx-auto px-4 py-8">
+    <PageLayout 
+      title="Dashboard" 
+      subtitle="Track your learning progress and personalized insights"
+      className="py-8"
+    >
+      <div className="container mx-auto px-6 max-w-7xl">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -202,7 +207,7 @@ const Dashboard = () => {
           </Card>
         </div>
       </div>
-    </div>
+    </PageLayout>
   );
 };
 

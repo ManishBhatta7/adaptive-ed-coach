@@ -1,15 +1,14 @@
-
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
-import MainLayout from '@/components/layout/MainLayout';
 import ProgressChart from '@/components/dashboard/ProgressChart';
 import AcademicProgressTimeline from '@/components/progress/AcademicProgressTimeline';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { SubjectArea } from '@/types';
-import { Upload, LineChart, BarChart3 } from 'lucide-react';
+import { Upload, LineChart, BarChart3, TrendingUp } from 'lucide-react';
+import PageLayout from '@/components/layout/PageLayout';
 
 const ProgressPage = () => {
   const navigate = useNavigate();
@@ -42,17 +41,22 @@ const ProgressPage = () => {
   const uniqueSubjects = getUniqueSubjects();
   
   return (
-    <MainLayout>
-      <div className="container px-4 py-8">
+    <PageLayout 
+      title="Learning Progress" 
+      subtitle="Track your academic achievements and growth over time"
+      className="py-8"
+    >
+      <div className="container px-6 max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-start justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Learning Progress</h1>
-            <p className="text-gray-600 mt-1">
-              Track your performance over time across different subjects
-            </p>
+          <div className="flex items-center">
+            <TrendingUp className="mr-3 h-6 w-6 text-pink-600" />
+            <h2 className="text-2xl font-bold text-gray-800">Your Learning Journey</h2>
           </div>
           
-          <Button asChild>
+          <Button 
+            asChild
+            className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
+          >
             <a href="/submit">
               <Upload className="h-4 w-4 mr-2" />
               Submit New Assignment
@@ -62,22 +66,24 @@ const ProgressPage = () => {
         
         <div className="mb-8">
           <Tabs defaultValue="overview">
-            <TabsList>
-              <TabsTrigger value="overview" className="flex items-center">
+            <TabsList className="bg-white/60 backdrop-blur-sm border border-pink-100">
+              <TabsTrigger value="overview" className="flex items-center data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-600 data-[state=active]:text-white">
                 <LineChart className="h-4 w-4 mr-2" />
                 Overview
               </TabsTrigger>
-              <TabsTrigger value="timeline" className="flex items-center">
+              <TabsTrigger value="timeline" className="flex items-center data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white">
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Progress Timeline
               </TabsTrigger>
             </TabsList>
             
             <TabsContent value="overview" className="mt-6">
-              <Card>
+              <Card className="bg-white/60 backdrop-blur-sm border-pink-100">
                 <CardHeader>
-                  <CardTitle>Overall Performance</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-xl bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                    Overall Performance
+                  </CardTitle>
+                  <CardDescription className="text-gray-600">
                     Your progress across all subject areas
                   </CardDescription>
                 </CardHeader>
@@ -94,20 +100,26 @@ const ProgressPage = () => {
             </TabsContent>
             
             <TabsContent value="timeline" className="mt-6">
-              <AcademicProgressTimeline 
-                performances={currentUser.performances}
-                title="Academic Progress Over Time"
-                description="Track your performance trends and improvement over time"
-              />
+              <div className="bg-white/60 backdrop-blur-sm border border-pink-100 rounded-lg p-6">
+                <AcademicProgressTimeline 
+                  performances={currentUser.performances}
+                  title="Academic Progress Over Time"
+                  description="Track your performance trends and improvement over time"
+                />
+              </div>
             </TabsContent>
           </Tabs>
         </div>
         
         {uniqueSubjects.length > 0 ? (
           <Tabs defaultValue={uniqueSubjects[0]}>
-            <TabsList className="mb-6">
+            <TabsList className="mb-6 bg-white/60 backdrop-blur-sm border border-pink-100">
               {uniqueSubjects.map(subject => (
-                <TabsTrigger key={subject} value={subject} className="capitalize">
+                <TabsTrigger 
+                  key={subject} 
+                  value={subject} 
+                  className="capitalize data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-600 data-[state=active]:text-white"
+                >
                   {subject.replace('_', ' ')}
                 </TabsTrigger>
               ))}
@@ -115,9 +127,11 @@ const ProgressPage = () => {
             
             {uniqueSubjects.map(subject => (
               <TabsContent key={subject} value={subject}>
-                <Card>
+                <Card className="bg-white/60 backdrop-blur-sm border-pink-100">
                   <CardHeader>
-                    <CardTitle className="capitalize">{subject.replace('_', ' ')} Progress</CardTitle>
+                    <CardTitle className="capitalize text-xl bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                      {subject.replace('_', ' ')} Progress
+                    </CardTitle>
                     <CardDescription>
                       Detailed view of your performance in this subject
                     </CardDescription>
@@ -131,26 +145,28 @@ const ProgressPage = () => {
                       />
                       
                       <div className="space-y-4 mt-6">
-                        <h3 className="text-lg font-medium">Recent Submissions</h3>
+                        <h3 className="text-lg font-medium text-gray-800">Recent Submissions</h3>
                         
                         {getPerformancesBySubject(subject).length === 0 ? (
-                          <p className="text-gray-500">No submissions for this subject yet.</p>
+                          <div className="text-center py-8 bg-gradient-to-r from-pink-50 to-purple-50 rounded-lg">
+                            <p className="text-gray-600">No submissions for this subject yet.</p>
+                          </div>
                         ) : (
                           <div className="space-y-4">
                             {getPerformancesBySubject(subject)
                               .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                               .slice(0, 5)
                               .map(performance => (
-                                <div key={performance.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                <div key={performance.id} className="border border-pink-100 rounded-lg p-4 hover:bg-gradient-to-r hover:from-pink-50 hover:to-purple-50 transition-all bg-white/80 backdrop-blur-sm">
                                   <div className="flex justify-between items-start mb-2">
-                                    <h4 className="text-md font-medium">{performance.title}</h4>
+                                    <h4 className="text-md font-medium text-gray-800">{performance.title}</h4>
                                     {performance.score !== undefined && (
-                                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${
                                         performance.score >= 80
-                                          ? 'bg-green-100 text-green-800'
+                                          ? 'bg-green-100 text-green-800 border-green-200'
                                           : performance.score >= 60
-                                          ? 'bg-yellow-100 text-yellow-800'
-                                          : 'bg-red-100 text-red-800'
+                                          ? 'bg-yellow-100 text-yellow-800 border-yellow-200'
+                                          : 'bg-red-100 text-red-800 border-red-200'
                                       }`}>
                                         {performance.score}%
                                       </span>
@@ -174,13 +190,19 @@ const ProgressPage = () => {
             ))}
           </Tabs>
         ) : (
-          <Card>
+          <Card className="bg-white/60 backdrop-blur-sm border-pink-100">
             <CardContent className="text-center py-12">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No performance data yet</h3>
-              <p className="text-gray-600 mb-6">
-                Submit your first assignment to start tracking your progress
+              <div className="w-24 h-24 rounded-full bg-gradient-to-r from-pink-100 to-purple-100 flex items-center justify-center mx-auto mb-6">
+                <Upload className="h-12 w-12 text-pink-500" />
+              </div>
+              <h3 className="text-xl font-medium text-gray-800 mb-3">No performance data yet</h3>
+              <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                Submit your first assignment to start tracking your progress and see detailed analytics
               </p>
-              <Button asChild>
+              <Button 
+                asChild
+                className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
+              >
                 <a href="/submit">
                   <Upload className="h-4 w-4 mr-2" />
                   Submit Your First Assignment
@@ -190,9 +212,8 @@ const ProgressPage = () => {
           </Card>
         )}
       </div>
-    </MainLayout>
+    </PageLayout>
   );
 };
 
 export default ProgressPage;
-

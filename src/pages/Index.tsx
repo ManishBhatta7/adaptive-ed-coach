@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Book, Upload, MessageSquare, Users, GraduationCap, Target, BookOpen, Brain, TrendingUp } from 'lucide-react';
+import heroImage from '@/assets/hero-education-ai.jpg';
 
 const Index = () => {
   const { state } = useAppContext();
@@ -37,8 +38,17 @@ const Index = () => {
       </header>
       
       {/* Hero Section */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto text-center">
+      <section className="relative py-20 px-6 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <img 
+            src={heroImage} 
+            alt="AI Education Hero" 
+            className="w-full h-full object-cover opacity-20"
+          />
+          <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 via-purple-600/20 to-blue-600/20"></div>
+        </div>
+        
+        <div className="container mx-auto text-center relative z-10">
           <h1 className="text-5xl md:text-7xl font-bold mb-6">
             <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">LIVE & self-paced</span>
             <br />
