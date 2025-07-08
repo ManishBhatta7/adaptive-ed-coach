@@ -60,6 +60,9 @@ const PageLayout = ({
             <Link to="/progress" className="text-sm font-medium hover:text-pink-600 transition-colors">
               Progress
             </Link>
+            <Link to="/content-management" className="text-sm font-medium hover:text-pink-600 transition-colors">
+              Content
+            </Link>
           </nav>
 
           <div className="flex items-center gap-4">
