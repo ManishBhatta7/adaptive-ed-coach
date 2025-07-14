@@ -2,12 +2,94 @@
 import { Link } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Book, Upload, MessageSquare, Users, GraduationCap, Target, BookOpen, Brain, TrendingUp } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Book, GraduationCap, BookOpen, Users, Brain, Target, TrendingUp, CheckCircle } from 'lucide-react';
 import heroImage from '@/assets/hero-education-ai.jpg';
 
 const Index = () => {
   const { state } = useAppContext();
   const { isAuthenticated } = state;
+  
+  const offerings = [
+    {
+      title: "Adaptive Learning",
+      subtitle: "Personalized AI-powered learning paths for every student",
+      image: heroImage,
+      features: [
+        "Self-paced learning modules",
+        "Real-time performance tracking",
+        "Customized content delivery"
+      ],
+      link: "/learning-style",
+      buttonText: "Discover Your Style",
+      color: "from-pink-500 to-purple-600"
+    },
+    {
+      title: "Voice Reading Coach",
+      subtitle: "AI-powered reading comprehension and fluency training",
+      image: heroImage,
+      features: [
+        "Speech recognition technology",
+        "Pronunciation feedback",
+        "Reading comprehension analysis"
+      ],
+      link: "/voice-reading",
+      buttonText: "Start Reading",
+      color: "from-blue-500 to-cyan-600"
+    },
+    {
+      title: "Essay Checker",
+      subtitle: "Intelligent essay analysis and improvement suggestions",
+      image: heroImage,
+      features: [
+        "Grammar and style checking",
+        "Content quality analysis",
+        "Personalized feedback"
+      ],
+      link: "/essay-checker",
+      buttonText: "Check Essay",
+      color: "from-green-500 to-emerald-600"
+    },
+    {
+      title: "Progress Analytics",
+      subtitle: "Comprehensive progress tracking and insights",
+      image: heroImage,
+      features: [
+        "Performance visualization",
+        "Learning trend analysis",
+        "Achievement milestones"
+      ],
+      link: "/progress",
+      buttonText: "View Progress",
+      color: "from-orange-500 to-red-600"
+    },
+    {
+      title: "Classroom Management",
+      subtitle: "AI-powered tools for teachers and educators",
+      image: heroImage,
+      features: [
+        "Student performance monitoring",
+        "Assignment creation tools",
+        "Class analytics dashboard"
+      ],
+      link: "/classrooms",
+      buttonText: "Manage Classes",
+      color: "from-purple-500 to-indigo-600"
+    },
+    {
+      title: "Answer Sheet Analysis",
+      subtitle: "Automated evaluation and detailed feedback",
+      image: heroImage,
+      features: [
+        "Instant scoring system",
+        "Error pattern analysis",
+        "Improvement recommendations"
+      ],
+      link: "/answer-sheet",
+      buttonText: "Analyze Answers",
+      color: "from-teal-500 to-blue-600"
+    }
+  ];
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
@@ -38,192 +120,70 @@ const Index = () => {
       </header>
       
       {/* Hero Section */}
-      <section className="relative py-20 px-6 overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <img 
-            src={heroImage} 
-            alt="AI Education Hero" 
-            className="w-full h-full object-cover opacity-20"
-          />
-          <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 via-purple-600/20 to-blue-600/20"></div>
-        </div>
-        
-        <div className="container mx-auto text-center relative z-10">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
-            <span className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">LIVE & self-paced</span>
-            <br />
-            <span className="text-gray-800">AI coaching</span>
+      <section className="py-20 px-6 text-center">
+        <div className="container mx-auto">
+          <h1 className="text-6xl font-bold text-gray-900 mb-8">
+            What do we offer?
           </h1>
-          
-          <h2 className="text-3xl md:text-4xl font-bold mb-8">
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">AI learning</span>
-            <span className="text-gray-800"> bootcamps</span>
-          </h2>
-          
-          <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">
-            For (1) students, (2) teachers, (3) parents and (4) schools
-          </p>
-          
-          {/* Circular Icons */}
-          <div className="flex justify-center items-center mb-16">
-            <div className="relative">
-              {/* Center AI circle */}
-              <div className="w-32 h-32 rounded-full bg-gradient-to-r from-pink-400 to-purple-500 flex items-center justify-center text-white font-bold text-2xl mx-auto mb-8">
-                AI
-                <br />
-                for all
-              </div>
-              
-              {/* Surrounding circles */}
-              <div className="absolute -top-12 -left-24 w-24 h-24 rounded-full bg-pink-200 flex flex-col items-center justify-center text-pink-800 text-sm font-medium">
-                <Users className="h-6 w-6 mb-1" />
-                Schools
-              </div>
-              <div className="absolute -top-12 -right-24 w-24 h-24 rounded-full bg-purple-200 flex flex-col items-center justify-center text-purple-800 text-sm font-medium">
-                <GraduationCap className="h-6 w-6 mb-1" />
-                Students
-              </div>
-              <div className="absolute -bottom-12 -left-24 w-24 h-24 rounded-full bg-blue-200 flex flex-col items-center justify-center text-blue-800 text-sm font-medium">
-                <BookOpen className="h-6 w-6 mb-1" />
-                Teachers
-              </div>
-              <div className="absolute -bottom-12 -right-24 w-24 h-24 rounded-full bg-green-200 flex flex-col items-center justify-center text-green-800 text-sm font-medium">
-                <Users className="h-6 w-6 mb-1" />
-                Parents
-              </div>
-            </div>
-          </div>
-          
-          <p className="text-2xl font-bold text-gray-800 mb-4">Our singular mission: To make AI accessible for all!</p>
-          <p className="text-lg text-pink-600 font-medium mb-12">By experts in Adaptive Education</p>
         </div>
       </section>
       
-      {/* For Students Section */}
-      <section className="py-16 bg-white/60 backdrop-blur-sm">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center gap-12">
-            <div className="md:w-1/2">
-              <div className="w-48 h-48 mx-auto bg-gradient-to-r from-pink-200 to-purple-200 rounded-full flex items-center justify-center mb-8">
-                <div className="text-center">
-                  <GraduationCap className="h-16 w-16 text-purple-600 mx-auto mb-2" />
-                  <p className="text-purple-800 font-bold text-lg">Student</p>
-                </div>
-              </div>
-            </div>
-            <div className="md:w-1/2">
-              <h2 className="text-4xl font-bold text-gray-800 mb-6">For Students</h2>
-              <div className="space-y-4 mb-8">
-                <p className="flex items-start text-gray-700">
-                  <span className="text-pink-500 mr-2">→</span>
-                  We offer both LIVE and self-paced AI coaching sessions.
-                </p>
-                <p className="flex items-start text-gray-700">
-                  <span className="text-pink-500 mr-2">→</span>
-                  Our adaptive learning program that adjusts to your learning style.
-                </p>
-                <p className="flex items-start text-gray-700">
-                  <span className="text-pink-500 mr-2">→</span>
-                  Progress tracking and personalized feedback for better academic performance.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-4">
-                <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700" asChild>
-                  <Link to="/learning-style">Discover Learning Style</Link>
-                </Button>
-                <Button variant="outline" className="border-pink-200 text-pink-600 hover:bg-pink-50" asChild>
-                  <Link to="/progress">Track Progress</Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* For Teachers Section */}
-      <section className="py-16">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row-reverse items-center gap-12">
-            <div className="md:w-1/2">
-              <div className="w-48 h-48 mx-auto bg-gradient-to-r from-blue-200 to-cyan-200 rounded-full flex items-center justify-center mb-8">
-                <div className="text-center">
-                  <BookOpen className="h-16 w-16 text-blue-600 mx-auto mb-2" />
-                  <p className="text-blue-800 font-bold text-lg">Teacher</p>
-                </div>
-              </div>
-            </div>
-            <div className="md:w-1/2">
-              <h2 className="text-4xl font-bold text-gray-800 mb-6">For Teachers</h2>
-              <div className="space-y-4 mb-8">
-                <p className="flex items-start text-gray-700">
-                  <span className="text-blue-500 mr-2">→</span>
-                  Classroom management tools and student progress analytics.
-                </p>
-                <p className="flex items-start text-gray-700">
-                  <span className="text-blue-500 mr-2">→</span>
-                  AI-powered assignment creation and automated feedback generation.
-                </p>
-                <p className="flex items-start text-gray-700">
-                  <span className="text-blue-500 mr-2">→</span>
-                  Professional development resources for modern teaching methods.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-4">
-                <Button className="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700" asChild>
-                  <Link to="/classrooms">Manage Classrooms</Link>
-                </Button>
-                <Button variant="outline" className="border-blue-200 text-blue-600 hover:bg-blue-50" asChild>
-                  <Link to="/assignments">Create Assignments</Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* For Schools Section */}
-      <section className="py-16 bg-white/60 backdrop-blur-sm">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center gap-12">
-            <div className="md:w-1/2">
-              <div className="w-48 h-48 mx-auto bg-gradient-to-r from-green-200 to-emerald-200 rounded-full flex items-center justify-center mb-8">
-                <div className="text-center">
-                  <Users className="h-16 w-16 text-green-600 mx-auto mb-2" />
-                  <p className="text-green-800 font-bold text-lg">School</p>
-                </div>
-              </div>
-            </div>
-            <div className="md:w-1/2">
-              <h2 className="text-4xl font-bold text-gray-800 mb-6">For Schools</h2>
-              <div className="space-y-4 mb-8">
-                <p className="flex items-start text-gray-700">
-                  <span className="text-green-500 mr-2">→</span>
-                  Institution-wide analytics and performance insights.
-                </p>
-                <p className="flex items-start text-gray-700">
-                  <span className="text-green-500 mr-2">→</span>
-                  Curriculum alignment with Odisha state board standards.
-                </p>
-                <p className="flex items-start text-gray-700">
-                  <span className="text-green-500 mr-2">→</span>
-                  Teacher training programs and administrative tools.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-4">
-                <Button className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700" asChild>
-                  <Link to="/dashboard">School Dashboard</Link>
-                </Button>
-                <Button variant="outline" className="border-green-200 text-green-600 hover:bg-green-50" asChild>
-                  <Link to="/settings">Settings</Link>
-                </Button>
-              </div>
-            </div>
+      {/* Offerings Grid */}
+      <section className="py-16 px-6">
+        <div className="container mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            {offerings.map((offering, index) => (
+              <Card key={index} className="group hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl hover:-translate-y-1">
+                <CardContent className="p-0">
+                  {/* Image */}
+                  <div className="relative overflow-hidden rounded-t-lg">
+                    <img 
+                      src={offering.image} 
+                      alt={offering.title}
+                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className={`absolute inset-0 bg-gradient-to-br ${offering.color} opacity-20 group-hover:opacity-30 transition-opacity duration-300`} />
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="p-6">
+                    <div className="mb-2">
+                      <span className={`inline-block px-3 py-1 text-sm font-medium text-white rounded-full bg-gradient-to-r ${offering.color}`}>
+                        {offering.title}
+                      </span>
+                    </div>
+                    
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      {offering.subtitle}
+                    </h3>
+                    
+                    <div className="space-y-2 mb-6">
+                      {offering.features.map((feature, featureIndex) => (
+                        <div key={featureIndex} className="flex items-start gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          <span className="text-sm text-gray-600">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <Button 
+                      className={`w-full bg-gradient-to-r ${offering.color} hover:opacity-90 text-white font-medium`}
+                      asChild
+                    >
+                      <Link to={offering.link}>
+                        {offering.buttonText}
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
       
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600">
+      <section className="py-20 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 mx-6 rounded-2xl mb-16">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-4xl font-bold text-white mb-6">Ready to transform education with AI?</h2>
           <p className="text-xl text-pink-100 mb-8 max-w-2xl mx-auto">
