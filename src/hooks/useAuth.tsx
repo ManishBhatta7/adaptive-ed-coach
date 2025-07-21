@@ -175,12 +175,6 @@ export const useAuth = () => {
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // For development when no Supabase credentials are available
-      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-        mockAuth(email, email.includes('teacher') ? 'teacher' : 'student');
-        return true;
-      }
-
       console.log('Attempting login with email:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -196,33 +190,28 @@ export const useAuth = () => {
       
       if (data.session) {
         setSession(data.session);
-        // Actual user profile fetch is handled by the onAuthStateChange listener
+        // User profile fetch is handled by the onAuthStateChange listener
         return true;
       }
       return false;
     } catch (error) {
       console.error('Login error:', error);
-      return false;
+      throw error;
     }
   };
 
   const register = async (name: string, email: string, password: string, role: 'student' | 'teacher' = 'student'): Promise<boolean> => {
     try {
-      // For development when no Supabase credentials are available
-      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-        const mockUser = mockAuth(email, role);
-        // Update the name since register provides it
-        setCurrentUser({...mockUser, name});
-        return true;
-      }
-
       console.log('Registering user with role:', role);
+      
+      const redirectUrl = `${window.location.origin}/dashboard`;
 
-      // Store role in user_metadata, so trigger/SQL works correctly
+      // Store role and name in user_metadata for the trigger function
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: { name, role }
         }
       });
@@ -236,14 +225,14 @@ export const useAuth = () => {
       
       if (data.session) {
         setSession(data.session);
-        // Actual user profile fetch is handled by the onAuthStateChange listener
+        // User profile fetch is handled by the onAuthStateChange listener
         return true;
       }
       
-      return false;
+      return true; // Account created, waiting for email confirmation
     } catch (error) {
       console.error('Registration error:', error);
-      return false;
+      throw error;
     }
   };
 
@@ -263,12 +252,6 @@ export const useAuth = () => {
     if (!currentUser || !session) return;
     
     try {
-      if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
-        // For development with mock data
-        setCurrentUser({ ...currentUser, ...profile });
-        return;
-      }
-      
       // Update the profile in the database
       const { error } = await supabase
         .from('profiles')
@@ -277,13 +260,14 @@ export const useAuth = () => {
         
       if (error) {
         console.error('Error updating profile:', error);
-        return;
+        throw error;
       }
       
       // Update the local state
       setCurrentUser({ ...currentUser, ...profile });
     } catch (error) {
       console.error('Error updating profile:', error);
+      throw error;
     }
   };
 
