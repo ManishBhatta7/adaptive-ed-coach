@@ -8,6 +8,7 @@ export interface StudentProfile {
   name: string;
   email?: string;
   avatar?: string;
+  role?: string;
   primaryLearningStyle?: LearningStyle;
   secondaryLearningStyle?: LearningStyle;
   learningStyleStrengths?: Record<LearningStyle, number>;

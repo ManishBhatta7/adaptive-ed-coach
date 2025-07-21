@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MainLayout from '@/components/layout/MainLayout';
 import { useAppContext } from '@/context/AppContext';
@@ -7,12 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LearningStyle, learningStyleInfo } from '@/types';
 import { Badge } from '@/components/ui/badge';
-import { User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ProfileEditForm } from '@/components/profile/ProfileEditForm';
+import { User, Edit } from 'lucide-react';
 
 const Profile = () => {
-  const { state } = useAppContext();
+  const { state, updateUserProfile } = useAppContext();
   const navigate = useNavigate();
   const { currentUser, isAuthenticated, isLoading } = state;
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -50,13 +53,38 @@ const Profile = () => {
   const secondaryStyle = currentUser.secondaryLearningStyle;
   const primaryStyleInfo = learningStyleInfo[primaryStyle];
 
+  const handleSaveProfile = (updatedProfile: any) => {
+    updateUserProfile(updatedProfile);
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <MainLayout>
+        <div className="container py-10">
+          <ProfileEditForm
+            user={currentUser}
+            onSave={handleSaveProfile}
+            onCancel={() => setIsEditing(false)}
+          />
+        </div>
+      </MainLayout>
+    );
+  }
+
   return (
     <MainLayout>
       <div className="container py-10">
-        <h1 className="text-3xl font-bold mb-8 flex items-center">
-          <User className="mr-2 h-6 w-6" />
-          My Profile
-        </h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold flex items-center">
+            <User className="mr-2 h-6 w-6" />
+            My Profile
+          </h1>
+          <Button onClick={() => setIsEditing(true)} variant="outline">
+            <Edit className="mr-2 h-4 w-4" />
+            Edit Profile
+          </Button>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1">

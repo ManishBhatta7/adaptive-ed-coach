@@ -28,6 +28,7 @@ import Classrooms from "./pages/Classrooms";
 import Assignments from "./pages/Assignments";
 import Notifications from "./pages/Notifications";
 import ContentManagementPage from "./pages/ContentManagementPage";
+import AdminDashboard from "./pages/AdminDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,6 +70,7 @@ const App = () => (
                 <Route path="/assignments" element={<Assignments />} />
                 <Route path="/notifications" element={<Notifications />} />
                 <Route path="/content-management" element={<ContentManagementPage />} />
+                <Route path="/admin" element={<AdminDashboard />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
