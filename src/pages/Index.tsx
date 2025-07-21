@@ -103,9 +103,14 @@ const Index = () => {
         </div>
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700" asChild>
-              <Link to="/dashboard">Dashboard</Link>
-            </Button>
+            <>
+              <Button variant="outline" className="border-pink-200 text-pink-600 hover:bg-pink-50" asChild>
+                <Link to="/profile">Profile</Link>
+              </Button>
+              <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700" asChild>
+                <Link to="/dashboard">Dashboard</Link>
+              </Button>
+            </>
           ) : (
             <>
               <Button variant="outline" className="border-pink-200 text-pink-600 hover:bg-pink-50" asChild>
