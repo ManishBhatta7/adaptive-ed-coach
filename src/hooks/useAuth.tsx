@@ -120,59 +120,6 @@ export const useAuth = () => {
     };
   }, [testMode.enabled, testMode.studentProfile]);
 
-  // Mock authentication for development
-  const mockAuth = (email: string, role: string = 'student') => {
-    console.warn('Using mock authentication (no Supabase credentials)');
-    const mockUser: StudentProfile = {
-      id: 'mock-user-id',
-      name: email.split('@')[0],
-      email,
-      avatar: '/placeholder.svg',
-      joinedAt: new Date().toISOString(),
-      lastActive: new Date().toISOString(),
-      primaryLearningStyle: LearningStyle.VISUAL,
-      secondaryLearningStyle: LearningStyle.AUDITORY,
-      learningStyleStrengths: { 
-        [LearningStyle.VISUAL]: 80, 
-        [LearningStyle.AUDITORY]: 60, 
-        [LearningStyle.READING_WRITING]: 40, 
-        [LearningStyle.KINESTHETIC]: 30,
-        [LearningStyle.LOGICAL]: 50,
-        [LearningStyle.SOCIAL]: 45,
-        [LearningStyle.SOLITARY]: 35
-      },
-      performances: [
-        {
-          id: 'perf-1',
-          date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          subjectArea: SubjectArea.MATH,
-          title: 'Math Quiz',
-          score: 85,
-          feedback: 'Good work on algebra!',
-          strengths: ['Problem solving', 'Algebraic thinking'],
-          weaknesses: ['Time management'],
-          recommendations: ['Practice more complex problems']
-        },
-        {
-          id: 'perf-2',
-          date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-          subjectArea: SubjectArea.SCIENCE,
-          title: 'Science Report',
-          score: 90,
-          feedback: 'Excellent analysis!',
-          strengths: ['Research skills', 'Critical thinking'],
-          weaknesses: ['Presentation format'],
-          recommendations: ['Work on visual presentation']
-        }
-      ]
-    };
-    setCurrentUser(mockUser);
-    setIsAuthenticated(true);
-    setIsTeacher(role === 'teacher');
-    setIsLoading(false);
-    return mockUser;
-  };
-
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       console.log('Attempting login with email:', email);
@@ -183,7 +130,8 @@ export const useAuth = () => {
 
       if (error) {
         console.error('Login error:', error);
-        throw error;
+        // Don't throw here, let the calling component handle the error
+        return false;
       }
 
       console.log('Login successful, session:', data.session);
@@ -196,7 +144,7 @@ export const useAuth = () => {
       return false;
     } catch (error) {
       console.error('Login error:', error);
-      throw error;
+      return false;
     }
   };
 
@@ -218,7 +166,8 @@ export const useAuth = () => {
 
       if (error) {
         console.error('Registration error:', error);
-        throw error;
+        // Don't throw here, let the calling component handle the error
+        return false;
       }
 
       console.log('Registration successful:', data);
@@ -232,7 +181,7 @@ export const useAuth = () => {
       return true; // Account created, waiting for email confirmation
     } catch (error) {
       console.error('Registration error:', error);
-      throw error;
+      return false;
     }
   };
 

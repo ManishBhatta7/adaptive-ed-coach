@@ -4,8 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast';
-import { Book } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Book, CheckCircle } from 'lucide-react';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import LoadingScreen from '@/components/loading/LoadingScreen';
 import { ValidatedInput } from '@/components/ui/validated-input';
@@ -49,19 +49,50 @@ const Login = () => {
     schema: loginSchema,
     onSubmit: async (data) => {
       console.log('Attempting login with email:', data.email);
-      const success = await login(data.email, data.password);
       
-      if (success) {
+      try {
+        const success = await login(data.email, data.password);
+        
+        if (success) {
+          // Success toast with better styling
+          toast({
+            title: "✅ Login successful!",
+            description: "Welcome back to AdaptiveEdCoach! Redirecting to dashboard...",
+            duration: 3000,
+          });
+          
+          // Delay navigation slightly to show toast
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 1000);
+        } else {
+          // More specific error handling
+          toast({
+            title: "❌ Login failed",
+            description: "Invalid email or password. Please check your credentials and try again.",
+            variant: 'destructive',
+            duration: 5000,
+          });
+        }
+      } catch (error: any) {
+        console.error('Login error:', error);
+        
+        // Handle different error types with specific messages
+        let errorMessage = "An unexpected error occurred. Please try again.";
+        
+        if (error.message?.includes('Invalid login credentials')) {
+          errorMessage = "Invalid email or password. Please check your credentials.";
+        } else if (error.message?.includes('Email not confirmed')) {
+          errorMessage = "Please check your email and click the confirmation link before signing in.";
+        } else if (error.message?.includes('Too many requests')) {
+          errorMessage = "Too many login attempts. Please wait a moment before trying again.";
+        }
+        
         toast({
-          title: 'Login successful',
-          description: 'Welcome back to AdaptiveEdCoach!'
-        });
-        navigate('/dashboard');
-      } else {
-        toast({
-          title: 'Login failed',
-          description: 'Invalid email or password',
-          variant: 'destructive'
+          title: "❌ Login failed",
+          description: errorMessage,
+          variant: 'destructive',
+          duration: 5000,
         });
       }
     }
@@ -98,7 +129,7 @@ const Login = () => {
           <p className="text-gray-600 mt-2">Sign in to your account to continue</p>
         </div>
         
-        <Card>
+        <Card className="shadow-lg">
           <form onSubmit={onSubmit}>
             <CardHeader>
               <CardTitle className="text-xl">Sign in</CardTitle>
@@ -150,7 +181,7 @@ const Login = () => {
                     if (!value) return 'Password is required';
                     return null;
                   }}
-                  showValidation={false} // Don't show validation for password on login
+                  showValidation={false}
                   required
                   disabled={isSubmitting}
                 />
@@ -159,7 +190,7 @@ const Login = () => {
             <CardFooter className="flex flex-col space-y-4">
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full transition-all duration-200 hover:scale-105" 
                 disabled={isSubmitting || hasErrors}
               >
                 {isSubmitting ? (

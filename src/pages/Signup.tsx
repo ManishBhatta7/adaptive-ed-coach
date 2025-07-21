@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast';
-import { Book } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { Book, CheckCircle, Mail } from 'lucide-react';
+import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import { ValidatedInput } from '@/components/ui/validated-input';
 import { emailSchema, passwordSchema, nameSchema } from '@/utils/validation';
 import { useFormValidation } from '@/hooks/useFormValidation';
@@ -28,6 +29,7 @@ const Signup = () => {
   const navigate = useNavigate();
   const { register } = useAppContext();
   const { toast } = useToast();
+  const [showEmailConfirm, setShowEmailConfirm] = useState(false);
 
   const [formData, setFormData] = useState<SignupFormData>({
     name: '',
@@ -49,19 +51,54 @@ const Signup = () => {
     schema: signupSchema,
     onSubmit: async (data) => {
       console.log(`Attempting to register with role: ${data.role}`);
-      const success = await register(data.name, data.email, data.password, data.role);
+      
+      try {
+        const success = await register(data.name, data.email, data.password, data.role);
 
-      if (success) {
+        if (success) {
+          // Success toast with better styling
+          toast({
+            title: "🎉 Account created successfully!",
+            description: `Welcome to AdaptiveEdCoach, ${data.name}! You're now signed in.`,
+            duration: 4000,
+          });
+
+          // Show email confirmation message if needed
+          setShowEmailConfirm(true);
+          
+          // Delay navigation to show success feedback
+          setTimeout(() => {
+            navigate('/learning-style');
+          }, 2000);
+        } else {
+          toast({
+            title: "❌ Registration failed",
+            description: "Could not create your account. Please try again.",
+            variant: 'destructive',
+            duration: 5000,
+          });
+        }
+      } catch (error: any) {
+        console.error('Registration error:', error);
+        
+        // Handle different error types with specific messages
+        let errorMessage = "An unexpected error occurred. Please try again.";
+        
+        if (error.message?.includes('already registered')) {
+          errorMessage = "An account with this email already exists. Try signing in instead.";
+        } else if (error.message?.includes('Password should be')) {
+          errorMessage = "Password must be at least 6 characters long.";
+        } else if (error.message?.includes('invalid email')) {
+          errorMessage = "Please enter a valid email address.";
+        } else if (error.message?.includes('weak password')) {
+          errorMessage = "Password is too weak. Please choose a stronger password.";
+        }
+        
         toast({
-          title: 'Account created',
-          description: 'Welcome to AdaptiveEdCoach!'
-        });
-        navigate('/learning-style');
-      } else {
-        toast({
-          title: 'Registration failed',
-          description: 'Could not create your account. Please try again.',
-          variant: 'destructive'
+          title: "❌ Registration failed",
+          description: errorMessage,
+          variant: 'destructive',
+          duration: 5000,
         });
       }
     }
@@ -98,7 +135,7 @@ const Signup = () => {
           <p className="text-gray-600 mt-2">Create your account and begin your learning journey</p>
         </div>
 
-        <Card>
+        <Card className="shadow-lg">
           <form onSubmit={onSubmit}>
             <CardHeader>
               <CardTitle className="text-xl">Create an account</CardTitle>
@@ -221,14 +258,33 @@ const Signup = () => {
                   </label>
                 </div>
               </div>
+
+              {showEmailConfirm && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
+                  <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-900">Check your email</p>
+                    <p className="text-sm text-blue-700">
+                      We've sent a confirmation link to {formData.email}. Please check your inbox and click the link to activate your account.
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
               <Button 
                 type="submit" 
-                className="w-full" 
+                className="w-full transition-all duration-200 hover:scale-105" 
                 disabled={isSubmitting || hasErrors}
               >
-                {isSubmitting ? 'Creating account...' : 'Create account'}
+                {isSubmitting ? (
+                  <>
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    Creating account...
+                  </>
+                ) : (
+                  'Create account'
+                )}
               </Button>
 
               <div className="text-center text-sm">
