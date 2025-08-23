@@ -7,10 +7,10 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
+    PostgrestVersion: "13.0.4"
   }
   public: {
     Tables: {
@@ -80,6 +80,101 @@ export type Database = {
           status?: string
           successful_imports?: number | null
           total_items?: number | null
+        }
+        Relationships: []
+      }
+      doubt_responses: {
+        Row: {
+          created_at: string
+          doubt_id: string
+          helpful_votes: number | null
+          id: string
+          is_solution: boolean | null
+          responder_id: string | null
+          response_text: string
+          response_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          doubt_id: string
+          helpful_votes?: number | null
+          id?: string
+          is_solution?: boolean | null
+          responder_id?: string | null
+          response_text: string
+          response_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          doubt_id?: string
+          helpful_votes?: number | null
+          id?: string
+          is_solution?: boolean | null
+          responder_id?: string | null
+          response_text?: string
+          response_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "doubt_responses_doubt_id_fkey"
+            columns: ["doubt_id"]
+            isOneToOne: false
+            referencedRelation: "doubts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      doubts: {
+        Row: {
+          attachments: Json | null
+          created_at: string
+          description: string
+          difficulty_level: string | null
+          id: string
+          priority: string | null
+          solved_at: string | null
+          solved_by: string | null
+          status: string | null
+          student_id: string
+          subject_area: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attachments?: Json | null
+          created_at?: string
+          description: string
+          difficulty_level?: string | null
+          id?: string
+          priority?: string | null
+          solved_at?: string | null
+          solved_by?: string | null
+          status?: string | null
+          student_id: string
+          subject_area?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string
+          description?: string
+          difficulty_level?: string | null
+          id?: string
+          priority?: string | null
+          solved_at?: string | null
+          solved_by?: string | null
+          status?: string | null
+          student_id?: string
+          subject_area?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -317,8 +412,8 @@ export type Database = {
     Functions: {
       has_role: {
         Args: {
-          _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
         }
         Returns: boolean
       }
