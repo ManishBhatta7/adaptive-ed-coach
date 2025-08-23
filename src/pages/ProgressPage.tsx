@@ -7,6 +7,7 @@ import AcademicProgressTimeline from '@/components/progress/AcademicProgressTime
 import { ProgressDashboard } from '@/components/progress/ProgressDashboard';
 import { DoubtsList } from '@/components/doubts/DoubtsList';
 import { DoubtForm, DoubtFormData } from '@/components/doubts/DoubtForm';
+import AgenticInterface from '@/components/AgenticInterface';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -133,27 +134,21 @@ const ProgressPage = () => {
   const handleSolveDoubt = async (doubt: Doubt) => {
     setIsSolvingDoubt(true);
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) throw new Error('No session found');
-
-      const response = await fetch('https://gwarmogcmeehajnevbmi.supabase.co/functions/v1/solve-doubt', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${sessionData.session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ doubtId: doubt.id }),
+      // Use the agentic layer instead of direct solve-doubt call
+      const { data, error } = await supabase.functions.invoke('gemini-agent', {
+        body: {
+          action: 'solve_student_doubt',
+          context: {
+            userMessage: 'Please solve this doubt using AI',
+            data: { doubt_id: doubt.id, action: 'generate_solution' }
+          }
+        }
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to get AI solution');
-      }
-
-      const result = await response.json();
+      if (error) throw error;
       
       toast({
-        title: 'AI Solution Generated!',
+        title: 'AI Agent Processed Doubt!',
         description: 'Your doubt has been analyzed and a solution is ready',
       });
       
@@ -213,6 +208,10 @@ const ProgressPage = () => {
                 <TrendingUp className="h-4 w-4 mr-2" />
                 Dashboard
               </TabsTrigger>
+              <TabsTrigger value="ai-agent" className="flex items-center data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-600 data-[state=active]:text-white">
+                <Brain className="h-4 w-4 mr-2" />
+                AI Agent
+              </TabsTrigger>
               <TabsTrigger value="doubts" className="flex items-center data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-blue-600 data-[state=active]:text-white">
                 <HelpCircle className="h-4 w-4 mr-2" />
                 My Doubts
@@ -229,6 +228,10 @@ const ProgressPage = () => {
             
             <TabsContent value="dashboard" className="mt-6">
               <ProgressDashboard performances={performances} />
+            </TabsContent>
+
+            <TabsContent value="ai-agent" className="mt-6">
+              <AgenticInterface />
             </TabsContent>
 
             <TabsContent value="doubts" className="mt-6">
