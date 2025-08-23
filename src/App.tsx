@@ -29,6 +29,7 @@ import Assignments from "./pages/Assignments";
 import Notifications from "./pages/Notifications";
 import ContentManagementPage from "./pages/ContentManagementPage";
 import AdminDashboard from "./pages/AdminDashboard";
+import OCRPage from "./pages/OCRPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient({
@@ -138,6 +139,11 @@ const App = () => (
                 <Route path="/admin" element={
                   <ProtectedRoute requiredRole="admin">
                     <AdminDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/ocr" element={
+                  <ProtectedRoute>
+                    <OCRPage />
                   </ProtectedRoute>
                 } />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

@@ -88,6 +88,19 @@ const Index = () => {
       link: "/answer-sheet",
       buttonText: "Analyze Answers",
       color: "from-teal-500 to-blue-600"
+    },
+    {
+      title: "OCR Document Scanner",
+      subtitle: "Convert images to editable text documents",
+      image: heroImage,
+      features: [
+        "Advanced OCR technology",
+        "Multiple format support",
+        "Editable text output"
+      ],
+      link: "/ocr",
+      buttonText: "Scan Document",
+      color: "from-amber-500 to-orange-600"
     }
   ];
   
