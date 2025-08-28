@@ -111,4 +111,3 @@ const ProgressChart = ({
 };
 
 export default ProgressChart;
-

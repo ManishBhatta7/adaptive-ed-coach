@@ -1,135 +1,31 @@
-
 import { Link } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Book, GraduationCap, BookOpen, Users, Brain, Target, TrendingUp, CheckCircle } from 'lucide-react';
-import heroImage from '@/assets/hero-education-ai.jpg';
+import { Book, Upload, MessageSquare, Users } from 'lucide-react';
 
 const Index = () => {
   const { state } = useAppContext();
   const { isAuthenticated } = state;
   
-  const offerings = [
-    {
-      title: "Adaptive Learning",
-      subtitle: "Personalized AI-powered learning paths for every student",
-      image: heroImage,
-      features: [
-        "Self-paced learning modules",
-        "Real-time performance tracking",
-        "Customized content delivery"
-      ],
-      link: "/learning-style",
-      buttonText: "Discover Your Style",
-      color: "from-pink-500 to-purple-600"
-    },
-    {
-      title: "Voice Reading Coach",
-      subtitle: "AI-powered reading comprehension and fluency training",
-      image: heroImage,
-      features: [
-        "Speech recognition technology",
-        "Pronunciation feedback",
-        "Reading comprehension analysis"
-      ],
-      link: "/voice-reading",
-      buttonText: "Start Reading",
-      color: "from-blue-500 to-cyan-600"
-    },
-    {
-      title: "Essay Checker",
-      subtitle: "Intelligent essay analysis and improvement suggestions",
-      image: heroImage,
-      features: [
-        "Grammar and style checking",
-        "Content quality analysis",
-        "Personalized feedback"
-      ],
-      link: "/essay-checker",
-      buttonText: "Check Essay",
-      color: "from-green-500 to-emerald-600"
-    },
-    {
-      title: "Progress Analytics",
-      subtitle: "Comprehensive progress tracking and insights",
-      image: heroImage,
-      features: [
-        "Performance visualization",
-        "Learning trend analysis",
-        "Achievement milestones"
-      ],
-      link: "/progress",
-      buttonText: "View Progress",
-      color: "from-orange-500 to-red-600"
-    },
-    {
-      title: "Classroom Management",
-      subtitle: "AI-powered tools for teachers and educators",
-      image: heroImage,
-      features: [
-        "Student performance monitoring",
-        "Assignment creation tools",
-        "Class analytics dashboard"
-      ],
-      link: "/classrooms",
-      buttonText: "Manage Classes",
-      color: "from-purple-500 to-indigo-600"
-    },
-    {
-      title: "Answer Sheet Analysis",
-      subtitle: "Automated evaluation and detailed feedback",
-      image: heroImage,
-      features: [
-        "Instant scoring system",
-        "Error pattern analysis",
-        "Improvement recommendations"
-      ],
-      link: "/answer-sheet",
-      buttonText: "Analyze Answers",
-      color: "from-teal-500 to-blue-600"
-    },
-    {
-      title: "OCR Document Scanner",
-      subtitle: "Convert images to editable text documents",
-      image: heroImage,
-      features: [
-        "Advanced OCR technology",
-        "Multiple format support",
-        "Editable text output"
-      ],
-      link: "/ocr",
-      buttonText: "Scan Document",
-      color: "from-amber-500 to-orange-600"
-    }
-  ];
-  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50">
-      {/* Header */}
-      <header className="w-full py-4 px-6 flex justify-between items-center bg-white/80 backdrop-blur-sm border-b border-pink-100">
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <header className="w-full py-4 px-6 flex justify-between items-center bg-white border-b">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center">
-            <Book className="h-5 w-5 text-white" />
-          </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">AdaptiveEdCoach</span>
+          <Book className="h-6 w-6 text-edu-primary" />
+          <span className="text-xl font-bold">AdaptiveEdCoach</span>
         </div>
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
-            <>
-              <Button variant="outline" className="border-pink-200 text-pink-600 hover:bg-pink-50" asChild>
-                <Link to="/profile">Profile</Link>
-              </Button>
-              <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700" asChild>
-                <Link to="/dashboard">Dashboard</Link>
-              </Button>
-            </>
+            <Button asChild>
+              <Link to="/dashboard">Go to Dashboard</Link>
+            </Button>
           ) : (
             <>
-              <Button variant="outline" className="border-pink-200 text-pink-600 hover:bg-pink-50" asChild>
+              <Button variant="outline" asChild>
                 <Link to="/login">Log in</Link>
               </Button>
-              <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700" asChild>
+              <Button asChild>
                 <Link to="/signup">Sign up</Link>
               </Button>
             </>
@@ -137,102 +33,131 @@ const Index = () => {
         </div>
       </header>
       
-      {/* Hero Section */}
-      <section className="py-20 px-6 text-center">
-        <div className="container mx-auto">
-          <h1 className="text-6xl font-bold text-gray-900 mb-8">
-            What do we offer?
-          </h1>
+      <section className="relative bg-edu-background py-20">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row items-center">
+            <div className="md:w-1/2 mb-10 md:mb-0">
+              <h1 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
+                Personalized AI Learning Coach
+              </h1>
+              <p className="text-xl mb-8 text-gray-700 max-w-md">
+                Get feedback that adapts to your learning style and tracks your progress over time.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" asChild>
+                  <Link to={isAuthenticated ? "/dashboard" : "/signup"}>
+                    Get Started
+                  </Link>
+                </Button>
+                <Button variant="outline" size="lg" asChild>
+                  <Link to="/learning-style">
+                    Discover Your Learning Style
+                  </Link>
+                </Button>
+              </div>
+            </div>
+            <div className="md:w-1/2 md:pl-10">
+              <div className="bg-white p-8 rounded-lg shadow-lg border border-gray-200">
+                <div className="mb-4 flex items-center text-edu-primary font-semibold">
+                  <Book className="mr-2 h-5 w-5" />
+                  <span>Smart Learning Analysis</span>
+                </div>
+                <h3 className="text-2xl font-bold mb-3">How It Works</h3>
+                <ul className="space-y-4">
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-edu-light flex items-center justify-center text-edu-primary font-bold mr-3">1</div>
+                    <p>Take our learning style assessment to discover how you learn best</p>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-edu-light flex items-center justify-center text-edu-primary font-bold mr-3">2</div>
+                    <p>Submit your assignments and get personalized AI feedback</p>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 h-6 w-6 rounded-full bg-edu-light flex items-center justify-center text-edu-primary font-bold mr-3">3</div>
+                    <p>Track your progress over time with detailed analytics</p>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
       
-      {/* Offerings Grid */}
-      <section className="py-16 px-6">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {offerings.map((offering, index) => (
-              <Card key={index} className="group hover:shadow-xl transition-all duration-300 bg-white/80 backdrop-blur-sm border-0 shadow-lg hover:shadow-2xl hover:-translate-y-1">
-                <CardContent className="p-0">
-                  {/* Image */}
-                  <div className="relative overflow-hidden rounded-t-lg">
-                    <img 
-                      src={offering.image} 
-                      alt={offering.title}
-                      className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    <div className={`absolute inset-0 bg-gradient-to-br ${offering.color} opacity-20 group-hover:opacity-30 transition-opacity duration-300`} />
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="p-6">
-                    <div className="mb-2">
-                      <span className={`inline-block px-3 py-1 text-sm font-medium text-white rounded-full bg-gradient-to-r ${offering.color}`}>
-                        {offering.title}
-                      </span>
-                    </div>
-                    
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      {offering.subtitle}
-                    </h3>
-                    
-                    <div className="space-y-2 mb-6">
-                      {offering.features.map((feature, featureIndex) => (
-                        <div key={featureIndex} className="flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-gray-600">{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                    
-                    <Button 
-                      className={`w-full bg-gradient-to-r ${offering.color} hover:opacity-90 text-white font-medium`}
-                      asChild
-                    >
-                      <Link to={offering.link}>
-                        {offering.buttonText}
-                      </Link>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+      {/* Features Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold mb-4">Adaptive Education Features</h2>
+            <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+              Our AI coach adapts to your unique learning style and provides personalized guidance
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-edu-background p-6 rounded-lg">
+              <div className="w-12 h-12 rounded-lg bg-edu-light flex items-center justify-center mb-4">
+                <Book className="h-6 w-6 text-edu-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Learning Style Detection</h3>
+              <p className="text-gray-700">
+                Discover whether you're a visual, auditory, kinesthetic, or logical learner through our assessment.
+              </p>
+            </div>
+            
+            <div className="bg-edu-background p-6 rounded-lg">
+              <div className="w-12 h-12 rounded-lg bg-edu-light flex items-center justify-center mb-4">
+                <Upload className="h-6 w-6 text-edu-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Progress Tracking</h3>
+              <p className="text-gray-700">
+                Monitor your academic growth over time with detailed analytics and performance insights.
+              </p>
+            </div>
+            
+            <div className="bg-edu-background p-6 rounded-lg">
+              <div className="w-12 h-12 rounded-lg bg-edu-light flex items-center justify-center mb-4">
+                <MessageSquare className="h-6 w-6 text-edu-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-3">Personalized Feedback</h3>
+              <p className="text-gray-700">
+                Receive feedback tailored to your learning style for maximum comprehension and retention.
+              </p>
+            </div>
           </div>
         </div>
       </section>
       
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 mx-6 rounded-2xl mb-16">
+      <section className="py-16 bg-edu-primary bg-opacity-10">
         <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold text-white mb-6">Ready to transform education with AI?</h2>
-          <p className="text-xl text-pink-100 mb-8 max-w-2xl mx-auto">
-            Join educators and students who are using adaptive AI coaching to achieve academic excellence.
+          <h2 className="text-3xl font-bold mb-6">Ready to transform your learning experience?</h2>
+          <p className="text-lg text-gray-700 mb-8 max-w-2xl mx-auto">
+            Join thousands of students who are discovering their learning potential with adaptive AI coaching.
           </p>
-          <Button size="lg" className="bg-white text-purple-600 hover:bg-gray-50 hover:text-purple-700 font-semibold px-8 py-4" asChild>
+          <Button size="lg" asChild>
             <Link to={isAuthenticated ? "/dashboard" : "/signup"}>
-              Start Your AI Journey
+              Get Started Today
             </Link>
           </Button>
         </div>
       </section>
       
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
+      <footer className="bg-white border-t py-12">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row md:justify-between items-center">
             <div className="flex items-center gap-2 mb-4 md:mb-0">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center">
-                <Book className="h-5 w-5 text-white" />
-              </div>
+              <Book className="h-6 w-6 text-edu-primary" />
               <span className="text-xl font-bold">AdaptiveEdCoach</span>
             </div>
             <div className="flex gap-8">
-              <Link to="/about" className="text-gray-300 hover:text-pink-400 text-sm">About</Link>
-              <Link to="/contact" className="text-gray-300 hover:text-pink-400 text-sm">Contact</Link>
-              <Link to="/privacy" className="text-gray-300 hover:text-pink-400 text-sm">Privacy</Link>
-              <Link to="/terms" className="text-gray-300 hover:text-pink-400 text-sm">Terms</Link>
+              <Link to="/about" className="text-gray-600 hover:text-edu-primary text-sm">About</Link>
+              <Link to="/contact" className="text-gray-600 hover:text-edu-primary text-sm">Contact</Link>
+              <Link to="/privacy" className="text-gray-600 hover:text-edu-primary text-sm">Privacy</Link>
+              <Link to="/terms" className="text-gray-600 hover:text-edu-primary text-sm">Terms</Link>
             </div>
           </div>
-          <div className="text-center mt-8 text-sm text-gray-400">
+          <div className="text-center mt-8 text-sm text-gray-600">
             &copy; {new Date().getFullYear()} AdaptiveEdCoach. All rights reserved.
           </div>
         </div>

@@ -7,8 +7,6 @@ import { useAppContext } from '@/context/AppContext';
 import { Book, ChartBar, FileText, Mic, User, Upload, Edit, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import LanguageSelector from '@/components/LanguageSelector';
-import LoadingScreen from '@/components/loading/LoadingScreen';
-import ErrorBoundary from '@/components/error/ErrorBoundary';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -18,7 +16,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { state } = useAppContext();
-  const { isAuthenticated, isLoading } = state;
+  const { isAuthenticated } = state;
 
   const handleLanguageChange = (lang: string) => {
     // In a real implementation, this would update the app's translations
@@ -76,10 +74,6 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     }
   ];
 
-  if (isLoading) {
-    return <LoadingScreen message="Loading application..." fullScreen />;
-  }
-
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -119,9 +113,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           </aside>
         )}
         <main className="flex-grow">
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
+          {children}
         </main>
       </div>
       <Footer />

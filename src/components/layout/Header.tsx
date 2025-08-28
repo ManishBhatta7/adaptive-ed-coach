@@ -45,9 +45,6 @@ const Header = () => {
           <Link to="/progress" className="text-sm font-medium hover:text-edu-primary transition-colors">
             Progress
           </Link>
-          <Link to="/ocr" className="text-sm font-medium hover:text-edu-primary transition-colors">
-            OCR Scanner
-          </Link>
         </nav>
 
         <div className="flex items-center gap-4">
@@ -182,13 +179,6 @@ const Header = () => {
             onClick={() => setMobileMenuOpen(false)}
           >
             Progress
-          </Link>
-          <Link 
-            to="/ocr" 
-            className="block py-2 text-sm font-medium hover:text-edu-primary transition-colors"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            OCR Scanner
           </Link>
         </div>
       )}
