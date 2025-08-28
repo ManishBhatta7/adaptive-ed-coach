@@ -42,7 +42,7 @@ const ProgressChart = ({
   
   useEffect(() => {
     // Group performances by date
-    const groupedByDate = performances.reduce<Record<string, any>>((acc, performance) => {
+    const groupedByDate = (performances || []).reduce<Record<string, any>>((acc, performance) => {
       const date = new Date(performance.date).toLocaleDateString();
       
       if (!acc[date]) {
@@ -65,7 +65,7 @@ const ProgressChart = ({
 
   // Get unique subject areas in the performance data
   const uniqueSubjects = Array.from(
-    new Set(performances.map(p => p.subjectArea))
+    new Set((performances || []).map(p => p.subjectArea))
   );
   
   return (
@@ -76,7 +76,7 @@ const ProgressChart = ({
       </CardHeader>
       <CardContent>
         <div className="h-80">
-          {performances.length > 0 ? (
+          {(performances || []).length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={chartData}
