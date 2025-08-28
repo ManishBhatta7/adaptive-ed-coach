@@ -28,13 +28,13 @@ const ProgressPage = () => {
   
   // Filter performances by subject area
   const getPerformancesBySubject = (subject: SubjectArea) => {
-    return currentUser.performances.filter(p => p.subjectArea === subject);
+    return (currentUser.performances || []).filter(p => p.subjectArea === subject);
   };
   
   // Get all unique subject areas from the user's performances
   const getUniqueSubjects = () => {
     const subjects = new Set<SubjectArea>();
-    currentUser.performances.forEach(p => subjects.add(p.subjectArea));
+    (currentUser.performances || []).forEach(p => subjects.add(p.subjectArea));
     return Array.from(subjects);
   };
   
@@ -70,7 +70,7 @@ const ProgressPage = () => {
             <CardContent>
               <div className="h-[400px]">
                 <ProgressChart 
-                  performances={currentUser.performances}
+                  performances={currentUser.performances || []}
                   title="All Subjects Performance" 
                   description="Track your scores across all academic areas"
                 />
