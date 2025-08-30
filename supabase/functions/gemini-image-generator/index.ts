@@ -1,5 +1,6 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -12,58 +13,97 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, style = "vivid", size = "1024x1024", quality = "auto" } = await req.json();
+    const { 
+      prompt, 
+      style = 'educational', 
+      size = '1024x1024',
+      format = 'png',
+      quality = 'high',
+      background = 'auto'
+    } = await req.json();
 
     if (!prompt) {
-      return new Response(
-        JSON.stringify({ error: 'Prompt is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      throw new Error('Prompt is required');
     }
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+    // Try OpenAI first for better quality and format support
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
     
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    if (openaiApiKey) {
+      try {
+        console.log('Using OpenAI for image generation');
+        
+        const enhancedPrompt = `Educational illustration: ${prompt}. Style: ${style}, clean, informative, visually appealing, professional, high-quality`;
+
+        const response = await fetch('https://api.openai.com/v1/images/generations', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openaiApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-image-1',
+            prompt: enhancedPrompt,
+            size: size,
+            quality: quality,
+            output_format: format === 'jpg' ? 'jpeg' : format,
+            background: background,
+            n: 1
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const imageUrl = data.data[0].url || data.data[0].b64_json ? `data:image/${format};base64,${data.data[0].b64_json}` : null;
+          
+          console.log('OpenAI image generated successfully');
+          
+          return new Response(JSON.stringify({ 
+            success: true,
+            image_url: imageUrl,
+            prompt: enhancedPrompt,
+            format: format,
+            size: size,
+            generator: 'openai'
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      } catch (openaiError) {
+        console.log('OpenAI failed, falling back to HuggingFace:', openaiError.message);
+      }
     }
 
-    // Generate image using OpenAI's gpt-image-1 model
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'gpt-image-1',
-        prompt: prompt,
-        size: size,
-        quality: quality,
-        output_format: 'png',
-        n: 1
-      })
+    // Fallback to HuggingFace
+    const hf = new HfInference(Deno.env.get('HUGGING_FACE_ACCESS_TOKEN'));
+    const enhancedPrompt = `Educational illustration: ${prompt}. Style: ${style}, clean, informative, visually appealing`;
+
+    console.log('Generating image with HuggingFace, prompt:', enhancedPrompt);
+
+    const image = await hf.textToImage({
+      inputs: enhancedPrompt,
+      model: 'black-forest-labs/FLUX.1-schnell',
+      parameters: {
+        width: parseInt(size.split('x')[0]),
+        height: parseInt(size.split('x')[1]),
+      }
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('OpenAI API error:', error);
-      throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
-    }
+    // Convert the blob to a base64 string
+    const arrayBuffer = await image.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    
+    const imageUrl = `data:image/png;base64,${base64}`;
 
-    const data = await response.json();
-    
-    // gpt-image-1 returns base64 encoded images
-    const imageData = data.data[0];
-    
-    return new Response(JSON.stringify({
+    console.log('HuggingFace image generated successfully');
+
+    return new Response(JSON.stringify({ 
       success: true,
-      image_url: imageData.b64_json ? `data:image/png;base64,${imageData.b64_json}` : imageData.url,
-      prompt_used: prompt,
-      generation_info: {
-        model: 'gpt-image-1',
-        size: size,
-        quality: quality
-      }
+      image_url: imageUrl,
+      prompt: enhancedPrompt,
+      format: 'png', // HuggingFace returns PNG
+      size: size,
+      generator: 'huggingface'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

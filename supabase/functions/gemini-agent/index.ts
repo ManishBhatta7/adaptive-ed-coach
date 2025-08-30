@@ -47,6 +47,65 @@ serve(async (req) => {
       "create_study_materials"
     ];
 
+    // Check if this is a rendering request
+    if (action === 'render_structured_data' && context.renderMode) {
+      const renderPrompt = `Convert the following structured data into beautiful, well-formatted HTML content that can be rendered in a browser. 
+
+IMPORTANT RULES:
+1. Return ONLY the HTML content, no JSON wrapper
+2. Use proper HTML tags and structure
+3. Include inline CSS classes for styling (use Tailwind-like classes)
+4. Make it visually appealing and educational
+5. If the data includes function calls or images, render them appropriately
+6. Use semantic HTML elements
+7. Make the content responsive and accessible
+
+Structured Data to Render:
+${JSON.stringify(context.structuredData, null, 2)}
+
+User Request: ${context.userMessage}
+
+Generate beautiful HTML content now:`;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: renderPrompt
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.3,
+            topK: 40,
+            topP: 0.95,
+            maxOutputTokens: 4096,
+          }
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Gemini API error: ${JSON.stringify(error)}`);
+      }
+
+      const data = await response.json();
+      const htmlContent = data.candidates[0].content.parts[0].text;
+
+      return new Response(JSON.stringify({
+        success: true,
+        agent_response: {
+          content: htmlContent,
+          content_type: 'html'
+        }
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
     const systemPrompt = `You are an intelligent educational AI agent that acts as a processing layer between frontend user interactions and backend operations. 
 
 Your role is to:
@@ -63,15 +122,29 @@ Current context:
 - Current Page: ${context.currentPage || 'Unknown'}
 - User Role: ${context.userRole || 'student'}
 
-Based on the user's action and context, you need to:
-1. Analyze what the user is trying to accomplish
-2. Determine if you need to generate content, call functions, or process data
-3. Respond with a structured JSON format that includes:
-   - action_type: The type of action to perform
-   - content: Any generated content
-   - function_calls: Array of functions to call with parameters
-   - ui_updates: Suggested UI changes or data to display
-   - next_steps: Suggested follow-up actions for the user
+When the user requests visual content (images, diagrams, charts), you should call the generate_image function.
+When the user requests data analysis, call the process_data function.
+
+IMPORTANT: Always respond with valid JSON in this exact format:
+{
+  "action_type": "type_here",
+  "content": "descriptive content here",
+  "function_calls": [
+    {
+      "function": "function_name",
+      "parameters": {
+        "param1": "value1",
+        "param2": "value2"
+      }
+    }
+  ],
+  "ui_updates": {
+    "message": "user friendly message",
+    "data_type": "text|image|chart|table",
+    "format_options": ["png", "jpg", "svg", "html"]
+  },
+  "next_steps": ["step1", "step2"]
+}
 
 Be intelligent, proactive, and educational in your responses.`;
 
@@ -133,14 +206,20 @@ Please analyze this request and provide a comprehensive response that helps acco
           
           switch (funcCall.function) {
             case 'generate_image':
-              // Call image generation function
+              // Call image generation function with format support
+              const params = {
+                ...funcCall.parameters,
+                format: funcCall.parameters.format || 'png',
+                quality: funcCall.parameters.quality || 'high'
+              };
+              
               const imageResponse = await fetch(`${supabaseUrl}/functions/v1/gemini-image-generator`, {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${supabaseServiceKey}`,
                   'Content-Type': 'application/json'
                 },
-                body: JSON.stringify(funcCall.parameters)
+                body: JSON.stringify(params)
               });
               result = await imageResponse.json();
               break;
