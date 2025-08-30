@@ -206,12 +206,17 @@ Please analyze this request and provide a comprehensive response that helps acco
           
           switch (funcCall.function) {
             case 'generate_image':
+            case 'generate_images':
               // Call image generation function with format support
               const params = {
-                ...funcCall.parameters,
-                format: funcCall.parameters.format || 'png',
-                quality: funcCall.parameters.quality || 'high'
+                prompt: funcCall.parameters.prompt || funcCall.parameters.description,
+                format: context.imageSpecs?.format || funcCall.parameters.format || 'png',
+                quality: context.imageSpecs?.quality || funcCall.parameters.quality || 'high',
+                width: context.imageSpecs?.width || 1024,
+                height: context.imageSpecs?.height || 768
               };
+              
+              console.log('Calling image generator with params:', params);
               
               const imageResponse = await fetch(`${supabaseUrl}/functions/v1/gemini-image-generator`, {
                 method: 'POST',
@@ -222,6 +227,7 @@ Please analyze this request and provide a comprehensive response that helps acco
                 body: JSON.stringify(params)
               });
               result = await imageResponse.json();
+              console.log('Image generation result:', result);
               break;
               
             case 'process_data':
