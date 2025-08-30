@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { useAppContext } from '@/context/AppContext';
+import AIImageLoader from '@/components/ui/ai-image-loader';
 import { Bot, Image, Database, BookOpen, Brain, Sparkles } from 'lucide-react';
 
 interface AgentAction {
