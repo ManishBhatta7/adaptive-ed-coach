@@ -126,147 +126,77 @@ const AgenticInterface = () => {
       <div className="space-y-4">
         {result.success ? (
           <div className="space-y-3">
-            <Alert>
-              <Bot className="h-4 w-4" />
-              <AlertDescription>
-                Agent processed your request successfully
-              </AlertDescription>
-            </Alert>
-
-            {/* Render the LLM-processed HTML content */}
+            {/* Only show the final rendered content in an editable format */}
             {result.rendered_content && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Brain className="h-4 w-4" />
-                    AI Agent Response
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+                <CardContent className="p-6">
                   <div 
-                    className="prose prose-sm max-w-none [&>*]:mb-4 [&>h1]:text-2xl [&>h2]:text-xl [&>h3]:text-lg [&>p]:text-base [&>ul]:list-disc [&>ol]:list-decimal [&>li]:ml-4"
+                    className="prose prose-lg max-w-none min-h-[400px] p-4 border border-border rounded-lg bg-background focus-within:ring-2 focus-within:ring-ring"
+                    contentEditable
+                    suppressContentEditableWarning={true}
                     dangerouslySetInnerHTML={{ __html: result.rendered_content }}
+                    style={{
+                      outline: 'none',
+                      lineHeight: '1.6',
+                      fontSize: '16px'
+                    }}
                   />
                 </CardContent>
               </Card>
             )}
 
-            {/* Fallback to original structured response if no rendered content */}
+            {/* Show generated images without technical details */}
+            {result.agent_response?.function_results?.map((funcResult: any, index: number) => (
+              funcResult.result?.image_url && (
+                <Card key={index}>
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <img 
+                          src={funcResult.result.image_url} 
+                          alt="AI Generated content"
+                          className="max-w-full h-auto rounded-lg border shadow-sm"
+                        />
+                      </div>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            const link = document.createElement('a');
+                            link.href = funcResult.result.image_url;
+                            link.download = `ai-generated-image.${funcResult.result.format || 'png'}`;
+                            link.click();
+                          }}
+                        >
+                          Download {(funcResult.result.format || 'PNG').toUpperCase()}
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            ))}
+
+            {/* Fallback to original content if no rendered content */}
             {!result.rendered_content && result.agent_response?.content && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Brain className="h-4 w-4" />
-                    Agent Response
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="whitespace-pre-wrap">
+                <CardContent className="p-6">
+                  <div 
+                    className="min-h-[400px] p-4 border border-border rounded-lg bg-background focus-within:ring-2 focus-within:ring-ring whitespace-pre-wrap"
+                    contentEditable
+                    suppressContentEditableWarning={true}
+                    style={{
+                      outline: 'none',
+                      lineHeight: '1.6',
+                      fontSize: '16px'
+                    }}
+                  >
                     {result.agent_response.content}
                   </div>
                 </CardContent>
               </Card>
-            )}
-
-            {result.agent_response?.function_results && (
-              <div className="space-y-2">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  Generated Content:
-                </h3>
-                {result.agent_response.function_results.map((funcResult: any, index: number) => (
-                  <Card key={index}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          {funcResult.function === 'generate_image' && <Image className="h-3 w-3" />}
-                          {funcResult.function}
-                        </Badge>
-                        {funcResult.result?.format && (
-                          <Badge variant="secondary" className="text-xs">
-                            {funcResult.result.format.toUpperCase()} • {funcResult.result.size}
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      {funcResult.result?.image_url && (
-                        <div className="space-y-3">
-                          <div className="relative">
-                            <img 
-                              src={funcResult.result.image_url} 
-                              alt="AI Generated content"
-                              className="max-w-full h-auto rounded-lg border shadow-sm"
-                            />
-                          </div>
-                          
-                          {/* Download options for different formats */}
-                          <div className="flex flex-wrap gap-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => {
-                                const link = document.createElement('a');
-                                link.href = funcResult.result.image_url;
-                                link.download = `ai-generated-image.${funcResult.result.format || 'png'}`;
-                                link.click();
-                              }}
-                            >
-                              Download {(funcResult.result.format || 'PNG').toUpperCase()}
-                            </Button>
-                            
-                            {funcResult.result.generator && (
-                              <Badge variant="outline" className="text-xs">
-                                Generated by {funcResult.result.generator}
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          {funcResult.result.prompt && (
-                            <details className="text-xs text-muted-foreground">
-                              <summary className="cursor-pointer hover:text-foreground">
-                                View generation prompt
-                              </summary>
-                              <p className="mt-1 p-2 bg-muted rounded text-xs">
-                                {funcResult.result.prompt}
-                              </p>
-                            </details>
-                          )}
-                        </div>
-                      )}
-                      
-                      {funcResult.result && typeof funcResult.result === 'string' && (
-                        <div className="text-sm text-muted-foreground">
-                          {funcResult.result}
-                        </div>
-                      )}
-                      
-                      {funcResult.result && typeof funcResult.result === 'object' && !funcResult.result.image_url && (
-                        <div className="text-sm">
-                          <pre className="bg-muted p-2 rounded text-xs overflow-auto">
-                            {JSON.stringify(funcResult.result, null, 2)}
-                          </pre>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-
-            {/* Show original JSON data in collapsible section for debugging */}
-            {result.original_json && (
-              <details className="mt-4">
-                <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
-                  View Original Structured Data
-                </summary>
-                <Card className="mt-2">
-                  <CardContent className="p-3">
-                    <pre className="text-xs overflow-auto bg-muted p-2 rounded">
-                      {JSON.stringify(result.original_json, null, 2)}
-                    </pre>
-                  </CardContent>
-                </Card>
-              </details>
             )}
           </div>
         ) : (
@@ -361,36 +291,6 @@ const AgenticInterface = () => {
       </Card>
 
       {agentResponse && renderActionResult(agentResponse)}
-
-      {conversationHistory.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Conversation History</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {conversationHistory.map((item, index) => (
-                <div key={index} className={`p-3 rounded-lg ${
-                  item.type === 'user_action' 
-                    ? 'bg-primary/10 ml-4' 
-                    : 'bg-muted mr-4'
-                }`}>
-                  <div className="text-xs text-muted-foreground mb-1">
-                    {item.timestamp.toLocaleTimeString()} - {item.type.replace('_', ' ')}
-                  </div>
-                  <div className="text-sm">
-                    {item.type === 'user_action' ? (
-                      <span><strong>Action:</strong> {item.action} - {item.message}</span>
-                    ) : (
-                      <span>{item.response?.agent_response?.content || 'Processing...'}</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
