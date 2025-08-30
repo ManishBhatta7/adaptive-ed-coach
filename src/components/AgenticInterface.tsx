@@ -123,10 +123,33 @@ const AgenticInterface = () => {
 
       if (error) throw error;
 
-      if (data?.success && data?.agent_response?.function_results?.[0]?.result?.image_url) {
-        setGeneratedImage(data.agent_response.function_results[0].result.image_url);
+      console.log('Image generation response:', data);
+
+      // Check multiple possible response formats
+      let imageUrl = null;
+      if (data?.success && data?.agent_response) {
+        // Check for function results format
+        if (data.agent_response.function_results?.[0]?.result?.image_url) {
+          imageUrl = data.agent_response.function_results[0].result.image_url;
+        }
+        // Check for direct image property
+        else if (data.agent_response.image) {
+          imageUrl = data.agent_response.image;
+        }
+        // Check for content with image
+        else if (data.agent_response.content && data.agent_response.content.includes('data:image')) {
+          const match = data.agent_response.content.match(/data:image\/[^;]+;base64,[^"'\s]+/);
+          if (match) {
+            imageUrl = match[0];
+          }
+        }
+      }
+
+      if (imageUrl) {
+        setGeneratedImage(imageUrl);
       } else {
-        throw new Error('Failed to generate image');
+        console.error('No image URL found in response:', data);
+        throw new Error('No image generated in response');
       }
     } catch (error: any) {
       console.error('Error generating image:', error);
