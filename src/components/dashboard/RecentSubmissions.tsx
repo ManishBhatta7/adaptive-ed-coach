@@ -11,7 +11,7 @@ interface RecentSubmissionsProps {
 
 const RecentSubmissions = ({ performances, limit = 5 }: RecentSubmissionsProps) => {
   // Sort by date (most recent first) and limit the number
-  const recentPerformances = [...(performances || [])]
+  const recentPerformances = [...performances]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, limit);
   
