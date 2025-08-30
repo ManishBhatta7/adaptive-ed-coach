@@ -28,6 +28,7 @@ const AgenticInterface = () => {
   const sendToAgent = async (actionData: AgentAction) => {
     setIsProcessing(true);
     try {
+      // First, get the initial JSON response from the agent
       const { data, error } = await supabase.functions.invoke('gemini-agent', {
         body: {
           ...actionData,
@@ -41,7 +42,39 @@ const AgenticInterface = () => {
 
       if (error) throw error;
       
-      setAgentResponse(data);
+      // If we got structured data, send it back to the LLM to render as HTML content
+      if (data.success && data.agent_response) {
+        try {
+          const renderResponse = await supabase.functions.invoke('gemini-agent', {
+            body: {
+              action: 'render_structured_data',
+              context: {
+                userMessage: `Please convert this structured data into beautifully formatted HTML content that can be rendered in a browser. Make it visually appealing with proper styling classes. Here is the data: ${JSON.stringify(data.agent_response)}`,
+                structuredData: data.agent_response,
+                renderMode: true
+              }
+            }
+          });
+
+          if (renderResponse.data?.success) {
+            // Use the rendered HTML content
+            setAgentResponse({
+              ...data,
+              rendered_content: renderResponse.data.agent_response?.content || renderResponse.data.raw_response,
+              original_json: data.agent_response
+            });
+          } else {
+            // Fallback to original response
+            setAgentResponse(data);
+          }
+        } catch (renderError) {
+          console.warn('Could not render structured data, using original:', renderError);
+          setAgentResponse(data);
+        }
+      } else {
+        setAgentResponse(data);
+      }
+      
       setConversationHistory(prev => [...prev, {
         type: 'user_action',
         action: actionData.action,
@@ -100,7 +133,26 @@ const AgenticInterface = () => {
               </AlertDescription>
             </Alert>
 
-            {result.agent_response?.content && (
+            {/* Render the LLM-processed HTML content */}
+            {result.rendered_content && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Brain className="h-4 w-4" />
+                    AI Agent Response
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div 
+                    className="prose prose-sm max-w-none"
+                    dangerouslySetInnerHTML={{ __html: result.rendered_content }}
+                  />
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Fallback to original structured response if no rendered content */}
+            {!result.rendered_content && result.agent_response?.content && (
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -148,27 +200,20 @@ const AgenticInterface = () => {
               </div>
             )}
 
-            {result.agent_response?.ui_updates && (
-              <Alert>
-                <AlertDescription>
-                  {result.agent_response.ui_updates.message}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {result.agent_response?.next_steps && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Suggested Next Steps:</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="list-disc list-inside space-y-1 text-sm">
-                    {result.agent_response.next_steps.map((step: string, index: number) => (
-                      <li key={index}>{step}</li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+            {/* Show original JSON data in collapsible section for debugging */}
+            {result.original_json && (
+              <details className="mt-4">
+                <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+                  View Original Structured Data
+                </summary>
+                <Card className="mt-2">
+                  <CardContent className="p-3">
+                    <pre className="text-xs overflow-auto bg-muted p-2 rounded">
+                      {JSON.stringify(result.original_json, null, 2)}
+                    </pre>
+                  </CardContent>
+                </Card>
+              </details>
             )}
           </div>
         ) : (
