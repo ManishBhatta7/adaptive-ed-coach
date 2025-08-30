@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
 import { useAppContext } from '@/context/AppContext';
 import AIImageLoader from '@/components/ui/ai-image-loader';
-import { Bot, Image, Database, BookOpen, Brain, Sparkles } from 'lucide-react';
+import { Bot, Image, Database, BookOpen, Brain, Sparkles, Download } from 'lucide-react';
 
 interface AgentAction {
   action: string;
@@ -23,6 +23,9 @@ const AgenticInterface = () => {
   const { state } = useAppContext();
   const [isProcessing, setIsProcessing] = useState(false);
   const [userInput, setUserInput] = useState('');
+  const [imagePrompt, setImagePrompt] = useState('Create a beautiful educational diagram with vibrant colors and clear visual elements');
+  const [generatedImage, setGeneratedImage] = useState<string | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [agentResponse, setAgentResponse] = useState<any>(null);
   const [conversationHistory, setConversationHistory] = useState<any[]>([]);
 
@@ -95,6 +98,40 @@ const AgenticInterface = () => {
       });
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleImageGeneration = async (format: 'png' | 'jpg') => {
+    if (!imagePrompt.trim()) return;
+    
+    setIsGeneratingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('gemini-agent', {
+        body: {
+          action: 'generate_educational_image',
+          context: {
+            userMessage: imagePrompt,
+            imageSpecs: {
+              format: format,
+              width: 600,
+              height: 400,
+              quality: 'high'
+            }
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data?.success && data?.agent_response?.function_results?.[0]?.result?.image_url) {
+        setGeneratedImage(data.agent_response.function_results[0].result.image_url);
+      } else {
+        throw new Error('Failed to generate image');
+      }
+    } catch (error: any) {
+      console.error('Error generating image:', error);
+    } finally {
+      setIsGeneratingImage(false);
     }
   };
 
@@ -220,27 +257,95 @@ const AgenticInterface = () => {
             AI Agent Interface
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-            <Button
-              variant="outline"
-              onClick={() => handleQuickAction('generate_study_image', 'Create a visual study aid as a high-quality PNG image')}
-              disabled={isProcessing}
-              className="flex items-center gap-2"
-            >
-              <Image className="h-4 w-4" />
-              Generate PNG
-            </Button>
+        <CardContent className="space-y-6">
+          {/* Image Generation Section */}
+          <div className="space-y-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border">
+            <h3 className="text-lg font-semibold text-purple-900 flex items-center gap-2">
+              <Image className="h-5 w-5" />
+              AI Visual Learning Assistant
+            </h3>
             
-            <Button
-              variant="outline"
-              onClick={() => handleQuickAction('generate_study_image', 'Create a visual study aid as a JPG image with transparent background')}
-              disabled={isProcessing}
-              className="flex items-center gap-2"
-            >
-              <Image className="h-4 w-4" />
-              Generate JPG
-            </Button>
+            <div className="space-y-3">
+              <Textarea
+                placeholder="Describe the educational diagram you want to create... (e.g., 'Create a diagram showing the water cycle with clear labels and vibrant colors')"
+                value={imagePrompt}
+                onChange={(e) => setImagePrompt(e.target.value)}
+                rows={2}
+                className="resize-none"
+              />
+              
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => handleImageGeneration('png')}
+                  disabled={isGeneratingImage || !imagePrompt.trim()}
+                  className="flex items-center gap-2 border-purple-200 text-purple-600 hover:bg-purple-50"
+                >
+                  <Image className="h-4 w-4" />
+                  {isGeneratingImage ? 'Generating...' : 'Generate PNG'}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => handleImageGeneration('jpg')}
+                  disabled={isGeneratingImage || !imagePrompt.trim()}
+                  className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50"
+                >
+                  <Image className="h-4 w-4" />
+                  {isGeneratingImage ? 'Generating...' : 'Generate JPG'}
+                </Button>
+              </div>
+            </div>
+
+            {/* Generated Image Display */}
+            {generatedImage && (
+              <div className="space-y-3">
+                <div className="relative group">
+                  <img 
+                    src={generatedImage} 
+                    alt="AI Generated Educational Content"
+                    className="w-full h-auto rounded-lg shadow-sm border max-w-2xl mx-auto"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors rounded-lg"></div>
+                </div>
+                
+                <div className="flex justify-center gap-2">
+                  <Button 
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = generatedImage;
+                      link.download = 'ai-generated-educational-image';
+                      link.click();
+                    }}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Image
+                  </Button>
+                  <Button 
+                    onClick={() => setGeneratedImage(null)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    Clear
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {isGeneratingImage && (
+              <div className="flex items-center justify-center p-8 bg-white/50 rounded-lg">
+                <div className="text-center space-y-3">
+                  <div className="animate-spin h-8 w-8 border-2 border-purple-500 border-t-transparent rounded-full mx-auto"></div>
+                  <p className="text-sm text-purple-700">Creating your educational diagram...</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             
             <Button
               variant="outline"

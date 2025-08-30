@@ -15,7 +15,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { SubjectArea } from '@/types';
 import { Upload, LineChart, BarChart3, TrendingUp, HelpCircle, Brain, MessageSquare, CheckCircle, Sparkles } from 'lucide-react';
-import AIImageLoader from '@/components/ui/ai-image-loader';
 import PageLayout from '@/components/layout/PageLayout';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
@@ -232,30 +231,7 @@ const ProgressPage = () => {
             </TabsContent>
 
             <TabsContent value="ai-agent" className="mt-6">
-              <div className="space-y-6">
-                <Card className="bg-gradient-to-br from-purple-50 to-indigo-50 border-purple-200">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-purple-900">
-                      <Sparkles className="h-5 w-5" />
-                      AI Visual Learning Assistant
-                    </CardTitle>
-                    <CardDescription className="text-purple-700">
-                      Generate educational diagrams and visual content to enhance your learning
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <AIImageLoader 
-                      prompt="Create a beautiful educational diagram that helps students understand complex concepts with vibrant colors and clear visual elements"
-                      autoLoad={true}
-                      width={600}
-                      height={400}
-                      className="max-w-2xl mx-auto"
-                    />
-                  </CardContent>
-                </Card>
-                
-                <AgenticInterface />
-              </div>
+              <AgenticInterface />
             </TabsContent>
 
             <TabsContent value="doubts" className="mt-6">
