@@ -122,28 +122,31 @@ Current context:
 - Current Page: ${context.currentPage || 'Unknown'}
 - User Role: ${context.userRole || 'student'}
 
-When the user requests visual content (images, diagrams, charts), you should call the generate_image function.
-When the user requests data analysis, call the process_data function.
+CRITICAL: When the user requests visual content (images, diagrams, charts), you MUST call the "generate_image" function.
+When the user requests data analysis, call the "process_data" function.
+
+For image generation requests, ALWAYS include function_calls in your response.
 
 IMPORTANT: Always respond with valid JSON in this exact format:
 {
-  "action_type": "type_here",
-  "content": "descriptive content here",
+  "action_type": "image_generation",
+  "content": "Generating educational diagram as requested...",
   "function_calls": [
     {
-      "function": "function_name",
+      "function": "generate_image",
       "parameters": {
-        "param1": "value1",
-        "param2": "value2"
+        "prompt": "detailed image description here",
+        "style": "educational",
+        "format": "png"
       }
     }
   ],
   "ui_updates": {
-    "message": "user friendly message",
-    "data_type": "text|image|chart|table",
-    "format_options": ["png", "jpg", "svg", "html"]
+    "message": "Creating your educational diagram...",
+    "data_type": "image",
+    "format_options": ["png", "jpg"]
   },
-  "next_steps": ["step1", "step2"]
+  "next_steps": ["Display the generated image", "Provide download options"]
 }
 
 Be intelligent, proactive, and educational in your responses.`;
