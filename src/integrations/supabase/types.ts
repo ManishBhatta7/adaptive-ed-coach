@@ -80,7 +80,85 @@ export type Database = {
             referencedRelation: "assignments"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "fk_classroom_assignments_classroom_id"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      classroom_students: {
+        Row: {
+          classroom_id: string
+          id: string
+          is_active: boolean | null
+          joined_at: string
+          student_id: string
+        }
+        Insert: {
+          classroom_id: string
+          id?: string
+          is_active?: boolean | null
+          joined_at?: string
+          student_id: string
+        }
+        Update: {
+          classroom_id?: string
+          id?: string
+          is_active?: boolean | null
+          joined_at?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classroom_students_classroom_id_fkey"
+            columns: ["classroom_id"]
+            isOneToOne: false
+            referencedRelation: "classrooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      classrooms: {
+        Row: {
+          created_at: string
+          description: string | null
+          grade_level: string | null
+          id: string
+          is_active: boolean | null
+          join_code: string
+          name: string
+          subject_area: string | null
+          teacher_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          grade_level?: string | null
+          id?: string
+          is_active?: boolean | null
+          join_code: string
+          name: string
+          subject_area?: string | null
+          teacher_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          grade_level?: string | null
+          id?: string
+          is_active?: boolean | null
+          join_code?: string
+          name?: string
+          subject_area?: string | null
+          teacher_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       content_categories: {
         Row: {
@@ -607,6 +685,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_join_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
