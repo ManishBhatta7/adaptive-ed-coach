@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      assignments: {
+        Row: {
+          assignment_type: string
+          created_at: string
+          description: string | null
+          due_date: string | null
+          id: string
+          is_active: boolean | null
+          teacher_id: string
+          title: string
+          total_points: number | null
+          updated_at: string
+        }
+        Insert: {
+          assignment_type: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          teacher_id: string
+          title: string
+          total_points?: number | null
+          updated_at?: string
+        }
+        Update: {
+          assignment_type?: string
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          teacher_id?: string
+          title?: string
+          total_points?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      classroom_assignments: {
+        Row: {
+          assigned_at: string
+          assignment_id: string
+          classroom_id: string
+          id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assignment_id: string
+          classroom_id: string
+          id?: string
+        }
+        Update: {
+          assigned_at?: string
+          assignment_id?: string
+          classroom_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "classroom_assignments_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_categories: {
         Row: {
           created_at: string
@@ -243,6 +311,45 @@ export type Database = {
           },
         ]
       }
+      learning_sessions: {
+        Row: {
+          created_at: string
+          duration_minutes: number | null
+          id: string
+          insights: Json | null
+          performance_data: Json | null
+          score: number | null
+          session_type: string
+          subject_area: string | null
+          topic: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          insights?: Json | null
+          performance_data?: Json | null
+          score?: number | null
+          session_type: string
+          subject_area?: string | null
+          topic?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number | null
+          id?: string
+          insights?: Json | null
+          performance_data?: Json | null
+          score?: number | null
+          session_type?: string
+          subject_area?: string | null
+          topic?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar: string | null
@@ -323,6 +430,60 @@ export type Database = {
           },
         ]
       }
+      report_analyses: {
+        Row: {
+          analysis_results: Json
+          created_at: string | null
+          id: string
+          report_url: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          analysis_results: Json
+          created_at?: string | null
+          id?: string
+          report_url: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          analysis_results?: Json
+          created_at?: string | null
+          id?: string
+          report_url?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      student_performance: {
+        Row: {
+          created_at: string | null
+          data: Json
+          id: string
+          type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data: Json
+          id?: string
+          type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          id?: string
+          type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       student_profiles: {
         Row: {
           id: string
@@ -351,6 +512,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      submissions: {
+        Row: {
+          ai_feedback: Json | null
+          assignment_type: string
+          content_data: Json
+          id: string
+          processed_at: string | null
+          score: number | null
+          status: string
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_feedback?: Json | null
+          assignment_type: string
+          content_data?: Json
+          id?: string
+          processed_at?: string | null
+          score?: number | null
+          status?: string
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_feedback?: Json | null
+          assignment_type?: string
+          content_data?: Json
+          id?: string
+          processed_at?: string | null
+          score?: number | null
+          status?: string
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       teacher_profiles: {
         Row: {
