@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import ProgressChart from '@/components/dashboard/ProgressChart';
 import AcademicProgressTimeline from '@/components/progress/AcademicProgressTimeline';
 import { ProgressDashboard } from '@/components/progress/ProgressDashboard';
+import { PersonalizedInsights } from '@/components/progress/PersonalizedInsights';
 import { DoubtsList } from '@/components/doubts/DoubtsList';
 import { DoubtForm, DoubtFormData } from '@/components/doubts/DoubtForm';
 import AgenticInterface from '@/components/AgenticInterface';
@@ -227,7 +228,17 @@ const ProgressPage = () => {
             </TabsList>
             
             <TabsContent value="dashboard" className="mt-6">
-              <ProgressDashboard performances={performances} />
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div className="xl:col-span-2">
+                  <ProgressDashboard performances={performances} />
+                </div>
+                <div>
+                  <PersonalizedInsights 
+                    studentProfile={currentUser}
+                    timeRange="month"
+                  />
+                </div>
+              </div>
             </TabsContent>
 
             <TabsContent value="ai-agent" className="mt-6">

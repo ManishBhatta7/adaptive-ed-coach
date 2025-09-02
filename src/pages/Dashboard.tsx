@@ -3,6 +3,7 @@ import { useAppContext } from '@/context/AppContext';
 import ProgressChart from '@/components/dashboard/ProgressChart';
 import RecentSubmissions from '@/components/dashboard/RecentSubmissions';
 import LearningStyleSummary from '@/components/dashboard/LearningStyleSummary';
+import { PersonalizedInsights } from '@/components/progress/PersonalizedInsights';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, FileText, TrendingUp, Users } from 'lucide-react';
@@ -132,12 +133,16 @@ const Dashboard = () => {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Left Column - Progress Chart */}
-          <div className="xl:col-span-2">
+          {/* Left Column - Progress Chart & Insights */}
+          <div className="xl:col-span-2 space-y-8">
             <ProgressChart 
               performances={state.currentUser?.performances || []} 
               title="Academic Progress"
               description="Your performance across different subjects over time"
+            />
+            <PersonalizedInsights 
+              studentProfile={state.currentUser}
+              timeRange="month"
             />
           </div>
 
