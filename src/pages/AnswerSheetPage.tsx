@@ -3,23 +3,23 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import MainLayout from '@/components/layout/MainLayout';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Upload, AlertCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import AnswerSheetFeedback from '@/components/answer-sheet/AnswerSheetFeedback';
+import AnswerSheetUploader from '@/components/answer-sheet/AnswerSheetUploader';
+import { SubmissionService } from '@/services/SubmissionService';
 
 const AnswerSheetPage = () => {
   const navigate = useNavigate();
   const { state } = useAppContext();
-  const { isAuthenticated } = state;
+  const { isAuthenticated, currentUser } = state;
+  const { toast } = useToast();
   
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [extractedText, setExtractedText] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [submissionId, setSubmissionId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{
     content: string[];
     completed: boolean;
@@ -33,101 +33,94 @@ const AnswerSheetPage = () => {
     navigate('/login');
     return null;
   }
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    // Check file type
-    if (!file.type.match('image.*')) {
-      setError('Please upload an image file (JPG, PNG, etc.)');
-      return;
-    }
-    
-    setSelectedFile(file);
-    setError(null);
-    
-    // Create preview URL
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPreviewUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-  
-  const processAnswerSheet = () => {
-    if (!selectedFile) return;
-    
-    setIsProcessing(true);
-    setFeedback(null);
-    
-    // Mock OCR extraction - in a real app, this would use Tesseract OCR
-    setTimeout(() => {
-      // Mock extracted text from a student's answer sheet
-      const mockExtractedText = 
-        "The water cycle, also known as the hydrologic cycle, describes the continuous movement of water on, above, and below the surface of the Earth. Water can change states between liquid, vapor, and ice during this cycle.\n\n" +
-        "The main steps of the water cycle are evaporation, condensation, precipitation, and collection. During evaporation, the sun heats up water from oceans, lakes, and rivers, turning it into water vapor. This water vapor rises into the atmosphere.\n\n" +
-        "When water vapor in the air cools down, it changes back into liquid water through condensation. We can see this as clouds. When the water droplets in clouds become heavy enough, they fall back to Earth as precipitation (rain, snow, hail).\n\n" +
-        "Finally, the water is collected in oceans, lakes, rivers, and underground, where the cycle begins again.";
-      
-      setExtractedText(mockExtractedText);
-      
-      // Simulate streaming AI feedback
-      const mockFeedbackParts = [
-        "Your answer provides a good overview of the water cycle.",
-        "You've correctly identified the main processes: evaporation, condensation, precipitation, and collection.",
-        "The explanation of evaporation is accurate and mentions the sun's role in heating water bodies.",
-        "Your description of condensation forming clouds is well explained.",
-        "The precipitation explanation covers different forms (rain, snow, hail).",
-        "To improve, consider mentioning transpiration from plants as part of the evaporation process.",
-        "You could also discuss infiltration when water seeps into the ground.",
-        "Adding information about groundwater movement would make your answer more comprehensive.",
-        "Overall, this is a solid explanation of the basic water cycle.",
-      ];
-      
-      let feedbackIndex = 0;
-      const fullFeedback: string[] = [];
-      
-      const feedbackInterval = setInterval(() => {
-        if (feedbackIndex < mockFeedbackParts.length) {
-          fullFeedback.push(mockFeedbackParts[feedbackIndex]);
-          setFeedback({
-            content: [...fullFeedback],
-            completed: false,
-            score: 0,
-            strengths: [],
-            improvements: []
-          });
-          feedbackIndex++;
-        } else {
-          clearInterval(feedbackInterval);
-          setFeedback({
-            content: fullFeedback,
-            completed: true,
-            score: 85,
-            strengths: [
-              "Clear explanation of the main water cycle processes",
-              "Good description of how water changes states",
-              "Logical sequence of events in the cycle"
-            ],
-            improvements: [
-              "Include transpiration from plants",
-              "Mention infiltration and groundwater processes",
-              "Add more specific examples of how the water cycle impacts ecosystems"
-            ]
-          });
-          setIsProcessing(false);
+
+  const handleTextExtracted = async (text: string, imgUrl: string) => {
+    if (!currentUser) return;
+
+    setExtractedText(text);
+    setImageUrl(imgUrl);
+    setIsAnalyzing(true);
+
+    try {
+      // Create submission record
+      const submission = await SubmissionService.createSubmission(
+        currentUser.id,
+        {
+          assignmentType: 'answer_sheet',
+          contentData: {
+            extractedText: text,
+            imageUrl: imgUrl
+          }
         }
-      }, 800);
-    }, 1500);
+      );
+
+      if (!submission) {
+        throw new Error('Failed to create submission record');
+      }
+
+      setSubmissionId(submission.id);
+
+      // Start AI analysis
+      const analysisResult = await SubmissionService.analyzeSubmission(
+        submission.id,
+        text,
+        'General', // Could be made configurable
+        'answer_sheet'
+      );
+
+      if (!analysisResult.success) {
+        throw new Error(analysisResult.error || 'Analysis failed');
+      }
+
+      const analysis = analysisResult.analysis;
+      
+      // Convert analysis to feedback format
+      setFeedback({
+        content: [analysis.overall_feedback || 'Analysis completed'],
+        completed: true,
+        score: analysis.score || 0,
+        strengths: analysis.strengths || analysis.correct_concepts || [],
+        improvements: analysis.improvements || analysis.errors || []
+      });
+
+      toast({
+        title: 'Analysis Complete',
+        description: 'Your answer sheet has been analyzed successfully',
+      });
+
+    } catch (error) {
+      console.error('Error analyzing submission:', error);
+      toast({
+        title: 'Analysis Failed',
+        description: error instanceof Error ? error.message : 'Failed to analyze your submission',
+        variant: 'destructive',
+      });
+
+      // Show basic feedback as fallback
+      setFeedback({
+        content: ['Unable to complete full analysis. Please try again.'],
+        completed: true,
+        score: 0,
+        strengths: ['Submission received'],
+        improvements: ['Try uploading a clearer image']
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
-  
-  const resetForm = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setExtractedText('');
+
+  const handleProcessingStart = () => {
     setFeedback(null);
-    setError(null);
+    setExtractedText('');
+    setSubmissionId(null);
+  };
+
+  const resetAll = () => {
+    setExtractedText('');
+    setImageUrl('');
+    setFeedback(null);
+    setSubmissionId(null);
+    setIsAnalyzing(false);
   };
 
   return (
@@ -148,71 +141,10 @@ const AnswerSheetPage = () => {
             </TabsList>
             
             <TabsContent value="upload">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Upload className="h-5 w-5 mr-2" />
-                    Upload Answer Sheet
-                  </CardTitle>
-                  <CardDescription>
-                    Upload a clear image of your handwritten answer for AI analysis
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <input
-                      type="file"
-                      id="answer-sheet"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                    />
-                    <label 
-                      htmlFor="answer-sheet" 
-                      className="cursor-pointer flex flex-col items-center"
-                    >
-                      <FileText className="h-10 w-10 text-gray-400 mb-2" />
-                      <span className="text-gray-700 font-medium">
-                        {selectedFile ? selectedFile.name : 'Click to upload or drag and drop'}
-                      </span>
-                      <span className="text-sm text-gray-500 mt-1">
-                        JPG, PNG, or other image formats
-                      </span>
-                    </label>
-                  </div>
-                  
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Error</AlertTitle>
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-                  
-                  {previewUrl && (
-                    <div className="mt-4">
-                      <p className="font-medium mb-2">Preview:</p>
-                      <img 
-                        src={previewUrl} 
-                        alt="Answer sheet preview" 
-                        className="max-h-[400px] mx-auto rounded-md border border-gray-200" 
-                      />
-                    </div>
-                  )}
-                  
-                  <div className="flex justify-between pt-4">
-                    <Button onClick={resetForm} variant="outline">
-                      Reset
-                    </Button>
-                    <Button 
-                      onClick={processAnswerSheet}
-                      disabled={!selectedFile || isProcessing}
-                    >
-                      {isProcessing ? 'Processing...' : 'Analyze Answer'}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <AnswerSheetUploader 
+                onTextExtracted={handleTextExtracted}
+                onProcessingStart={handleProcessingStart}
+              />
               
               {extractedText && (
                 <Card className="mt-6">
@@ -223,8 +155,19 @@ const AnswerSheetPage = () => {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="bg-gray-50 p-4 rounded-md whitespace-pre-line">
+                    <div className="bg-gray-50 p-4 rounded-md whitespace-pre-line max-h-64 overflow-y-auto">
                       {extractedText}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {isAnalyzing && (
+                <Card className="mt-6">
+                  <CardContent className="py-6">
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3"></div>
+                      <span>Analyzing your answer with AI...</span>
                     </div>
                   </CardContent>
                 </Card>

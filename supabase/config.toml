@@ -3,6 +3,9 @@ project_id = "gwarmogcmeehajnevbmi"
 [functions.analyze-report]
 verify_jwt = true
 
+[functions.analyze-submission]
+verify_jwt = true
+
 [functions.gemini-agent]
 verify_jwt = false
 

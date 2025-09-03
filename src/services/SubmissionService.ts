@@ -61,6 +61,35 @@ export class SubmissionService {
     }
   }
 
+  // Analyze submission with AI
+  static async analyzeSubmission(
+    submissionId: string,
+    content: string,
+    subject?: string,
+    assignmentType?: string
+  ): Promise<{ success: boolean; analysis?: any; error?: string }> {
+    try {
+      const { data, error } = await supabase.functions.invoke('analyze-submission', {
+        body: {
+          submissionId,
+          content,
+          subject,
+          assignmentType
+        }
+      });
+
+      if (error) {
+        console.error('Error calling analyze-submission:', error);
+        return { success: false, error: error.message };
+      }
+
+      return { success: true, analysis: data.analysis };
+    } catch (error) {
+      console.error('Error in analyzeSubmission:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   // Update submission with AI feedback
   static async updateSubmissionWithFeedback(
     submissionId: string,
