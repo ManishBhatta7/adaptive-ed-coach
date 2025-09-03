@@ -1,6 +1,6 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-import { Configuration, OpenAIApi } from "https://esm.sh/openai@3.2.1"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,9 +51,9 @@ serve(async (req) => {
       return errorResponse('Unauthorized: Invalid token', 401)
     }
 
-    // Initialize OpenAI API
-    const openai = getOpenAiClient()
-    if (!openai) {
+    // Get OpenAI API key
+    const openAiApiKey = getOpenAiApiKey()
+    if (!openAiApiKey) {
       return errorResponse('OpenAI API key not configured', 500)
     }
 
@@ -85,7 +85,7 @@ serve(async (req) => {
 
     // Analyze image with OpenAI Vision API
     try {
-      const analysisResult = await analyzeWithAI(openai, file, base64Image)
+      const analysisResult = await analyzeWithAI(openAiApiKey, file, base64Image)
       // Enhance with recommendations
       analysisResult.recommendations = generateRecommendations(analysisResult)
       // Store analysis results in the database
@@ -95,6 +95,7 @@ serve(async (req) => {
         reportUrl: publicUrl
       })
     } catch (aiError) {
+      console.error('AI analysis error:', aiError)
       // If AI fails, return a more basic analysis as fallback
       const fallbackResult = generateFallbackAnalysis(userId, publicUrl)
       return successJsonResponse(fallbackResult)
@@ -114,11 +115,8 @@ function getSupabaseClient() {
   return createClient(supabaseUrl, supabaseServiceKey)
 }
 
-function getOpenAiClient() {
-  const openAiKey = Deno.env.get('OPENAI_API_KEY')
-  if (!openAiKey) return null
-  const configuration = new Configuration({ apiKey: openAiKey })
-  return new OpenAIApi(configuration)
+function getOpenAiApiKey() {
+  return Deno.env.get('OPENAI_API_KEY')
 }
 
 function getAuthToken(req: Request): { ok: true, value: string } | { ok: false, error: string } {
@@ -199,37 +197,52 @@ function toBase64(buffer: ArrayBuffer): string {
   )
 }
 
-async function analyzeWithAI(openai: any, file: File, base64Image: string) {
-  const response = await openai.createChatCompletion({
-    model: "gpt-4o-mini",
-    messages: [
-      {
-        role: "system",
-        content: aiPrompt
-      },
-      {
-        role: "user",
-        content: [
-          {
-            type: "text",
-            text: "Analyze this report card and extract the information described in my system prompt."
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: `data:${file.type};base64,${base64Image}`
+async function analyzeWithAI(openAiApiKey: string, file: File, base64Image: string) {
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${openAiApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'gpt-4.1-2025-04-14',
+      messages: [
+        {
+          role: "system",
+          content: aiPrompt
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Analyze this report card and extract the information described in my system prompt."
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:${file.type};base64,${base64Image}`
+              }
             }
-          }
-        ]
-      }
-    ],
-    max_tokens: 1500
+          ]
+        }
+      ],
+      max_completion_tokens: 1500,
+      temperature: 0.3
+    })
   })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(`OpenAI API error: ${JSON.stringify(error)}`)
+  }
+
+  const data = await response.json()
 
   // Parse the AI response
   let analysisResult
   try {
-    const aiResponseText = response.data.choices[0].message?.content || '{}'
+    const aiResponseText = data.choices[0].message?.content || '{}'
     // Extract JSON from the response (the AI might wrap it in markdown)
     const jsonMatch = aiResponseText.match(/```json\n([\s\S]*?)\n```/) ||
                       aiResponseText.match(/```\n([\s\S]*?)\n```/) ||

@@ -92,7 +92,7 @@ Please provide a detailed, educational response that helps the student understan
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-mini-2025-08-07',
         messages: [
           {
             role: 'system',
@@ -103,8 +103,7 @@ Please provide a detailed, educational response that helps the student understan
             content: prompt
           }
         ],
-        max_tokens: 1000,
-        temperature: 0.7,
+        max_completion_tokens: 1000
       }),
     });
 

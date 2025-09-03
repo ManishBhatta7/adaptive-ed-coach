@@ -1,1 +1,28 @@
 project_id = "gwarmogcmeehajnevbmi"
+
+[functions.analyze-report]
+verify_jwt = true
+
+[functions.gemini-agent]
+verify_jwt = false
+
+[functions.gemini-chat]
+verify_jwt = false
+
+[functions.gemini-data-processor]
+verify_jwt = true
+
+[functions.gemini-image-generator]
+verify_jwt = false
+
+[functions.import-content]
+verify_jwt = true
+
+[functions.solve-doubt]
+verify_jwt = true
+
+[functions.test-gemini]
+verify_jwt = false
+
+[functions.test-openai]
+verify_jwt = false

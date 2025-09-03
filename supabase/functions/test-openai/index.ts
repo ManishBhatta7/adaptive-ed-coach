@@ -27,8 +27,9 @@ serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: "Say 'The OpenAI API key is working!'" }]
+        model: "gpt-5-mini-2025-08-07",
+        messages: [{ role: "user", content: "Say 'The OpenAI API key is working!'" }],
+        max_completion_tokens: 50
       })
     })
 
