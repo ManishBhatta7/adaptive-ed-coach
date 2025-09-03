@@ -2,7 +2,11 @@
 import { useState, useEffect } from "react";
 import { Classroom } from "@/types";
 import { useAppContext } from "@/context/AppContext";
-import { fetchClassrooms } from "./useSupabaseClassroomService";
+import { 
+  fetchClassrooms, 
+  createClassroom as createSupabaseClassroom,
+  joinClassroom as joinSupabaseClassroom
+} from "./useSupabaseClassroomService";
 import { generateMockAssignments, generateMockClassrooms } from "./useClassroomMockUtils";
 
 export const useClassroom = () => {
@@ -11,27 +15,9 @@ export const useClassroom = () => {
   const { state } = useAppContext();
 
   useEffect(() => {
-    if (
-      !import.meta.env.VITE_SUPABASE_URL ||
-      !import.meta.env.VITE_SUPABASE_ANON_KEY
-    ) {
-      if (
-        state.isAuthenticated &&
-        state.currentUser &&
-        classrooms.length === 0
-      ) {
-        const mockClassrooms = generateMockClassrooms(
-          state.currentUser.id,
-          state.isTeacher
-        );
-        setClassrooms(mockClassrooms);
-      }
-    } else {
-      if (state.isAuthenticated && state.currentUser) {
-        handleFetchClassrooms(state.currentUser.id, state.isTeacher);
-      }
+    if (state.isAuthenticated && state.currentUser) {
+      handleFetchClassrooms(state.currentUser.id, state.isTeacher);
     }
-    // eslint-disable-next-line
   }, [state.isAuthenticated, state.currentUser, state.isTeacher]);
 
   const handleFetchClassrooms = async (userId: string, isTeacher: boolean) => {
@@ -40,19 +26,35 @@ export const useClassroom = () => {
       const fetchedClassrooms = await fetchClassrooms(userId, isTeacher);
       if (fetchedClassrooms) {
         setClassrooms(fetchedClassrooms);
+      } else {
+        // Fallback to mock data if Supabase fails
+        const mockClassrooms = generateMockClassrooms(userId, isTeacher);
+        setClassrooms(mockClassrooms);
       }
     } catch (error) {
       console.error("Error in fetchClassrooms:", error);
+      // Fallback to mock data
+      const mockClassrooms = generateMockClassrooms(userId, isTeacher);
+      setClassrooms(mockClassrooms);
     } finally {
       setIsLoading(false);
     }
   };
 
   const joinClassroom = async (joinCode: string): Promise<boolean> => {
-    if (
-      !import.meta.env.VITE_SUPABASE_URL ||
-      !import.meta.env.VITE_SUPABASE_ANON_KEY
-    ) {
+    if (!state.currentUser?.id) return false;
+    
+    try {
+      const success = await joinSupabaseClassroom(joinCode, state.currentUser.id);
+      if (success) {
+        // Refresh classrooms list
+        await handleFetchClassrooms(state.currentUser.id, state.isTeacher);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Error joining classroom:", error);
+      // Fallback to mock behavior
       const existingClassroom = classrooms.find((c) => c.joinCode === joinCode);
       if (existingClassroom) return true;
 
@@ -70,23 +72,6 @@ export const useClassroom = () => {
       setClassrooms((prev) => [...prev, mockClassroom]);
       return true;
     }
-    // Production logic: find and update state (placeholder, real logic not implemented)
-    const classroom = classrooms.find((c) => c.joinCode === joinCode);
-    if (classroom) {
-      setClassrooms((prevClassrooms) =>
-        prevClassrooms.map((c) => {
-          if (c.id === classroom.id) {
-            return {
-              ...c,
-              studentIds: [...c.studentIds, state.currentUser?.id || ""],
-            };
-          }
-          return c;
-        })
-      );
-      return true;
-    }
-    return false;
   };
 
   const createClassroom = async (
@@ -94,10 +79,16 @@ export const useClassroom = () => {
     teacherId: string,
     description?: string
   ): Promise<Classroom> => {
-    if (
-      !import.meta.env.VITE_SUPABASE_URL ||
-      !import.meta.env.VITE_SUPABASE_ANON_KEY
-    ) {
+    try {
+      const newClassroom = await createSupabaseClassroom(name, teacherId, description);
+      if (newClassroom) {
+        setClassrooms((prev) => [...prev, newClassroom]);
+        return newClassroom;
+      }
+      throw new Error("Failed to create classroom");
+    } catch (error) {
+      console.error("Error creating classroom:", error);
+      // Fallback to mock creation
       const mockClassroom: Classroom = {
         id: `mock-classroom-${Date.now()}`,
         name,
@@ -113,21 +104,12 @@ export const useClassroom = () => {
       setClassrooms((prev) => [...prev, mockClassroom]);
       return mockClassroom;
     }
-    // Production: just local creation (placeholder)
-    const newClassroom: Classroom = {
-      id: `classroom-${Date.now()}`,
-      name,
-      description,
-      teacherId,
-      studentIds: [],
-      assignments: [],
-      joinCode: `${name.substring(0, 3).toUpperCase()}${
-        Math.floor(Math.random() * 900) + 100
-      }`,
-      createdAt: new Date().toISOString(),
-    };
-    setClassrooms((prev) => [...prev, newClassroom]);
-    return newClassroom;
+  };
+
+  const refreshClassrooms = async () => {
+    if (state.currentUser) {
+      await handleFetchClassrooms(state.currentUser.id, state.isTeacher);
+    }
   };
 
   return {
@@ -135,5 +117,6 @@ export const useClassroom = () => {
     isLoading,
     joinClassroom,
     createClassroom,
+    refreshClassrooms,
   };
 };

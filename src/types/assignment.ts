@@ -6,8 +6,12 @@ export interface Assignment {
   title: string;
   description: string;
   subjectArea: SubjectArea;
+  assignmentType: string;
   dueDate: string;
   createdAt: string;
+  teacherId: string;
+  totalPoints: number;
+  isActive: boolean;
   attachments?: string[];
   maxScore?: number;
 }
