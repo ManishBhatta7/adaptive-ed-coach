@@ -66,7 +66,11 @@ const ProgressPage = () => {
   // Get all unique subject areas from the user's performances
   const getUniqueSubjects = () => {
     const subjects = new Set<SubjectArea>();
-    performances.forEach(p => subjects.add(p.subjectArea));
+    performances.forEach(p => {
+      if (p.subjectArea && Object.values(SubjectArea).includes(p.subjectArea as SubjectArea)) {
+        subjects.add(p.subjectArea as SubjectArea);
+      }
+    });
     return Array.from(subjects);
   };
   

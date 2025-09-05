@@ -221,8 +221,12 @@ export const generateEdgeCaseAssignments = (): Assignment[] => {
       title: 'Overdue Assignment',
       description: 'This assignment was due yesterday',
       subjectArea: SubjectArea.MATH,
+      assignmentType: 'homework',
       dueDate: new Date(now.getTime() - 1000 * 60 * 60 * 24).toISOString(),
       createdAt: new Date(now.getTime() - 1000 * 60 * 60 * 48).toISOString(),
+      teacherId: 'teacher-1',
+      totalPoints: 100,
+      isActive: true,
       maxScore: 100
     },
     
@@ -232,8 +236,12 @@ export const generateEdgeCaseAssignments = (): Assignment[] => {
       title: 'Far Future Assignment',
       description: 'This assignment is due in 10 years',
       subjectArea: SubjectArea.SCIENCE,
+      assignmentType: 'project',
       dueDate: new Date(now.getTime() + 1000 * 60 * 60 * 24 * 365 * 10).toISOString(),
       createdAt: now.toISOString(),
+      teacherId: 'teacher-1',
+      totalPoints: 200,
+      isActive: true,
       maxScore: 200
     },
     
@@ -243,8 +251,12 @@ export const generateEdgeCaseAssignments = (): Assignment[] => {
       title: 'This is an Extremely Long Assignment Title That Should Test How the UI Handles Very Long Text Content and Whether It Wraps Properly or Causes Layout Issues',
       description: 'This is an extremely long description that should test how the UI handles very lengthy text content. '.repeat(20),
       subjectArea: SubjectArea.LITERATURE,
+      assignmentType: 'essay',
       dueDate: new Date(now.getTime() + 1000 * 60 * 60 * 24 * 7).toISOString(),
       createdAt: now.toISOString(),
+      teacherId: 'teacher-1',
+      totalPoints: 150,
+      isActive: true,
       maxScore: 150,
       attachments: ['file1.pdf', 'file2.doc', 'file3.jpg', 'file4.png', 'file5.txt']
     },
@@ -255,8 +267,12 @@ export const generateEdgeCaseAssignments = (): Assignment[] => {
       title: 'No Points Assignment',
       description: 'This assignment has no points',
       subjectArea: SubjectArea.ART,
+      assignmentType: 'participation',
       dueDate: new Date(now.getTime() + 1000 * 60 * 60 * 24 * 3).toISOString(),
       createdAt: now.toISOString(),
+      teacherId: 'teacher-1',
+      totalPoints: 0,
+      isActive: true,
       maxScore: 0
     },
     
@@ -266,8 +282,12 @@ export const generateEdgeCaseAssignments = (): Assignment[] => {
       title: 'Matemáticas Avançadas: Análisis de Funcções 函数分析',
       description: 'Étude des fonctions mathématiques avec caractères spéciaux: ñ, ç, ü, é, à, 中文',
       subjectArea: SubjectArea.MATH,
+      assignmentType: 'homework',
       dueDate: new Date(now.getTime() + 1000 * 60 * 60 * 24 * 5).toISOString(),
       createdAt: now.toISOString(),
+      teacherId: 'teacher-1',
+      totalPoints: 100,
+      isActive: true,
       maxScore: 100
     }
   ];

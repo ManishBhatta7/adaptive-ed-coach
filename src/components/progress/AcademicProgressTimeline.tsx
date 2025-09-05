@@ -41,7 +41,9 @@ const AcademicProgressTimeline = ({
   
   // Get unique subject areas in the performance data
   const uniqueSubjects = Array.from(
-    new Set(performances.map(p => p.subjectArea))
+    new Set(performances.map(p => p.subjectArea).filter((s): s is SubjectArea => 
+      typeof s === 'string' && Object.values(SubjectArea).includes(s as SubjectArea)
+    ))
   );
   
   return (

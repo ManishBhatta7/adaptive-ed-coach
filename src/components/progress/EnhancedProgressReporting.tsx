@@ -116,7 +116,7 @@ export const EnhancedProgressReporting = ({ className = "" }: EnhancedProgressRe
         .order('created_at', { ascending: true });
 
       if (selectedSubject !== 'all') {
-        query = query.eq('data->subjectArea', selectedSubject);
+        query = query.eq('data->>subjectArea', selectedSubject);
       }
 
       const { data: performanceData, error } = await query;

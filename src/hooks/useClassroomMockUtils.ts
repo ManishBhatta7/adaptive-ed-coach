@@ -9,8 +9,12 @@ export const generateMockAssignments = (): Assignment[] => {
       title: 'Weekly Problem Set',
       description: 'Complete the problem set from chapter 5',
       subjectArea: SubjectArea.MATH,
+      assignmentType: 'homework',
       dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      teacherId: 'mock-teacher-1',
+      totalPoints: 100,
+      isActive: true,
       maxScore: 100,
     },
     {
@@ -18,8 +22,12 @@ export const generateMockAssignments = (): Assignment[] => {
       title: 'Research Paper',
       description: 'Write a 5-page paper on a topic of your choice',
       subjectArea: SubjectArea.LITERATURE,
+      assignmentType: 'essay',
       dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
       createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      teacherId: 'mock-teacher-1',
+      totalPoints: 100,
+      isActive: true,
       maxScore: 100,
     }
   ];
