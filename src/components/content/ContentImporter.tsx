@@ -50,7 +50,12 @@ const ContentImporter = () => {
 
   const fetchImportLogs = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('import-content');
+      const { data, error } = await supabase.functions.invoke('import-content', {
+        body: null,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
       
       if (error) throw error;
       
