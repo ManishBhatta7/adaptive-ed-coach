@@ -50,12 +50,7 @@ const ContentImporter = () => {
 
   const fetchImportLogs = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('import-content', {
-        body: null,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const { data, error } = await supabase.functions.invoke('import-content');
       
       if (error) throw error;
       
@@ -72,12 +67,7 @@ const ContentImporter = () => {
 
   const checkImportStatus = async (importId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('import-content', {
-        body: null,
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const { data, error } = await supabase.functions.invoke('import-content');
       
       if (error) throw error;
       
