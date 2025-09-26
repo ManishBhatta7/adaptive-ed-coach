@@ -14,21 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProfileEditForm } from '@/components/profile/ProfileEditForm';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { 
-  User, 
-  Edit, 
-  Shield, 
-  GraduationCap, 
-  Users, 
-  Activity, 
-  Calendar,
-  Clock,
-  FileText,
-  TrendingUp,
-  Settings,
-  Save,
-  X
-} from 'lucide-react';
+import { User, CreditCard as Edit, Shield, GraduationCap, Users, Activity, Calendar, Clock, FileText, TrendingUp, Settings, Save, X } from 'lucide-react';
 
 interface ActivityLog {
   id: string;

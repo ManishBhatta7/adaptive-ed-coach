@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Book, GraduationCap, BookOpen, Users, Brain, Target, TrendingUp, CheckCircle } from 'lucide-react';
+import { Book, GraduationCap, BookOpen, Users, Brain, Target, TrendingUp, CircleCheck as CheckCircle } from 'lucide-react';
 import heroImage from '@/assets/hero-education-ai.jpg';
 
 const Index = () => {
