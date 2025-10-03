@@ -41,11 +41,11 @@ export const UserRoleManager = () => {
     try {
       setIsLoading(true);
       
-      // Fetch all users (excluding email for security)
+      // Fetch all users using secure admin function
+      // This function checks admin role at the database level and only returns
+      // email addresses to actual admins for legitimate user management
       const { data: usersData, error: usersError } = await supabase
-        .from('profiles')
-        .select('id, name, avatar, role, joined_at, last_active')
-        .order('joined_at', { ascending: false });
+        .rpc('get_all_profiles_admin');
 
       if (usersError) throw usersError;
 
