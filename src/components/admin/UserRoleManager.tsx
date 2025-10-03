@@ -41,10 +41,10 @@ export const UserRoleManager = () => {
     try {
       setIsLoading(true);
       
-      // Fetch all users
+      // Fetch all users (excluding email for security)
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, name, avatar, role, joined_at, last_active')
         .order('joined_at', { ascending: false });
 
       if (usersError) throw usersError;
