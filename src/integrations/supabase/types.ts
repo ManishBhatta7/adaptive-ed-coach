@@ -275,10 +275,13 @@ export type Database = {
       }
       doubts: {
         Row: {
+          ai_confidence_score: number | null
+          assigned_to: string | null
           attachments: Json | null
           created_at: string
           description: string
           difficulty_level: string | null
+          escalated_at: string | null
           id: string
           priority: string | null
           solved_at: string | null
@@ -287,14 +290,19 @@ export type Database = {
           student_id: string
           subject_area: string | null
           tags: string[] | null
+          telegram_chat_id: number | null
+          telegram_message_id: number | null
           title: string
           updated_at: string
         }
         Insert: {
+          ai_confidence_score?: number | null
+          assigned_to?: string | null
           attachments?: Json | null
           created_at?: string
           description: string
           difficulty_level?: string | null
+          escalated_at?: string | null
           id?: string
           priority?: string | null
           solved_at?: string | null
@@ -303,14 +311,19 @@ export type Database = {
           student_id: string
           subject_area?: string | null
           tags?: string[] | null
+          telegram_chat_id?: number | null
+          telegram_message_id?: number | null
           title: string
           updated_at?: string
         }
         Update: {
+          ai_confidence_score?: number | null
+          assigned_to?: string | null
           attachments?: Json | null
           created_at?: string
           description?: string
           difficulty_level?: string | null
+          escalated_at?: string | null
           id?: string
           priority?: string | null
           solved_at?: string | null
@@ -319,6 +332,8 @@ export type Database = {
           student_id?: string
           subject_area?: string | null
           tags?: string[] | null
+          telegram_chat_id?: number | null
+          telegram_message_id?: number | null
           title?: string
           updated_at?: string
         }
@@ -437,6 +452,8 @@ export type Database = {
           last_active: string | null
           name: string
           role: string
+          telegram_chat_id: number | null
+          telegram_username: string | null
         }
         Insert: {
           avatar?: string | null
@@ -446,6 +463,8 @@ export type Database = {
           last_active?: string | null
           name: string
           role: string
+          telegram_chat_id?: number | null
+          telegram_username?: string | null
         }
         Update: {
           avatar?: string | null
@@ -455,6 +474,8 @@ export type Database = {
           last_active?: string | null
           name?: string
           role?: string
+          telegram_chat_id?: number | null
+          telegram_username?: string | null
         }
         Relationships: []
       }

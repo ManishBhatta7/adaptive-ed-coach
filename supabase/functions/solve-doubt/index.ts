@@ -7,6 +7,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const AI_CONFIDENCE_THRESHOLD = 0.80; // Doubts with confidence < 0.80 are assigned to teachers
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -59,7 +61,7 @@ serve(async (req) => {
       );
     }
 
-    // Generate AI response using OpenAI
+    // Generate AI response using OpenAI with confidence scoring
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
       return new Response(
@@ -83,6 +85,14 @@ Guidelines for your response:
 5. Suggest additional resources or practice if relevant
 6. End with a question to check understanding
 
+IMPORTANT: After providing your response, on a new line, add a confidence score rating your certainty in this response from 0.0 to 1.0 based on:
+- Clarity of the student's question (well-defined vs vague)
+- Complexity of the subject matter
+- Your certainty in the explanation
+- Whether this requires human teacher interaction
+
+Format your final line as: "CONFIDENCE: 0.XX"
+
 Please provide a detailed, educational response that helps the student understand the concept thoroughly.`;
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -96,7 +106,7 @@ Please provide a detailed, educational response that helps the student understan
         messages: [
           {
             role: 'system',
-            content: 'You are an expert educational tutor who helps students understand concepts clearly and encouragingly. Always provide comprehensive explanations with examples.'
+            content: 'You are an expert educational tutor who helps students understand concepts clearly and encouragingly. Always provide comprehensive explanations with examples and rate your confidence in your response.'
           },
           {
             role: 'user',
@@ -114,51 +124,232 @@ Please provide a detailed, educational response that helps the student understan
     }
 
     const aiData = await openAIResponse.json();
-    const aiResponseText = aiData.choices[0].message.content;
+    const fullResponse = aiData.choices[0].message.content;
 
-    // Save the AI response to the database
-    const { data: savedResponse, error: saveError } = await supabase
-      .from('doubt_responses')
-      .insert({
-        doubt_id: doubtId,
-        response_text: aiResponseText,
-        response_type: 'ai',
-        is_solution: true,
-      })
-      .select()
-      .single();
+    // Extract confidence score from response
+    const confidenceMatch = fullResponse.match(/CONFIDENCE:\s*(0?\.\d+|1\.0+)/i);
+    const confidenceScore = confidenceMatch ? parseFloat(confidenceMatch[1]) : 0.75; // Default to 0.75 if not found
+    
+    // Remove confidence line from actual response
+    const aiResponseText = fullResponse.replace(/\n*CONFIDENCE:\s*(0?\.\d+|1\.0+)\s*$/i, '').trim();
 
-    if (saveError) {
-      console.error('Error saving AI response:', saveError);
-      throw new Error('Failed to save AI response');
+    console.log(`AI Confidence Score: ${confidenceScore}`);
+
+    if (confidenceScore >= AI_CONFIDENCE_THRESHOLD) {
+      // High confidence - save AI response and mark as solved
+      const { data: savedResponse, error: saveError } = await supabase
+        .from('doubt_responses')
+        .insert({
+          doubt_id: doubtId,
+          response_text: aiResponseText,
+          response_type: 'ai',
+          is_solution: true,
+        })
+        .select()
+        .single();
+
+      if (saveError) {
+        console.error('Error saving AI response:', saveError);
+        throw new Error('Failed to save AI response');
+      }
+
+      // Update doubt status to 'resolved'
+      await supabase
+        .from('doubts')
+        .update({ 
+          status: 'resolved',
+          ai_confidence_score: confidenceScore,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', doubtId);
+
+      // Send Telegram notification if chat_id exists
+      if (doubt.telegram_chat_id) {
+        try {
+          await supabase.functions.invoke('send-telegram-notification', {
+            body: {
+              chatId: doubt.telegram_chat_id,
+              message: `✅ *Your doubt has been solved!*\n\n*Question:* ${doubt.title}\n\n*Answer:*\n${aiResponseText}\n\n_Confidence: ${(confidenceScore * 100).toFixed(0)}%_`,
+              parseMode: 'Markdown'
+            }
+          });
+        } catch (notifError) {
+          console.error('Failed to send Telegram notification:', notifError);
+          // Don't fail the whole operation if notification fails
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'AI solution generated successfully (high confidence)',
+          response: savedResponse,
+          confidence: confidenceScore,
+          escalated: false
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+
+    } else {
+      // Low confidence - assign to teacher
+      console.log('Low confidence - escalating to teacher');
+
+      // Find best available teacher based on subject expertise and workload
+      const teacherId = await findBestTeacher(supabase, doubt.subject_area);
+
+      if (!teacherId) {
+        // No teachers available - save AI response but mark for review
+        const { data: savedResponse, error: saveError } = await supabase
+          .from('doubt_responses')
+          .insert({
+            doubt_id: doubtId,
+            response_text: `${aiResponseText}\n\n⚠️ _Note: This response has lower confidence (${(confidenceScore * 100).toFixed(0)}%). A teacher will review it soon._`,
+            response_type: 'ai',
+            is_solution: false,
+          })
+          .select()
+          .single();
+
+        await supabase
+          .from('doubts')
+          .update({ 
+            status: 'in_progress',
+            ai_confidence_score: confidenceScore,
+            escalated_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', doubtId);
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: 'Low confidence - no teachers available, marked for review',
+            response: savedResponse,
+            confidence: confidenceScore,
+            escalated: true,
+            assigned_teacher: null
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Assign to teacher
+      await supabase
+        .from('doubts')
+        .update({ 
+          status: 'in_progress',
+          assigned_to: teacherId,
+          ai_confidence_score: confidenceScore,
+          escalated_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', doubtId);
+
+      // Save AI's preliminary response for teacher reference
+      await supabase
+        .from('doubt_responses')
+        .insert({
+          doubt_id: doubtId,
+          response_text: `_[Preliminary AI Response - Confidence: ${(confidenceScore * 100).toFixed(0)}%]_\n\n${aiResponseText}`,
+          response_type: 'ai',
+          is_solution: false,
+        });
+
+      // Notify student via Telegram
+      if (doubt.telegram_chat_id) {
+        try {
+          await supabase.functions.invoke('send-telegram-notification', {
+            body: {
+              chatId: doubt.telegram_chat_id,
+              message: `📚 *Your doubt is being reviewed by a teacher*\n\n*Question:* ${doubt.title}\n\nYour doubt requires expert attention and has been assigned to a teacher. You'll receive a detailed response soon! 👨‍🏫`,
+              parseMode: 'Markdown'
+            }
+          });
+        } catch (notifError) {
+          console.error('Failed to send Telegram notification:', notifError);
+        }
+      }
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'Low confidence - assigned to teacher',
+          confidence: confidenceScore,
+          escalated: true,
+          assigned_teacher: teacherId
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
-
-    // Update doubt status to 'in_progress'
-    await supabase
-      .from('doubts')
-      .update({ 
-        status: 'in_progress',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', doubtId);
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: 'AI solution generated successfully',
-        response: savedResponse
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
 
   } catch (error: any) {
     console.error('Error in solve-doubt function:', error);
     return new Response(
       JSON.stringify({
         error: 'Failed to generate solution',
-        details: error.message
+        details: error instanceof Error ? error.message : 'Unknown error'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
+
+async function findBestTeacher(supabase: any, subjectArea: string | null): Promise<string | null> {
+  try {
+    // Get all teachers with their profiles
+    const { data: teachers } = await supabase
+      .from('user_roles')
+      .select(`
+        user_id,
+        profiles!inner(id, name),
+        teacher_profiles(subjects)
+      `)
+      .eq('role', 'teacher');
+
+    if (!teachers || teachers.length === 0) {
+      return null;
+    }
+
+    // Filter by subject expertise if subject is specified
+    let eligibleTeachers = teachers;
+    if (subjectArea) {
+      eligibleTeachers = teachers.filter((teacher: any) => {
+        const subjects = teacher.teacher_profiles?.subjects || [];
+        return subjects.some((s: string) => 
+          s.toLowerCase().includes(subjectArea.toLowerCase()) ||
+          subjectArea.toLowerCase().includes(s.toLowerCase())
+        );
+      });
+
+      // If no teachers match the subject, fall back to all teachers
+      if (eligibleTeachers.length === 0) {
+        eligibleTeachers = teachers;
+      }
+    }
+
+    // Calculate workload for each teacher (count of open assigned doubts)
+    const teacherWorkloads = await Promise.all(
+      eligibleTeachers.map(async (teacher: any) => {
+        const { count } = await supabase
+          .from('doubts')
+          .select('id', { count: 'exact', head: true })
+          .eq('assigned_to', teacher.user_id)
+          .in('status', ['open', 'in_progress']);
+
+        return {
+          teacherId: teacher.user_id,
+          workload: count || 0
+        };
+      })
+    );
+
+    // Sort by workload (ascending) and return teacher with lowest workload
+    teacherWorkloads.sort((a, b) => a.workload - b.workload);
+    
+    return teacherWorkloads[0]?.teacherId || null;
+
+  } catch (error) {
+    console.error('Error finding best teacher:', error);
+    return null;
+  }
+}
