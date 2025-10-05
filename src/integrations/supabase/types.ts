@@ -589,13 +589,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "student_profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       submissions: {
@@ -661,13 +654,6 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "teacher_profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "public_profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       user_roles: {
@@ -696,50 +682,12 @@ export type Database = {
       }
     }
     Views: {
-      public_profiles: {
-        Row: {
-          avatar: string | null
-          id: string | null
-          joined_at: string | null
-          last_active: string | null
-          name: string | null
-          role: string | null
-        }
-        Insert: {
-          avatar?: string | null
-          id?: string | null
-          joined_at?: string | null
-          last_active?: string | null
-          name?: string | null
-          role?: string | null
-        }
-        Update: {
-          avatar?: string | null
-          id?: string | null
-          joined_at?: string | null
-          last_active?: string | null
-          name?: string | null
-          role?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       generate_join_code: {
         Args: Record<PropertyKey, never>
         Returns: string
-      }
-      get_all_profiles_admin: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          avatar: string
-          email: string
-          id: string
-          joined_at: string
-          last_active: string
-          name: string
-          role: string
-        }[]
       }
       has_role: {
         Args: {
