@@ -139,7 +139,7 @@ Format as JSON with keys: score, strengths, improvements, suggestions, encourage
         console.log('OpenAI analysis completed');
         
       } catch (error) {
-        console.error('OpenAI failed:', error.message);
+        console.error('OpenAI failed:', error instanceof Error ? error.message : 'Unknown error');
         
         if (!geminiApiKey) {
           throw new Error('OpenAI failed and no Gemini backup available');
@@ -225,7 +225,7 @@ Format as JSON with keys: score, strengths, improvements, suggestions, encourage
     console.error('Error in analyze-submission function:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

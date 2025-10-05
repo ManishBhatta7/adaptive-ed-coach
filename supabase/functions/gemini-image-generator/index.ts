@@ -70,7 +70,7 @@ serve(async (req) => {
           });
         }
       } catch (openaiError) {
-        console.log('OpenAI failed, falling back to HuggingFace:', openaiError.message);
+        console.log('OpenAI failed, falling back to HuggingFace:', openaiError instanceof Error ? openaiError.message : 'Unknown error');
       }
     }
 
@@ -112,7 +112,7 @@ serve(async (req) => {
     console.error('Error in gemini-image-generator function:', error);
     return new Response(JSON.stringify({
       success: false,
-      error: error.message
+      error: error instanceof Error ? error.message : 'Unknown error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

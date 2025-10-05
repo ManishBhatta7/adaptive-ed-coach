@@ -60,6 +60,7 @@ serve(async (req) => {
     // Parse the incoming file and userId
     const { file, userId, reqError } = await extractFileAndUserId(req)
     if (reqError) return errorResponse(reqError, 400)
+    if (!file || !userId) return errorResponse('File and userId are required', 400)
     if (userId !== user.id) return errorResponse('User ID mismatch', 403)
 
     // Ensure the storage bucket exists
@@ -102,7 +103,7 @@ serve(async (req) => {
     }
   } catch (error) {
     console.error('General error:', error)
-    return errorResponse(error.message, 500)
+    return errorResponse(error instanceof Error ? error.message : 'Unknown error', 500)
   }
 })
 
@@ -166,7 +167,7 @@ async function ensureStudentBucket(supabase: any): Promise<{ ok: boolean, error?
     }
     return { ok: true }
   } catch (err) {
-    return { ok: false, error: err.message || 'Unknown bucket error', fatal: true }
+    return { ok: false, error: err instanceof Error ? err.message : 'Unknown bucket error', fatal: true }
   }
 }
 

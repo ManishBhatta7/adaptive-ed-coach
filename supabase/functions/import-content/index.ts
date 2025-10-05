@@ -75,8 +75,8 @@ Deno.serve(async (req) => {
 
       console.log('Import log created:', importLog.id);
 
-      // Start background import process
-      EdgeRuntime.waitUntil(performContentImport(supabase, importLog.id, body));
+      // Start background import process (no await, runs in background)
+      Promise.resolve().then(() => performContentImport(supabase, importLog.id, body));
 
       return new Response(
         JSON.stringify({ 
@@ -181,7 +181,7 @@ async function performContentImport(supabase: any, importLogId: string, request:
         console.log(`Successfully imported item ${i + 1}/${content.length}: ${item.title}`);
       } catch (error) {
         failedImports++;
-        const errorMsg = `Failed to import "${item.title}": ${error.message}`;
+        const errorMsg = `Failed to import "${item.title}": ${error instanceof Error ? error.message : 'Unknown error'}`;
         errors.push(errorMsg);
         console.error(errorMsg);
       }
@@ -218,7 +218,7 @@ async function performContentImport(supabase: any, importLogId: string, request:
       .update({
         status: 'failed',
         completed_at: new Date().toISOString(),
-        error_details: { error: error.message }
+        error_details: { error: error instanceof Error ? error.message : 'Unknown error' }
       })
       .eq('id', importLogId);
   }
