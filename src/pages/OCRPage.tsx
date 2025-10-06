@@ -6,7 +6,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Upload, FileText, Download, Copy, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import Tesseract from 'tesseract.js';
 
 const OCRPage = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -29,7 +28,7 @@ const OCRPage = () => {
         return;
       }
 
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      if (file.size > 10 * 1024 * 1024) {
         toast({
           title: 'File too large',
           description: 'Please select an image smaller than 10MB',
@@ -53,6 +52,8 @@ const OCRPage = () => {
     setExtractedText('');
 
     try {
+      const Tesseract = await import('tesseract.js');
+
       const result = await Tesseract.recognize(
         selectedImage,
         'eng',
@@ -109,7 +110,7 @@ const OCRPage = () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     toast({
       title: 'Download started',
       description: 'Text file download has started',
@@ -132,13 +133,12 @@ const OCRPage = () => {
             Image to Text Converter
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Extract text from images using advanced OCR technology. Upload an image containing text 
+            Extract text from images using advanced OCR technology. Upload an image containing text
             and convert it to editable, searchable text format.
           </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Image Upload Section */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -186,7 +186,7 @@ const OCRPage = () => {
                       </Button>
                     </div>
                   </div>
-                  
+
                   {showPreview && (
                     <div className="border rounded-lg overflow-hidden">
                       <img
@@ -228,7 +228,6 @@ const OCRPage = () => {
             </CardContent>
           </Card>
 
-          {/* Extracted Text Section */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -272,7 +271,6 @@ const OCRPage = () => {
           </Card>
         </div>
 
-        {/* Tips Section */}
         <Card className="mt-8">
           <CardHeader>
             <CardTitle>Tips for Better OCR Results</CardTitle>
@@ -296,7 +294,7 @@ const OCRPage = () => {
                 </ul>
               </div>
               <div className="space-y-2">
-                <h4 className="font-semibold text-purple-600">Supported Formats</h4>
+                <h4 className="font-semibold text-orange-600">Supported Formats</h4>
                 <ul className="space-y-1 text-gray-600">
                   <li>• JPEG, PNG, GIF, BMP</li>
                   <li>• Documents, screenshots</li>
