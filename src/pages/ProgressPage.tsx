@@ -19,6 +19,7 @@ import { Upload, LineChart, BarChart3, TrendingUp, HelpCircle, Brain, MessageSqu
 import PageLayout from '@/components/layout/PageLayout';
 import { useToast } from '@/hooks/use-toast';
 import { formatDistanceToNow } from 'date-fns';
+import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 
 interface Doubt {
   id: string;
@@ -472,9 +473,10 @@ const ProgressPage = () => {
                               <Badge variant="default" className="text-xs">Solution</Badge>
                             )}
                           </div>
-                          <div className="prose prose-sm max-w-none">
-                            <p className="text-gray-800 whitespace-pre-wrap">{response.response_text}</p>
-                          </div>
+                          <MarkdownRenderer 
+                            content={response.response_text}
+                            className="text-gray-800"
+                          />
                           <p className="text-xs text-gray-500 mt-2">
                             {formatDistanceToNow(new Date(response.created_at), { addSuffix: true })}
                           </p>

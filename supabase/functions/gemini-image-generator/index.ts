@@ -1,6 +1,5 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { HfInference } from 'https://esm.sh/@huggingface/inference@2.3.2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,84 +25,56 @@ serve(async (req) => {
       throw new Error('Prompt is required');
     }
 
-    // Try OpenAI first for better quality and format support
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     
-    if (openaiApiKey) {
-      try {
-        console.log('Using OpenAI for image generation');
-        
-        const enhancedPrompt = `Educational illustration: ${prompt}. Style: ${style}, clean, informative, visually appealing, professional, high-quality`;
-
-        const response = await fetch('https://api.openai.com/v1/images/generations', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${openaiApiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'gpt-image-1',
-            prompt: enhancedPrompt,
-            size: size,
-            quality: quality,
-            output_format: format === 'jpg' ? 'jpeg' : format,
-            background: background,
-            n: 1
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          const imageUrl = data.data[0].url || data.data[0].b64_json ? `data:image/${format};base64,${data.data[0].b64_json}` : null;
-          
-          console.log('OpenAI image generated successfully');
-          
-          return new Response(JSON.stringify({ 
-            success: true,
-            image_url: imageUrl,
-            prompt: enhancedPrompt,
-            format: format,
-            size: size,
-            generator: 'openai'
-          }), {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
-      } catch (openaiError) {
-        console.log('OpenAI failed, falling back to HuggingFace:', openaiError instanceof Error ? openaiError.message : 'Unknown error');
-      }
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured');
     }
 
-    // Fallback to HuggingFace
-    const hf = new HfInference(Deno.env.get('HUGGING_FACE_ACCESS_TOKEN'));
-    const enhancedPrompt = `Educational illustration: ${prompt}. Style: ${style}, clean, informative, visually appealing`;
+    console.log('Using Lovable AI Nano banana for image generation');
+    
+    const enhancedPrompt = `Educational illustration: ${prompt}. Style: ${style}, clean, informative, visually appealing, professional, high-quality`;
 
-    console.log('Generating image with HuggingFace, prompt:', enhancedPrompt);
-
-    const image = await hf.textToImage({
-      inputs: enhancedPrompt,
-      model: 'black-forest-labs/FLUX.1-schnell',
-      parameters: {
-        width: parseInt(size.split('x')[0]),
-        height: parseInt(size.split('x')[1]),
-      }
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-image-preview',
+        messages: [
+          {
+            role: 'user',
+            content: enhancedPrompt
+          }
+        ],
+        modalities: ['image', 'text']
+      }),
     });
 
-    // Convert the blob to a base64 string
-    const arrayBuffer = await image.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Lovable AI error:', error);
+      throw new Error(`Lovable AI error: ${error.error?.message || 'Unknown error'}`);
+    }
+
+    const data = await response.json();
+    const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
     
-    const imageUrl = `data:image/png;base64,${base64}`;
+    if (!imageUrl) {
+      throw new Error('No image URL returned from Lovable AI');
+    }
 
-    console.log('HuggingFace image generated successfully');
-
+    console.log('Lovable AI image generated successfully');
+    
     return new Response(JSON.stringify({ 
       success: true,
       image_url: imageUrl,
       prompt: enhancedPrompt,
-      format: 'png', // HuggingFace returns PNG
+      format: format,
       size: size,
-      generator: 'huggingface'
+      generator: 'lovable-ai-nano-banana'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
