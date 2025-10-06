@@ -57,10 +57,10 @@ Deno.serve(async (req) => {
       );
     }
 
-    const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
-    if (!deepseekApiKey) {
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
       return new Response(
-        JSON.stringify({ error: 'DeepSeek API key not configured' }),
+        JSON.stringify({ error: 'Lovable AI key not configured' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -82,14 +82,14 @@ Guidelines for your response:
 
 Please provide a detailed, educational response that helps the student understand the concept thoroughly.`;
 
-    const deepseekResponse = await fetch('https://api.deepseek.com/chat/completions', {
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${deepseekApiKey}`,
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'deepseek-chat',
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'system',
@@ -99,19 +99,17 @@ Please provide a detailed, educational response that helps the student understan
             role: 'user',
             content: prompt
           }
-        ],
-        temperature: 0.7,
-        max_tokens: 1000
+        ]
       }),
     });
 
-    if (!deepseekResponse.ok) {
-      const error = await deepseekResponse.json();
-      console.error('DeepSeek API error:', error);
-      throw new Error(`DeepSeek API error: ${error.error?.message || 'Unknown error'}`);
+    if (!aiResponse.ok) {
+      const error = await aiResponse.json();
+      console.error('Lovable AI error:', error);
+      throw new Error(`Lovable AI error: ${error.error?.message || 'Unknown error'}`);
     }
 
-    const aiData = await deepseekResponse.json();
+    const aiData = await aiResponse.json();
     const aiResponseText = aiData.choices?.[0]?.message?.content || 'No response generated';
 
     const { data: savedResponse, error: saveError } = await supabase
