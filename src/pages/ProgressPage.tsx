@@ -139,22 +139,15 @@ const ProgressPage = () => {
   const handleSolveDoubt = async (doubt: Doubt) => {
     setIsSolvingDoubt(true);
     try {
-      // Use the agentic layer instead of direct solve-doubt call
-      const { data, error } = await supabase.functions.invoke('gemini-agent', {
-        body: {
-          action: 'solve_student_doubt',
-          context: {
-            userMessage: 'Please solve this doubt using AI',
-            data: { doubt_id: doubt.id, action: 'generate_solution' }
-          }
-        }
+      const { data, error } = await supabase.functions.invoke('solve-doubt', {
+        body: { doubtId: doubt.id }
       });
 
       if (error) throw error;
       
       toast({
-        title: 'AI Agent Processed Doubt!',
-        description: 'Your doubt has been analyzed and a solution is ready',
+        title: 'AI Solution Generated!',
+        description: 'DeepSeek AI has analyzed your doubt and provided a solution',
       });
       
       // Automatically open the doubt to show the solution
