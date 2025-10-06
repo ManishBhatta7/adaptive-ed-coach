@@ -26,9 +26,9 @@ serve(async (req) => {
   try {
     const { action, context, capabilities = [] }: AgentRequest = await req.json();
 
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
-    if (!geminiApiKey) {
-      throw new Error('Gemini API key not configured');
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
+    if (!lovableApiKey) {
+      throw new Error('Lovable API key not configured');
     }
 
     // Initialize Supabase client for data operations
@@ -108,34 +108,36 @@ Provide detailed feedback including:
       userPrompt = context.userMessage || 'Please provide guidance.';
     }
 
-    // Call Gemini API
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiApiKey}`, {
+    // Call Lovable AI (Free Gemini)
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${lovableApiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: `${systemPrompt}\n\n${userPrompt}`
-          }]
-        }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 2048,
-        }
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: userPrompt
+          }
+        ]
       })
     });
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(`Gemini API error: ${JSON.stringify(error)}`);
+      console.error('Lovable AI error:', error);
+      throw new Error(`Lovable AI error: ${error.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
-    const agentResponse = data.candidates[0].content.parts[0].text;
+    const agentResponse = data.choices?.[0]?.message?.content || 'No response generated';
 
     return new Response(JSON.stringify({
       success: true,

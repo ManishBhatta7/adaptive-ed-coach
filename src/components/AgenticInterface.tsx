@@ -10,6 +10,7 @@ import { useAppContext } from '@/context/AppContext';
 import { Bot, Image, Database, BookOpen, Brain, Sparkles, Download, FileText, Copy, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
+import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 
 interface AgentAction {
   action: string;
@@ -333,14 +334,15 @@ const AgenticInterface = () => {
                 <CardContent className="p-6">
                   <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-6">
                     {result.rendered_content ? (
-                      <div 
-                        className="prose prose-lg max-w-none"
-                        dangerouslySetInnerHTML={{ __html: result.rendered_content }}
+                      <MarkdownRenderer 
+                        content={result.rendered_content}
+                        className="text-gray-800"
                       />
                     ) : (
-                      <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
-                        {result.agent_response?.content}
-                      </div>
+                      <MarkdownRenderer 
+                        content={result.agent_response?.content || ''}
+                        className="text-gray-800"
+                      />
                     )}
                   </div>
                 </CardContent>
@@ -430,7 +432,7 @@ const AgenticInterface = () => {
             <Bot className="h-5 w-5 text-purple-600" />
             AI Agent Interface
             <Badge variant="outline" className="ml-auto">
-              Powered by Gemini & GPT-5
+              Powered by Lovable AI (Free Gemini)
             </Badge>
           </CardTitle>
         </CardHeader>
