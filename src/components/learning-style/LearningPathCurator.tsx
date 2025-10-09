@@ -183,16 +183,12 @@ function LearningPathCurator(props: LearningPathCuratorProps) {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-2 sm:p-4 space-y-4 sm:space-y-6">
-      <Card className="shadow-lg transition-shadow duration-200 hover:shadow-xl">
+    <div className="max-w-4xl mx-auto p-4 space-y-6">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-xl sm:text-2xl flex items-center gap-2">
-            <span role="img" aria-label="create" className="hidden sm:inline">✨</span>
-            Create Interactive Learning Path
-          </CardTitle>
-          <p className="text-sm text-muted-foreground">Design an engaging learning experience</p>
+          <CardTitle>Create Interactive Learning Path</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 sm:space-y-6">
+        <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
             <Input
@@ -213,16 +209,15 @@ function LearningPathCurator(props: LearningPathCuratorProps) {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             <div className="space-y-2">
-              <Label htmlFor="grade">Grade Level</Label>
+              <Label htmlFor="grade" className="text-sm font-medium">Grade Level</Label>
               <Select
                 onValueChange={(value) => setMetadata(prev => ({ ...prev, grade: value }))}
                 value={metadata.grade}
               >
-                <SelectTrigger id="grade">
+                <SelectTrigger id="grade" className="h-11">
                   <SelectValue placeholder="Select grade" />
-                </SelectTrigger>
                 <SelectContent>
                   {['1st', '2nd', '3rd', '4th', '5th', '6th', '7th', '8th', '9th', '10th', '11th', '12th'].map(grade => (
                     <SelectItem key={grade} value={grade}>{grade} Grade</SelectItem>
@@ -232,12 +227,12 @@ function LearningPathCurator(props: LearningPathCuratorProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="subject">Subject</Label>
+              <Label htmlFor="subject" className="text-sm font-medium">Subject</Label>
               <Select
                 onValueChange={(value) => setMetadata(prev => ({ ...prev, subject: value }))}
                 value={metadata.subject}
               >
-                <SelectTrigger id="subject">
+                <SelectTrigger id="subject" className="h-11">
                   <SelectValue placeholder="Select subject" />
                 </SelectTrigger>
                 <SelectContent>
@@ -259,9 +254,10 @@ function LearningPathCurator(props: LearningPathCuratorProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="lessonNumber">Lesson Number</Label>
+              <Label htmlFor="lessonNumber" className="text-sm font-medium">Lesson Number</Label>
               <Input
                 id="lessonNumber"
+                className="h-11"
                 value={metadata.lessonNumber}
                 onChange={(e) => setMetadata(prev => ({ ...prev, lessonNumber: e.target.value }))}
                 placeholder="e.g., 1.2, Chapter 3"
@@ -269,9 +265,10 @@ function LearningPathCurator(props: LearningPathCuratorProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="tags">Tags</Label>
+              <Label htmlFor="tags" className="text-sm font-medium">Tags</Label>
               <Input
                 id="tags"
+                className="h-11"
                 placeholder="Add tags (comma separated)"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ',') {
@@ -362,6 +359,7 @@ function LearningPathCurator(props: LearningPathCuratorProps) {
           {currentStep.type === 'conversation' && (
             <div className="space-y-4">
               <Textarea
+                className="min-h-[120px] p-4 text-base"
                 placeholder="Enter conversation message..."
                 value={currentStep.content.message || ''}
                 onChange={(e) => setCurrentStep({
@@ -370,8 +368,9 @@ function LearningPathCurator(props: LearningPathCuratorProps) {
                 })}
               />
               <div className="space-y-2">
-                <Label>Add interaction options (optional)</Label>
+                <Label className="text-sm font-medium">Add interaction options (optional)</Label>
                 <Input
+                  className="h-11"
                   placeholder="Option 1, Option 2, Option 3..."
                   onChange={(e) => {
                     const options = e.target.value.split(',').map(opt => opt.trim());
@@ -394,8 +393,8 @@ function LearningPathCurator(props: LearningPathCuratorProps) {
           {currentStep.type === 'video' && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label>Select Imported Video</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                <Label className="text-sm font-medium">Select Imported Video</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {importedVideos.length > 0 ? importedVideos.map(video => (
                     <Card key={video.id} className="overflow-hidden cursor-pointer border-2 border-blue-200 hover:border-blue-500" onClick={() => setCurrentStep({
                       ...currentStep,
@@ -458,9 +457,10 @@ function LearningPathCurator(props: LearningPathCuratorProps) {
           )}
 
           <div className="space-y-2">
-            <Label>Reward Points</Label>
+            <Label className="text-sm font-medium">Reward Points</Label>
             <Input
               type="number"
+              className="h-11"
               value={currentStep.rewards.points}
               onChange={(e) => setCurrentStep({
                 ...currentStep,
@@ -470,7 +470,7 @@ function LearningPathCurator(props: LearningPathCuratorProps) {
             />
           </div>
 
-          <Button onClick={addStep}>Add Step</Button>
+          <Button onClick={addStep} className="w-full sm:w-auto h-11">Add Step</Button>
         </CardContent>
       </Card>
 
@@ -479,16 +479,30 @@ function LearningPathCurator(props: LearningPathCuratorProps) {
         {steps.map((step, index) => (
           <Card key={step.id}>
             <CardContent className="p-4">
-              <div className="flex justify-between items-center">
-                <div>
-                  <span className="font-medium">Step {index + 1}: {step.type}</span>
-                  <p className="text-sm text-gray-600">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4">
+                <div className="w-full sm:w-auto">
+                  <span className="font-medium block">Step {index + 1}: {step.type}</span>
+                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
                     {step.type === 'conversation' && step.content.message}
                     {step.type === 'video' && 'Video: ' + step.content.videoUrl}
                     {step.type === 'game' && 'Game: ' + step.content.gameType}
                   </p>
                 </div>
-                <Badge>{step.rewards.points} points</Badge>
+                <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
+                  <Badge className="whitespace-nowrap">{step.rewards.points} points</Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="min-h-[36px]"
+                    onClick={() => {
+                      const stepsCopy = [...steps];
+                      stepsCopy.splice(index, 1);
+                      setSteps(stepsCopy);
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

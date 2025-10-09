@@ -151,13 +151,16 @@ const FastContentImporter = () => {
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="video-url">Single Video URL</Label>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Input
                 id="video-url"
                 placeholder="Paste a YouTube video URL"
                 disabled={isImporting}
+                className="min-h-[44px]"
+                aria-label="YouTube video URL input"
               />
               <Button
+                className="w-full sm:w-auto min-h-[44px]"
                 onClick={async () => {
                   const input = document.getElementById('video-url') as HTMLInputElement;
                   const url = input.value;
@@ -211,20 +214,39 @@ const FastContentImporter = () => {
           {importedVideos.length > 0 && (
             <div className="space-y-4">
               <h3 className="font-semibold">Imported Videos ({importedVideos.length})</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {importedVideos.map((video) => (
-                  <Card key={video.id} className={`overflow-hidden border-2 ${selectedVideos.includes(video.id) ? 'border-blue-500' : 'border-transparent'}`}>
-                    <img
-                      src={video.thumbnailUrl}
-                      alt={video.title}
-                      className="w-full aspect-video object-cover"
-                    />
+                  <Card 
+                    key={video.id} 
+                    className={`overflow-hidden border-2 transition-all duration-200 hover:shadow-lg ${
+                      selectedVideos.includes(video.id) ? 'border-blue-500 scale-[1.02]' : 'border-transparent'
+                    }`}
+                  >
+                    <div className="relative">
+                      <img
+                        src={video.thumbnailUrl}
+                        alt={video.title}
+                        className="w-full aspect-video object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={() => window.open(video.url, '_blank')}
+                          className="backdrop-blur-sm"
+                        >
+                          Preview Video
+                        </Button>
+                      </div>
+                    </div>
                     <CardContent className="p-4">
                       <h4 className="font-medium truncate">{video.title}</h4>
-                      <div className="flex justify-between items-center mt-2 gap-2">
+                      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mt-2 gap-2">
                         <Button
                           variant={selectedVideos.includes(video.id) ? 'default' : 'outline'}
                           size="sm"
+                          className="flex-1 min-h-[36px]"
                           onClick={() => {
                             setSelectedVideos((prev) =>
                               prev.includes(video.id)
@@ -233,22 +255,21 @@ const FastContentImporter = () => {
                             );
                           }}
                         >
-                          {selectedVideos.includes(video.id) ? 'Selected' : 'Select'}
+                          {selectedVideos.includes(video.id) ? (
+                            <>✓ Selected</>
+                          ) : (
+                            <>Select</>
+                          )}
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
+                          className="flex-1 min-h-[36px]"
                           onClick={() => setImportedVideos(prev => 
                             prev.filter(v => v.id !== video.id)
                           )}
                         >
                           Remove
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => window.open(video.url, '_blank')}
-                        >
-                          Preview
                         </Button>
                       </div>
                     </CardContent>
