@@ -205,15 +205,33 @@ export const LearningStyleProvider = ({ children }: { children: ReactNode }) => 
   };
   
   // Save quiz results to user profile
-  const saveQuizResults = () => {
-    if (state.currentUser) {
-      const { primaryStyle, secondaryStyle, styleStrengths } = calculateLearningStyle();
-      
-      updateUserProfile({
+  const saveQuizResults = async () => {
+    if (!state.currentUser) {
+      throw new Error('User must be logged in to save quiz results');
+    }
+
+    const { primaryStyle, secondaryStyle, styleStrengths } = calculateLearningStyle();
+    
+    try {
+      // First update just the learning style fields
+      await updateUserProfile({
         primaryLearningStyle: primaryStyle,
-        secondaryLearningStyle: secondaryStyle,
-        learningStyleStrengths: styleStrengths
+        secondaryLearningStyle: secondaryStyle
       });
+      
+      // Then check if the strengths column exists and update it separately
+      try {
+        await updateUserProfile({
+          learningStyleStrengths: styleStrengths
+        });
+      } catch (error: any) {
+        // If the column doesn't exist, log it but don't fail the whole operation
+        console.warn('Could not save learning style strengths:', error.message);
+        // The basic learning styles were still saved, so we can continue
+      }
+    } catch (error) {
+      console.error('Error saving quiz results:', error);
+      throw new Error('Failed to save learning style results');
     }
   };
   

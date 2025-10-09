@@ -15,19 +15,24 @@ interface ImportRequest {
   };
 }
 
-interface StudyRaysContent {
+interface YouTubeContent {
   id: string;
   title: string;
-  description?: string;
-  content_type: string;
+  description: string;
+  video_url: string;
+  thumbnail_url: string;
   subject_area?: string;
   grade_level?: string;
   difficulty_level?: string;
-  content_data: any;
-  tags?: string[];
-  questions?: Array<{
-    question_text: string;
-    question_type: string;
+  transcript?: string;
+  ai_summary?: string;
+  ai_key_points?: string[];
+  ai_quiz_questions?: {
+    question: string;
+    options: string[];
+    correct_answer: string;
+    explanation: string;
+  }[];
     options?: any;
     correct_answer?: string;
     explanation?: string;
@@ -156,10 +161,10 @@ async function performContentImport(supabase: any, importLogId: string, request:
       .update({ status: 'in_progress' })
       .eq('id', importLogId);
 
-    // Fetch content from Study Rays Network
-    const content = await fetchStudyRaysContent(request);
+    // Fetch content from YouTube
+    const content = await fetchYouTubeContent(request);
     
-    console.log(`Fetched ${content.length} items from Study Rays Network`);
+    console.log(`Fetched ${content.length} videos from YouTube`);
 
     // Update total items count
     await supabase

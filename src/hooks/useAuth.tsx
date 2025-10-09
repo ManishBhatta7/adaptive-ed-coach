@@ -198,24 +198,40 @@ export const useAuth = () => {
   };
 
   const updateUserProfile = async (profile: Partial<StudentProfile>) => {
-    if (!currentUser || !session) return;
+    if (!currentUser || !session) {
+      throw new Error('User must be authenticated to update profile');
+    }
     
     try {
+      // Log the payload for debugging
+      console.log('Updating profile with payload:', profile);
+      
       // Update the profile in the database
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .update(profile)
-        .eq('id', currentUser.id);
+        .eq('id', currentUser.id)
+        .select();
         
       if (error) {
-        console.error('Error updating profile:', error);
-        throw error;
+        console.error('Supabase error updating profile:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        throw new Error(`Failed to update profile: ${error.message}`);
       }
       
-      // Update the local state
-      setCurrentUser({ ...currentUser, ...profile });
+      if (!data || data.length === 0) {
+        throw new Error('No profile data returned after update');
+      }
+      
+      // Update the local state with the returned data
+      setCurrentUser({ ...currentUser, ...data[0] });
+      
+      console.log('Profile updated successfully');
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error in updateUserProfile:', error);
       throw error;
     }
   };

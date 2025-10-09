@@ -32,9 +32,14 @@ const LearningStyleQuiz = () => {
     setQuizResponse(currentQuestion.id, option);
   };
   
-  const handleSubmit = () => {
-    saveQuizResults();
-    setShowResults(true);
+  const handleSubmit = async () => {
+    try {
+      await saveQuizResults();
+      setShowResults(true);
+    } catch (error) {
+      console.error('Failed to save quiz results:', error);
+      alert('Failed to save your learning style results. Please try again.');
+    }
   };
   
   if (showResults) {

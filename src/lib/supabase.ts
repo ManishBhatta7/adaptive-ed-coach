@@ -1,5 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
+export { createClient };
 
 // Check if we should use the integration client
 const shouldUseIntegrationClient = () => {

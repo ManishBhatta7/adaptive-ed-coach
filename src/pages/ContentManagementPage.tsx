@@ -1,5 +1,5 @@
 import PageLayout from '@/components/layout/PageLayout';
-import ContentImporter from '@/components/content/ContentImporter';
+import FastContentImporter from '@/components/content/FastContentImporter';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Database, BookOpen, Users, TrendingUp } from 'lucide-react';
 
@@ -56,36 +56,36 @@ const ContentManagementPage = () => {
         {/* Import Section */}
         <div className="mb-8">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Study Rays Network Integration</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">YouTube Learning Content</h2>
             <p className="text-gray-600">
-              Import high-quality educational content from Study Rays Network. Filter by subject, grade level, 
+              Import high-quality educational content from YouTube. Filter by subject, grade level, 
               and difficulty to get the most relevant content for your students.
             </p>
           </div>
           
-          <ContentImporter />
+          <FastContentImporter />
         </div>
 
         {/* Information Card */}
         <Card className="bg-gradient-to-r from-pink-50 to-purple-50 border-pink-100">
           <CardHeader>
             <CardTitle className="text-xl bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-              About Study Rays Network
+              About YouTube Integration
             </CardTitle>
             <CardDescription className="text-gray-700">
-              Study Rays Network is a comprehensive educational platform providing high-quality learning materials
+              Access a vast library of educational content from YouTube creators and educators
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-semibold mb-2 text-purple-700">Content Types Available:</h4>
+                <h4 className="font-semibold mb-2 text-purple-700">AI-Enhanced Features:</h4>
                 <ul className="space-y-1 text-sm text-gray-700">
-                  <li>• Interactive lessons and tutorials</li>
-                  <li>• Practice quizzes and assessments</li>
-                  <li>• Educational articles and resources</li>
-                  <li>• Video lectures and demonstrations</li>
-                  <li>• Structured courses and learning paths</li>
+                  <li>• Automatic content analysis</li>
+                  <li>• AI-generated quiz questions</li>
+                  <li>• Smart content recommendations</li>
+                  <li>• Auto-generated transcripts</li>
+                  <li>• Learning objective detection</li>
                 </ul>
               </div>
               <div>
