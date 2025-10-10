@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useEffect, ReactNode, useState } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useClassroom } from '@/hooks/useClassroom';
 import { AppState, Classroom, StudentProfile } from '@/types';
@@ -15,7 +14,7 @@ const initialState: AppState = {
   isLoading: true
 };
 
-export const AppContext = createContext<{
+interface AppContextType {
   state: AppState;
   session: Session | null;
   login: (email: string, password: string) => Promise<boolean>;
@@ -25,23 +24,58 @@ export const AppContext = createContext<{
   updateOnboarding: (data: OnboardingData) => Promise<void>;
   joinClassroom: (joinCode: string) => Promise<boolean>;
   createClassroom: (name: string, description?: string) => Promise<Classroom>;
-}>({
+}
+
+export const AppContext = createContext<AppContextType>({
   state: initialState,
   session: null,
   login: () => Promise.resolve(false),
   register: () => Promise.resolve(false),
   logout: () => Promise.resolve(),
-  updateOnboarding: (data: OnboardingData) => Promise.resolve(),
   updateUserProfile: () => Promise.resolve(),
+  updateOnboarding: () => Promise.resolve(),
   joinClassroom: () => Promise.resolve(false),
   createClassroom: () => Promise.resolve({} as Classroom)
 });
 
-export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const { state: authState, session, login, register, logout, updateUserProfile, setUserProfile } = useAuth();
+export const AppProvider = ({ children }: { children: ReactNode }): JSX.Element => {
+  const { 
+    currentUser,
+    session,
+    isAuthenticated,
+    isTeacher,
+    isLoading,
+    login,
+    register,
+    logout,
+    updateUserProfile
   } = useAuth();
-  
-  const { classrooms, joinClassroom, createClassroom } = useClassroom();
+
+  const { classrooms, createClassroom, joinClassroom } = useClassroom(currentUser?.id);
+
+  const updateOnboarding = async (data: OnboardingData) => {
+    if (!currentUser?.id) return;
+
+    try {
+      // Update preferences in database
+      await supabase
+        .from('user_preferences')
+        .upsert({
+          user_id: currentUser.id,
+          ...data
+        });
+
+      // Update user profile with new preferences
+      await updateUserProfile({
+        preferences: {
+          ...currentUser.preferences,
+          ...data
+        }
+      });
+    } catch (error) {
+      console.error('Error updating onboarding data:', error);
+    }
+  };
 
   const state: AppState = {
     currentUser,
@@ -60,34 +94,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
         register,
         logout,
         updateUserProfile,
-        updateOnboarding: async (data: OnboardingData) => {
-          if (!currentUser?.id) return;
-          await supabase
-            .from('user_preferences')
-            .upsert({
-              user_id: currentUser.id,
-              ...data
-            });
-          
-          // Get updated profile
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', currentUser.id)
-            .single();
-            
-          if (profile) {
-            setCurrentUser({
-              ...profile,
-              preferences: {
-                ...profile.preferences,
-                ...data
-              }
-            });
-        },
+        updateOnboarding,
         joinClassroom,
-        createClassroom: (name: string, description?: string) => 
-          createClassroom(name, currentUser?.id || '', description)
+        createClassroom
       }}
     >
       {children}

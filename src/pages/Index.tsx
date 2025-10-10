@@ -4,6 +4,7 @@ import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Book, GraduationCap, BookOpen, Users, Brain, Target, TrendingUp, CircleCheck as CheckCircle } from 'lucide-react';
+import { PricingPlans } from '@/components/pricing/PricingPlans';
 import heroImage from '@/assets/hero-education-ai.jpg';
 
 const Index = () => {
@@ -12,52 +13,52 @@ const Index = () => {
   
   const offerings = [
     {
-      title: "Adaptive Learning",
-      subtitle: "Personalized AI-powered learning paths for every student",
+      title: "Your Personal AI Study Buddy",
+      subtitle: "Learn smarter every day with an AI companion that knows your strengths",
       image: heroImage,
       features: [
-        "Self-paced learning modules",
-        "Real-time performance tracking",
-        "Customized content delivery"
+        "Personalized learning that adapts to you",
+        "Instant feedback on your work",
+        "AI-powered study recommendations"
       ],
       link: "/learning-style",
-      buttonText: "Discover Your Style",
+      buttonText: "Meet Your Study Buddy",
       color: "from-pink-500 to-purple-600"
     },
     {
-      title: "Voice Reading Coach",
-      subtitle: "AI-powered reading comprehension and fluency training",
+      title: "Interactive Reading Assistant",
+      subtitle: "Like having a personal tutor guiding your reading — always available",
       image: heroImage,
       features: [
-        "Speech recognition technology",
-        "Pronunciation feedback",
-        "Reading comprehension analysis"
+        "Friendly conversation practice",
+        "Real-time guidance as you read",
+        "Build confidence at your pace"
       ],
       link: "/voice-reading",
-      buttonText: "Start Reading",
+      buttonText: "Practice With Me",
       color: "from-blue-500 to-cyan-600"
     },
     {
-      title: "Essay Checker",
-      subtitle: "Intelligent essay analysis and improvement suggestions",
+      title: "Writing Coach",
+      subtitle: "Your personal writing assistant that helps you improve with every essay",
       image: heroImage,
       features: [
-        "Grammar and style checking",
-        "Content quality analysis",
-        "Personalized feedback"
+        "Instant essay feedback",
+        "Writing style suggestions",
+        "Step-by-step improvements"
       ],
       link: "/essay-checker",
-      buttonText: "Check Essay",
+      buttonText: "Improve My Writing",
       color: "from-green-500 to-emerald-600"
     },
     {
-      title: "Progress Analytics",
-      subtitle: "Comprehensive progress tracking and insights",
+      title: "My Learning Journey",
+      subtitle: "Watch yourself grow and celebrate your achievements",
       image: heroImage,
       features: [
-        "Performance visualization",
-        "Learning trend analysis",
-        "Achievement milestones"
+        "Personal progress dashboard",
+        "Daily learning streaks",
+        "Achievement badges"
       ],
       link: "/progress",
       buttonText: "View Progress",
@@ -199,17 +200,24 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Pricing Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-6">
+          <PricingPlans />
+        </div>
+      </section>
       
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 mx-6 rounded-2xl mb-16">
         <div className="container mx-auto px-6 text-center">
-          <h2 className="text-4xl font-bold text-white mb-6">Ready to transform education with AI?</h2>
+          <h2 className="text-4xl font-bold text-white mb-6">Meet Your New Study Buddy</h2>
           <p className="text-xl text-pink-100 mb-8 max-w-2xl mx-auto">
-            Join educators and students who are using adaptive AI coaching to achieve academic excellence.
+            Start your 7-day free trial and discover how learning with an AI companion can transform your study experience.
           </p>
           <Button size="lg" className="bg-white text-purple-600 hover:bg-gray-50 hover:text-purple-700 font-semibold px-8 py-4" asChild>
             <Link to={isAuthenticated ? "/dashboard" : "/signup"}>
-              Start Your AI Journey
+              Try Free for 7 Days
             </Link>
           </Button>
         </div>

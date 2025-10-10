@@ -15,4 +15,12 @@ export interface StudentProfile {
   performances: PerformanceRecord[];
   joinedAt: string;
   lastActive: string;
+  preferences?: {
+    userType: string;
+    board: string;
+    subject: string;
+    theme?: 'light' | 'dark';
+    notifications?: boolean;
+    language?: string;
+  };
 }

@@ -68,7 +68,7 @@ const Signup = () => {
           
           // Delay navigation to show success feedback
           setTimeout(() => {
-            navigate('/learning-style');
+            navigate('/onboarding');
           }, 2000);
         } else {
           toast({
