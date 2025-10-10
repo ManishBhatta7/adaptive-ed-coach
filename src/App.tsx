@@ -13,6 +13,7 @@ const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const LearningStylePage = lazy(() => import("./pages/LearningStylePage"));
 const SubmitAssignment = lazy(() => import("./pages/SubmitAssignment"));
@@ -57,6 +58,7 @@ const App = () => (
               <Suspense fallback={<LoadingScreen />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/login" element={
                     <ProtectedRoute requireAuth={false}>
                       <Login />
