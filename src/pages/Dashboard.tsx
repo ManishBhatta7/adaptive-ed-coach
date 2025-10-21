@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import ProgressChart from '@/components/dashboard/ProgressChart';
 import RecentSubmissions from '@/components/dashboard/RecentSubmissions';
@@ -8,6 +9,11 @@ import { ConfidenceScoreTracker } from '@/components/analytics/ConfidenceScoreTr
 import { StudyScheduleSuggestions } from '@/components/study/StudyScheduleSuggestions';
 import { DifficultyAdaptation } from '@/components/adaptive/DifficultyAdaptation';
 import { LearningStyleBadge } from '@/components/learning-style/LearningStyleBadge';
+import { XPProgressBar } from '@/components/gamification/XPProgressBar';
+import { StreakCounter } from '@/components/gamification/StreakCounter';
+import { DailyGoalsWidget } from '@/components/gamification/DailyGoalsWidget';
+import { AchievementNotification } from '@/components/gamification/AchievementNotification';
+import GamificationService, { Achievement } from '@/services/GamificationService';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { BookOpen, FileText, TrendingUp, Users, Sparkles } from 'lucide-react';
@@ -18,6 +24,46 @@ const Dashboard = () => {
   const { state } = useAppContext();
   const { isLoading } = state;
   const { toast } = useToast();
+
+  // Gamification state (mock data - replace with real data from database)
+  const [totalXP, setTotalXP] = useState(250); // Mock XP
+  const [achievementToShow, setAchievementToShow] = useState<Achievement | null>(null);
+  
+  const level = GamificationService.calculateLevel(totalXP);
+  const streak = {
+    current: 3,
+    longest: 5,
+    lastActivity: new Date(),
+    streakBonus: 30,
+  };
+
+  const [dailyGoals, setDailyGoals] = useState([
+    { id: '1', title: 'Submit 1 assignment', description: 'Complete and submit your work', completed: false, xpReward: 50, icon: '📝' },
+    { id: '2', title: 'Complete learning quiz', description: 'Test your knowledge', completed: false, xpReward: 40, icon: '📚' },
+    { id: '3', title: 'Study for 30 minutes', description: 'Consistent daily practice', completed: false, xpReward: 30, icon: '⏰' },
+  ]);
+
+  const handleGoalComplete = (goalId: string) => {
+    setDailyGoals(prev => prev.map(g => 
+      g.id === goalId ? { ...g, completed: true } : g
+    ));
+    
+    const goal = dailyGoals.find(g => g.id === goalId);
+    if (goal) {
+      setTotalXP(prev => prev + goal.xpReward);
+      
+      toast({
+        title: `+${goal.xpReward} XP!`,
+        description: goal.title + ' completed!',
+      });
+
+      // Check for achievements
+      const newAchievements = GamificationService.checkAchievements(state.currentUser || {} as any);
+      if (newAchievements.length > 0) {
+        setTimeout(() => setAchievementToShow(newAchievements[0]), 500);
+      }
+    }
+  };
 
   if (isLoading) {
     return (
@@ -68,14 +114,33 @@ const Dashboard = () => {
     >
       <div className="container mx-auto px-6 max-w-7xl">
 
-        {/* Header */}
+        {/* Header with Gamification */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Welcome back, {state.currentUser?.name || 'Student'}!
-          </h1>
-          <p className="text-gray-600">
-            Track your progress and continue your learning journey
-          </p>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Welcome back, {state.currentUser?.name || 'Student'}!
+              </h1>
+              <p className="text-gray-600">
+                Track your progress and continue your learning journey
+              </p>
+            </div>
+          </div>
+          
+          {/* Gamification Status Bar */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <XPProgressBar 
+              level={level}
+              animated={true}
+              onLevelUp={() => {
+                toast({
+                  title: 'Level Up! 🎉',
+                  description: `You're now a ${level.title}!`,
+                });
+              }}
+            />
+            <StreakCounter streak={streak} compact={false} animated={true} />
+          </div>
         </div>
 
         {/* Quick Actions */}
@@ -174,6 +239,10 @@ const Dashboard = () => {
 
           {/* Right Column - Learning Style Summary & AI Features */}
           <div className="space-y-8">
+            <DailyGoalsWidget 
+              goals={dailyGoals}
+              onGoalComplete={handleGoalComplete}
+            />
             <LearningStyleSummary
               primaryStyle={state.currentUser?.primaryLearningStyle}
               secondaryStyle={state.currentUser?.secondaryLearningStyle}
@@ -190,6 +259,14 @@ const Dashboard = () => {
             />
           </div>
         </div>
+
+        {/* Achievement Notification */}
+        <AchievementNotification
+          achievement={achievementToShow}
+          onClose={() => setAchievementToShow(null)}
+          autoClose={true}
+          closeDelay={5000}
+        />
 
         {/* Study Schedule */}
         <div className="mt-8">
