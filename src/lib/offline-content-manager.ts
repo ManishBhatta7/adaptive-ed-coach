@@ -1,6 +1,8 @@
 import React from 'react';
 import { rourkelaCurriculum, LessonContent } from '@/data/rourkela-curriculum';
 import { useOfflineData } from '@/hooks/usePWA';
+import { AppError, handleError } from '@/utils/errorHandler';
+import { retryOperation } from '@/utils/retry';
 
 interface OfflineContentCache {
   lessons: LessonContent[];
@@ -45,99 +47,165 @@ class OfflineContentManager {
   private readonly CACHE_EXPIRY = 7 * 24 * 60 * 60 * 1000; // 7 days
 
   async init(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
-      
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => {
-        this.db = request.result;
-        resolve();
-      };
+    try {
+      return await retryOperation(
+        () => new Promise<void>((resolve, reject) => {
+          const request = indexedDB.open(this.DB_NAME, this.DB_VERSION);
+          
+          request.onerror = () => {
+            const error = new AppError(
+              'Failed to open IndexedDB',
+              'DB_INIT_ERROR',
+              undefined,
+              { dbName: this.DB_NAME, dbVersion: this.DB_VERSION }
+            );
+            reject(error);
+          };
+          
+          request.onsuccess = () => {
+            this.db = request.result;
+            console.log('[OfflineContentManager] Database initialized successfully');
+            resolve();
+          };
 
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result;
-        
-        // Create object stores
-        if (!db.objectStoreNames.contains('lessons')) {
-          const lessonStore = db.createObjectStore('lessons', { keyPath: 'id' });
-          lessonStore.createIndex('class', 'class', { unique: false });
-          lessonStore.createIndex('subject', 'subject', { unique: false });
-          lessonStore.createIndex('board', 'board', { unique: false });
-        }
+          request.onupgradeneeded = (event) => {
+            const db = (event.target as IDBOpenDBRequest).result;
+            
+            // Create object stores
+            if (!db.objectStoreNames.contains('lessons')) {
+              const lessonStore = db.createObjectStore('lessons', { keyPath: 'id' });
+              lessonStore.createIndex('class', 'class', { unique: false });
+              lessonStore.createIndex('subject', 'subject', { unique: false });
+              lessonStore.createIndex('board', 'board', { unique: false });
+            }
 
-        if (!db.objectStoreNames.contains('multimedia')) {
-          const mediaStore = db.createObjectStore('multimedia', { keyPath: 'id' });
-          mediaStore.createIndex('type', 'type', { unique: false });
-          mediaStore.createIndex('priority', 'priority', { unique: false });
-          mediaStore.createIndex('cached', 'cached', { unique: false });
-        }
+            if (!db.objectStoreNames.contains('multimedia')) {
+              const mediaStore = db.createObjectStore('multimedia', { keyPath: 'id' });
+              mediaStore.createIndex('type', 'type', { unique: false });
+              mediaStore.createIndex('priority', 'priority', { unique: false });
+              mediaStore.createIndex('cached', 'cached', { unique: false });
+            }
 
-        if (!db.objectStoreNames.contains('assessments')) {
-          const assessmentStore = db.createObjectStore('assessments', { keyPath: 'id' });
-          assessmentStore.createIndex('lessonId', 'lessonId', { unique: false });
-        }
+            if (!db.objectStoreNames.contains('assessments')) {
+              const assessmentStore = db.createObjectStore('assessments', { keyPath: 'id' });
+              assessmentStore.createIndex('lessonId', 'lessonId', { unique: false });
+            }
 
-        if (!db.objectStoreNames.contains('sync_queue')) {
-          const syncStore = db.createObjectStore('sync_queue', { keyPath: 'id' });
-          syncStore.createIndex('userId', 'userId', { unique: false });
-          syncStore.createIndex('type', 'type', { unique: false });
-          syncStore.createIndex('timestamp', 'timestamp', { unique: false });
-        }
+            if (!db.objectStoreNames.contains('sync_queue')) {
+              const syncStore = db.createObjectStore('sync_queue', { keyPath: 'id' });
+              syncStore.createIndex('userId', 'userId', { unique: false });
+              syncStore.createIndex('type', 'type', { unique: false });
+              syncStore.createIndex('timestamp', 'timestamp', { unique: false });
+            }
 
-        if (!db.objectStoreNames.contains('user_progress')) {
-          const progressStore = db.createObjectStore('user_progress', { keyPath: 'id' });
-          progressStore.createIndex('userId', 'userId', { unique: false });
-          progressStore.createIndex('lessonId', 'lessonId', { unique: false });
-        }
+            if (!db.objectStoreNames.contains('user_progress')) {
+              const progressStore = db.createObjectStore('user_progress', { keyPath: 'id' });
+              progressStore.createIndex('userId', 'userId', { unique: false });
+              progressStore.createIndex('lessonId', 'lessonId', { unique: false });
+            }
 
-        if (!db.objectStoreNames.contains('offline_cache_meta')) {
-          db.createObjectStore('offline_cache_meta', { keyPath: 'key' });
+            if (!db.objectStoreNames.contains('offline_cache_meta')) {
+              db.createObjectStore('offline_cache_meta', { keyPath: 'key' });
+            }
+          };
+        }),
+        {
+          maxRetries: 2,
+          delay: 1000
         }
-      };
-    });
+      );
+    } catch (error) {
+      const appError = error instanceof AppError
+        ? error
+        : new AppError(
+            'Failed to initialize offline content manager',
+            'INIT_ERROR',
+            undefined,
+            { originalError: error }
+          );
+      console.error('[OfflineContentManager] Initialization error:', appError);
+      throw appError;
+    }
   }
 
   // Cache essential lessons for offline access
   async cacheEssentialLessons(classNum: number, subjects: string[] = ['science', 'mathematics']): Promise<void> {
-    if (!this.db) await this.init();
-
-    const transaction = this.db!.transaction(['lessons', 'offline_cache_meta'], 'readwrite');
-    const lessonStore = transaction.objectStore('lessons');
-    const metaStore = transaction.objectStore('offline_cache_meta');
-
     try {
-      // Get lessons for specified class and subjects
-      const lessonsToCache: LessonContent[] = [];
-      
-      for (const subject of subjects) {
-        const subjectLessons = rourkelaCurriculum[subject as keyof typeof rourkelaCurriculum]?.[classNum] || [];
-        lessonsToCache.push(...subjectLessons);
+      if (!this.db) {
+        await this.init();
       }
 
-      // Cache lessons
-      for (const lesson of lessonsToCache) {
-        await lessonStore.put(lesson);
-      }
+      return await retryOperation(
+        async () => {
+          const transaction = this.db!.transaction(['lessons', 'offline_cache_meta'], 'readwrite');
+          const lessonStore = transaction.objectStore('lessons');
+          const metaStore = transaction.objectStore('offline_cache_meta');
 
-      // Update cache metadata
-      const cacheInfo: OfflineContentCache = {
-        lessons: lessonsToCache,
-        multimedia: [], // Will be populated separately
-        assessments: [], // Will be populated separately
-        lastUpdated: Date.now(),
-        version: '1.0'
-      };
+          // Get lessons for specified class and subjects
+          const lessonsToCache: LessonContent[] = [];
+          
+          for (const subject of subjects) {
+            const subjectLessons = rourkelaCurriculum[subject as keyof typeof rourkelaCurriculum]?.[classNum] || [];
+            if (subjectLessons.length === 0) {
+              console.warn(`[OfflineContentManager] No lessons found for ${subject} class ${classNum}`);
+            }
+            lessonsToCache.push(...subjectLessons);
+          }
 
-      await metaStore.put({
-        key: `cache_class_${classNum}`,
-        data: cacheInfo,
-        timestamp: Date.now()
-      });
+          if (lessonsToCache.length === 0) {
+            throw new AppError(
+              `No lessons found for class ${classNum} and subjects ${subjects.join(', ')}`,
+              'NO_LESSONS_FOUND',
+              404,
+              { classNum, subjects }
+            );
+          }
 
-      console.log(`Cached ${lessonsToCache.length} lessons for Class ${classNum}`);
+          // Cache lessons with progress tracking
+          let cached = 0;
+          for (const lesson of lessonsToCache) {
+            await lessonStore.put(lesson);
+            cached++;
+            if (cached % 10 === 0) {
+              console.log(`[OfflineContentManager] Cached ${cached}/${lessonsToCache.length} lessons`);
+            }
+          }
+
+          // Update cache metadata
+          const cacheInfo: OfflineContentCache = {
+            lessons: lessonsToCache,
+            multimedia: [],
+            assessments: [],
+            lastUpdated: Date.now(),
+            version: '1.0'
+          };
+
+          await metaStore.put({
+            key: `cache_class_${classNum}`,
+            data: cacheInfo,
+            timestamp: Date.now()
+          });
+
+          console.log(`[OfflineContentManager] Successfully cached ${lessonsToCache.length} lessons for Class ${classNum}`);
+        },
+        {
+          maxRetries: 2,
+          delay: 500,
+          backoff: 'exponential'
+        }
+      );
     } catch (error) {
-      console.error('Error caching essential lessons:', error);
-      throw error;
+      const appError = error instanceof AppError
+        ? error
+        : new AppError(
+            'Failed to cache lessons',
+            'CACHE_LESSONS_ERROR',
+            undefined,
+            { classNum, subjects, originalError: error }
+          );
+      
+      console.error('[OfflineContentManager] Error caching essential lessons:', appError);
+      throw appError;
     }
   }
 

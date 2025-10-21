@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { usePWA } from '@/hooks/usePWA';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AnimatedButton, IconButton } from '@/components/ui/animated-button';
 import { 
   WifiOff, 
   Wifi, 
@@ -78,11 +78,11 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
   // Online indicator (after reconnecting)
   if (showOnlineMessage && !isOffline) {
     return (
-      <div className={`fixed ${positionClass} left-0 right-0 z-50 px-4 py-2`}>
-        <Alert className="bg-green-500 text-white border-green-600 shadow-lg max-w-4xl mx-auto">
+      <div className={`fixed ${positionClass} left-0 right-0 z-50 px-4 py-2 animate-slide-in-down`}>
+        <Alert className="bg-green-500 text-white border-green-600 shadow-lg max-w-4xl mx-auto animate-fade-in">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <CheckCircle className="h-5 w-5" />
+              <CheckCircle className="h-5 w-5 animate-scale-in" />
               <div>
                 <AlertDescription className="text-white font-medium">
                   {t('common.backOnline') || 'Back Online'}
@@ -92,16 +92,13 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
                 </p>
               </div>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
+            <IconButton
+              icon={X}
+              label="Dismiss notification"
               onClick={handleDismiss}
               className="text-white hover:bg-green-600"
-              aria-label="Dismiss notification"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+              animation="scale"
+            />
           </div>
         </Alert>
       </div>
@@ -110,11 +107,11 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
 
   // Offline indicator
   return (
-    <div className={`fixed ${positionClass} left-0 right-0 z-50 px-4 py-2`}>
-      <Alert className="bg-orange-500 text-white border-orange-600 shadow-lg max-w-4xl mx-auto">
-        <div className="flex items-center justify-between">
+    <div className={`fixed ${positionClass} left-0 right-0 z-50 px-4 py-2 animate-slide-in-down`}>
+      <Alert className="bg-orange-500 text-white border-orange-600 shadow-lg max-w-4xl mx-auto animate-fade-in">
+          <div className="flex items-center justify-between">
           <div className="flex items-center gap-3 flex-1">
-            <CloudOff className="h-5 w-5 animate-pulse" />
+            <CloudOff className="h-5 w-5 animate-pulse" aria-hidden="true" />
             <div className="flex-1">
               <AlertDescription className="text-white font-medium flex items-center gap-2">
                 {t('common.offlineMode') || 'Offline Mode'}
@@ -128,37 +125,28 @@ export const OfflineIndicator: React.FC<OfflineIndicatorProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
+            <AnimatedButton
               type="button"
               variant="secondary"
               size="sm"
               onClick={handleSync}
               disabled={isSyncing || isOffline}
               className="bg-orange-600 text-white hover:bg-orange-700 border-orange-700"
-              aria-label="Retry sync"
+              icon={RefreshCw}
+              iconAnimation="rotate"
+              animation="scale"
+              isLoading={isSyncing}
+              loadingText={t('common.syncing') || 'Syncing...'}
             >
-              {isSyncing ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                  {t('common.syncing') || 'Syncing...'}
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  {t('common.retry') || 'Retry'}
-                </>
-              )}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
+              {t('common.retry') || 'Retry'}
+            </AnimatedButton>
+            <IconButton
+              icon={X}
+              label="Dismiss notification"
               onClick={handleDismiss}
               className="text-white hover:bg-orange-600"
-              aria-label="Dismiss notification"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+              animation="scale"
+            />
           </div>
         </div>
       </Alert>

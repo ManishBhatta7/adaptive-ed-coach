@@ -55,7 +55,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
           console.log(`Caching content for class ${currentUser.class}`);
           await offlineContentManager.cacheEssentialLessons(
             currentUser.class,
-            ['science', 'mathematics'] // Cache science and math by default
+            ['science', 'mathematics', 'social_studies'] // Cache core subjects by default
           );
           console.log('Essential lessons cached successfully');
         }

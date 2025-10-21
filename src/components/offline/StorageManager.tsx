@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AnimatedButton } from '@/components/ui/animated-button';
+import { AnimatedCard, StatCard } from '@/components/ui/animated-card';
 import { 
   HardDrive, 
   Trash2, 
@@ -179,12 +180,12 @@ export const StorageManager: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Card>
+      <AnimatedCard variant="static" className="animate-pulse">
         <CardContent className="p-8 text-center">
-          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
-          <p className="text-gray-600">{t('storage.loading') || 'Loading storage information...'}</p>
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground animate-fade-in">{t('storage.loading') || 'Loading storage information...'}</p>
         </CardContent>
-      </Card>
+      </AnimatedCard>
     );
   }
 
@@ -199,7 +200,7 @@ export const StorageManager: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Storage Overview */}
-      <Card>
+      <AnimatedCard variant="interactive" className="animate-fade-in">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <HardDrive className="h-5 w-5" />
@@ -245,33 +246,24 @@ export const StorageManager: React.FC = () => {
               {/* Cache Statistics */}
               {cacheStats && (
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-blue-50 rounded-lg">
-                    <Database className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-blue-900">
-                      {cacheStats.totalLessons || 0}
-                    </div>
-                    <div className="text-xs text-blue-600">
-                      {t('storage.lessons') || 'Lessons'}
-                    </div>
-                  </div>
-                  <div className="text-center p-4 bg-purple-50 rounded-lg">
-                    <Folder className="h-6 w-6 text-purple-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-purple-900">
-                      {cacheStats.totalMultimedia || 0}
-                    </div>
-                    <div className="text-xs text-purple-600">
-                      {t('storage.media') || 'Media Files'}
-                    </div>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <CheckCircle className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                    <div className="text-2xl font-bold text-green-900">
-                      {cacheStats.totalProgress || 0}
-                    </div>
-                    <div className="text-xs text-green-600">
-                      {t('storage.records') || 'Progress Records'}
-                    </div>
-                  </div>
+                  <StatCard
+                    label={t('storage.lessons') || 'Lessons'}
+                    value={cacheStats.totalLessons || 0}
+                    icon={<Database className="h-6 w-6" />}
+                    className="bg-blue-50 border-blue-200"
+                  />
+                  <StatCard
+                    label={t('storage.media') || 'Media Files'}
+                    value={cacheStats.totalMultimedia || 0}
+                    icon={<Folder className="h-6 w-6" />}
+                    className="bg-purple-50 border-purple-200"
+                  />
+                  <StatCard
+                    label={t('storage.records') || 'Progress Records'}
+                    value={cacheStats.totalProgress || 0}
+                    icon={<CheckCircle className="h-6 w-6" />}
+                    className="bg-green-50 border-green-200"
+                  />
                 </div>
               )}
             </>
@@ -283,10 +275,10 @@ export const StorageManager: React.FC = () => {
             </Alert>
           )}
         </CardContent>
-      </Card>
+      </AnimatedCard>
 
       {/* Cache Items Management */}
-      <Card>
+      <AnimatedCard variant="hover" className="animate-fade-in" style={{ animationDelay: '100ms' }}>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -300,37 +292,45 @@ export const StorageManager: React.FC = () => {
             </div>
             <div className="flex gap-2">
               {selectedItems.size > 0 && (
-                <Button
+                <AnimatedButton
                   type="button"
                   variant="destructive"
                   size="sm"
                   onClick={handleClearSelected}
                   disabled={isClearing}
+                  icon={Trash2}
+                  iconAnimation="wiggle"
+                  animation="scale"
+                  isLoading={isClearing}
                 >
-                  <Trash2 className="h-4 w-4 mr-2" />
                   {t('storage.clearSelected') || 'Clear Selected'} ({selectedItems.size})
-                </Button>
+                </AnimatedButton>
               )}
-              <Button
+              <AnimatedButton
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={handleClearAll}
                 disabled={isClearing}
+                icon={Trash2}
+                iconAnimation="shake"
+                animation="scale"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
                 {t('storage.clearAll') || 'Clear All'}
-              </Button>
+              </AnimatedButton>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {cacheItems.map((item) => (
-              <div
+            {cacheItems.map((item, index) => (
+              <AnimatedCard
                 key={item.key}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                variant="hover"
+                className="p-4 animate-fade-in"
+                style={{ animationDelay: `${index * 50}ms` }}
               >
+                <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {item.canDelete && (
                     <Checkbox
@@ -354,18 +354,19 @@ export const StorageManager: React.FC = () => {
                   </div>
                 </div>
                 {!item.canDelete && (
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge variant="secondary" className="text-xs animate-pulse">
                     {t('storage.protected') || 'Protected'}
                   </Badge>
                 )}
-              </div>
+                </div>
+              </AnimatedCard>
             ))}
           </div>
         </CardContent>
-      </Card>
+      </AnimatedCard>
 
       {/* Tips */}
-      <Card>
+      <AnimatedCard variant="static" className="animate-fade-in" style={{ animationDelay: '200ms' }}>
         <CardHeader>
           <CardTitle className="text-sm font-medium">
             {t('storage.tips') || 'Storage Tips'}
@@ -387,7 +388,7 @@ export const StorageManager: React.FC = () => {
             </li>
           </ul>
         </CardContent>
-      </Card>
+      </AnimatedCard>
     </div>
   );
 };
