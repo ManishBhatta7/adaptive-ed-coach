@@ -160,7 +160,10 @@ export const useAuth = () => {
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: { name, role }
+          data: { name, role },
+          // Skip email confirmation for development
+          // Remove this in production if you want email verification
+          emailRedirectTo: undefined
         }
       });
 
@@ -171,17 +174,39 @@ export const useAuth = () => {
       }
 
       console.log('Registration successful:', data);
+      console.log('Session created:', data.session ? 'Yes' : 'No');
+      console.log('User created:', data.user ? 'Yes' : 'No');
       
-      // Check if email confirmation is required
-      if (data.user && !data.session) {
-        console.log('Email confirmation required for:', data.user.email);
-        // Return true but session will be null (email confirmation needed)
+      // If session is created, user is auto-logged in (email confirmation disabled)
+      if (data.session) {
+        console.log('User auto-logged in with session');
+        setSession(data.session);
+        setIsAuthenticated(true);
+        
+        // Wait for profile to be created by trigger
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Fetch the newly created profile
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+        
+        if (profile) {
+          console.log('Profile fetched:', profile);
+          setCurrentUser(profile as StudentProfile);
+          setIsTeacher(profile.role === 'teacher');
+        } else {
+          console.error('Profile not found:', profileError);
+        }
+        
         return true;
       }
       
-      if (data.session) {
-        setSession(data.session);
-        // User profile fetch is handled by the onAuthStateChange listener
+      // Email confirmation required (shouldn't happen with autoConfirm)
+      if (data.user && !data.session) {
+        console.log('Email confirmation required for:', data.user.email);
         return true;
       }
       

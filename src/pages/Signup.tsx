@@ -61,17 +61,18 @@ const Signup = () => {
           // Success toast with better styling
           toast({
             title: "🎉 Account created successfully!",
-            description: `Welcome to AdaptiveEdCoach, ${data.name}! Please check your email to confirm your account.`,
-            duration: 5000,
+            description: `Welcome to AdaptiveEdCoach, ${data.name}! Redirecting to your dashboard...`,
+            duration: 3000,
           });
-
-          // Show email confirmation message
-          setShowEmailConfirm(true);
           
-          // Redirect to login after showing message
+          // Redirect to dashboard based on role
           setTimeout(() => {
-            navigate('/login');
-          }, 3000);
+            if (data.role === 'teacher') {
+              navigate('/teacher-dashboard');
+            } else {
+              navigate('/dashboard');
+            }
+          }, 1500);
         } else {
           toast({
             title: "❌ Registration failed",
