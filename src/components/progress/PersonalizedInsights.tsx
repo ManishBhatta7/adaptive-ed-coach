@@ -18,6 +18,7 @@ import { StudentProfile, CoachingMode } from '@/types';
 import { ProgressAnalysisService, ProgressInsight } from '@/services/ProgressAnalysisService';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
+import { LearningStyleBadge } from '@/components/learning-style/LearningStyleBadge';
 
 interface PersonalizedInsightsProps {
   studentProfile: StudentProfile;
@@ -289,9 +290,15 @@ export const PersonalizedInsights: React.FC<PersonalizedInsightsProps> = ({
           {studentProfile.primaryLearningStyle && (
             <Card className="bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200">
               <CardContent className="p-4">
-                <div className="flex items-center gap-3 mb-3">
-                  <Brain className="h-5 w-5 text-purple-600" />
-                  <h4 className="font-medium">Learning Style Optimization</h4>
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-3">
+                    <Brain className="h-5 w-5 text-purple-600" />
+                    <h4 className="font-medium">Learning Style Optimization</h4>
+                  </div>
+                  <LearningStyleBadge 
+                    learningStyle={studentProfile.primaryLearningStyle} 
+                    variant="compact"
+                  />
                 </div>
                 <p className="text-sm text-gray-600 mb-3">
                   Your insights are personalized for {studentProfile.primaryLearningStyle.replace('_', ' ')} learners.

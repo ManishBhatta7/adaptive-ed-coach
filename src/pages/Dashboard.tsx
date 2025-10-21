@@ -4,14 +4,20 @@ import ProgressChart from '@/components/dashboard/ProgressChart';
 import RecentSubmissions from '@/components/dashboard/RecentSubmissions';
 import LearningStyleSummary from '@/components/dashboard/LearningStyleSummary';
 import { PersonalizedInsights } from '@/components/progress/PersonalizedInsights';
+import { ConfidenceScoreTracker } from '@/components/analytics/ConfidenceScoreTracker';
+import { StudyScheduleSuggestions } from '@/components/study/StudyScheduleSuggestions';
+import { DifficultyAdaptation } from '@/components/adaptive/DifficultyAdaptation';
+import { LearningStyleBadge } from '@/components/learning-style/LearningStyleBadge';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpen, FileText, TrendingUp, Users } from 'lucide-react';
+import { BookOpen, FileText, TrendingUp, Users, Sparkles } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';
+import { useToast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   const { state } = useAppContext();
   const { isLoading } = state;
+  const { toast } = useToast();
 
   if (isLoading) {
     return (
@@ -131,6 +137,25 @@ const Dashboard = () => {
           </Card>
         </div>
 
+        {/* Learning Style Indicator */}
+        {state.currentUser?.primaryLearningStyle && (
+          <div className="mb-8 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Sparkles className="h-5 w-5 text-purple-600" />
+                <div>
+                  <p className="font-medium text-purple-900">AI-Optimized for Your Learning Style</p>
+                  <p className="text-sm text-purple-700">All feedback and content is personalized based on your preferences</p>
+                </div>
+              </div>
+              <LearningStyleBadge 
+                learningStyle={state.currentUser.primaryLearningStyle} 
+                variant="default"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
           {/* Left Column - Progress Chart & Insights */}
@@ -144,16 +169,39 @@ const Dashboard = () => {
               studentProfile={state.currentUser}
               timeRange="month"
             />
+            <ConfidenceScoreTracker studentProfile={state.currentUser} />
           </div>
 
-          {/* Right Column - Learning Style Summary */}
-          <div>
+          {/* Right Column - Learning Style Summary & AI Features */}
+          <div className="space-y-8">
             <LearningStyleSummary
               primaryStyle={state.currentUser?.primaryLearningStyle}
               secondaryStyle={state.currentUser?.secondaryLearningStyle}
               styleStrengths={state.currentUser?.learningStyleStrengths}
             />
+            <DifficultyAdaptation 
+              studentProfile={state.currentUser}
+              onLevelChange={(newLevel) => {
+                toast({
+                  title: 'Difficulty Level Updated',
+                  description: `Content difficulty adjusted to ${newLevel} level`,
+                });
+              }}
+            />
           </div>
+        </div>
+
+        {/* Study Schedule */}
+        <div className="mt-8">
+          <StudyScheduleSuggestions 
+            studentProfile={state.currentUser}
+            onScheduleAccept={(schedule) => {
+              toast({
+                title: 'Schedule Accepted!',
+                description: 'Your personalized study schedule has been saved.',
+              });
+            }}
+          />
         </div>
 
         {/* Recent Submissions */}

@@ -9,6 +9,10 @@ import { PersonalizedInsights } from '@/components/progress/PersonalizedInsights
 import { DoubtsList } from '@/components/doubts/DoubtsList';
 import { DoubtForm, DoubtFormData } from '@/components/doubts/DoubtForm';
 import AgenticInterface from '@/components/AgenticInterface';
+import { ConfidenceScoreTracker } from '@/components/analytics/ConfidenceScoreTracker';
+import { StudyScheduleSuggestions } from '@/components/study/StudyScheduleSuggestions';
+import { DifficultyAdaptation } from '@/components/adaptive/DifficultyAdaptation';
+import { LearningStyleBadge } from '@/components/learning-style/LearningStyleBadge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -226,16 +230,49 @@ const ProgressPage = () => {
             </TabsList>
             
             <TabsContent value="dashboard" className="mt-6">
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                <div className="xl:col-span-2">
-                  <ProgressDashboard performances={performances} />
+              <div className="space-y-6">
+                {/* Learning Style Badge */}
+                {currentUser.primaryLearningStyle && (
+                  <div className="flex items-center justify-between bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
+                    <div className="flex items-center gap-3">
+                      <Sparkles className="h-5 w-5 text-purple-600" />
+                      <div>
+                        <p className="font-medium text-purple-900">AI-Optimized Learning</p>
+                        <p className="text-sm text-purple-700">Your experience is personalized for your learning style</p>
+                      </div>
+                    </div>
+                    <LearningStyleBadge 
+                      learningStyle={currentUser.primaryLearningStyle} 
+                      variant="default"
+                    />
+                  </div>
+                )}
+
+                {/* Main Dashboard Grid */}
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+                  <div className="xl:col-span-2 space-y-6">
+                    <ProgressDashboard performances={performances} />
+                    <ConfidenceScoreTracker studentProfile={currentUser} />
+                  </div>
+                  <div className="space-y-6">
+                    <PersonalizedInsights 
+                      studentProfile={currentUser}
+                      timeRange="month"
+                    />
+                    <DifficultyAdaptation studentProfile={currentUser} />
+                  </div>
                 </div>
-                <div>
-                  <PersonalizedInsights 
-                    studentProfile={currentUser}
-                    timeRange="month"
-                  />
-                </div>
+
+                {/* Study Schedule */}
+                <StudyScheduleSuggestions 
+                  studentProfile={currentUser}
+                  onScheduleAccept={(schedule) => {
+                    toast({
+                      title: 'Schedule Accepted!',
+                      description: 'Your personalized study schedule has been saved.',
+                    });
+                  }}
+                />
               </div>
             </TabsContent>
 
