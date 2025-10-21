@@ -53,23 +53,25 @@ const Signup = () => {
       console.log(`Attempting to register with role: ${data.role}`);
       
       try {
+        console.log('Starting registration process...');
         const success = await register(data.name, data.email, data.password, data.role);
+        console.log('Registration result:', success);
 
         if (success) {
           // Success toast with better styling
           toast({
             title: "🎉 Account created successfully!",
-            description: `Welcome to AdaptiveEdCoach, ${data.name}! You're now signed in.`,
-            duration: 4000,
+            description: `Welcome to AdaptiveEdCoach, ${data.name}! Please check your email to confirm your account.`,
+            duration: 5000,
           });
 
-          // Show email confirmation message if needed
+          // Show email confirmation message
           setShowEmailConfirm(true);
           
-          // Delay navigation to show success feedback
+          // Redirect to login after showing message
           setTimeout(() => {
-            navigate('/onboarding');
-          }, 2000);
+            navigate('/login');
+          }, 3000);
         } else {
           toast({
             title: "❌ Registration failed",
@@ -79,26 +81,31 @@ const Signup = () => {
           });
         }
       } catch (error: any) {
-        console.error('Registration error:', error);
+        console.error('Registration error caught:', error);
+        console.error('Error message:', error.message);
+        console.error('Error code:', error.code);
+        console.error('Error details:', error);
         
         // Handle different error types with specific messages
         let errorMessage = "An unexpected error occurred. Please try again.";
         
-        if (error.message?.includes('already registered')) {
+        if (error.message?.toLowerCase().includes('user already registered') || error.message?.toLowerCase().includes('already registered')) {
           errorMessage = "An account with this email already exists. Try signing in instead.";
         } else if (error.message?.includes('Password should be')) {
           errorMessage = "Password must be at least 6 characters long.";
-        } else if (error.message?.includes('invalid email')) {
+        } else if (error.message?.toLowerCase().includes('invalid email') || error.message?.toLowerCase().includes('email')) {
           errorMessage = "Please enter a valid email address.";
-        } else if (error.message?.includes('weak password')) {
-          errorMessage = "Password is too weak. Please choose a stronger password.";
+        } else if (error.message?.toLowerCase().includes('weak password') || error.message?.toLowerCase().includes('password')) {
+          errorMessage = "Password is too weak. Please choose a stronger password (at least 6 characters).";
+        } else if (error.message) {
+          errorMessage = error.message; // Show the actual error message from Supabase
         }
         
         toast({
           title: "❌ Registration failed",
           description: errorMessage,
           variant: 'destructive',
-          duration: 5000,
+          duration: 6000,
         });
       }
     }

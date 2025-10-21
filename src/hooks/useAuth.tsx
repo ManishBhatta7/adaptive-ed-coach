@@ -166,11 +166,18 @@ export const useAuth = () => {
 
       if (error) {
         console.error('Registration error:', error);
-        // Don't throw here, let the calling component handle the error
-        return false;
+        // Throw the error so it can be caught by the signup page
+        throw error;
       }
 
       console.log('Registration successful:', data);
+      
+      // Check if email confirmation is required
+      if (data.user && !data.session) {
+        console.log('Email confirmation required for:', data.user.email);
+        // Return true but session will be null (email confirmation needed)
+        return true;
+      }
       
       if (data.session) {
         setSession(data.session);
@@ -178,10 +185,11 @@ export const useAuth = () => {
         return true;
       }
       
-      return true; // Account created, waiting for email confirmation
+      return true; // Account created successfully
     } catch (error) {
       console.error('Registration error:', error);
-      return false;
+      // Re-throw the error so the component can handle it
+      throw error;
     }
   };
 
