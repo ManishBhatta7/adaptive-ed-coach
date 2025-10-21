@@ -227,7 +227,7 @@ export const sampleScienceContent: LessonContent = {
     {
       id: 'p1',
       problem: 'Observe shadows at different times of the day near your school. What changes do you notice?',
-      problemOdia: 'ଆପଣଙ୍କ ବିଦ୍ୟାଳୟ ନିକଟରେ ଦିନର ବିଭିନ୍ନ ସମୟରେ ଛାୟା ପରିଦର୍ଶନ କରନ୍ତୁ। ଆପଣ କ'ଣ ପରିବର୍ତ୍ତନ ଦେଖନ୍ତି?',
+      problemOdia: 'ଆପଣଙ୍କ ବିଦ୍ୟାଳୟ ନିକଟରେ ଦିନର ବିଭିନ୍ନ ସମୟରେ ଛାୟା ପରିଦର୍ଶନ କରନ୍ତୁ। ଆପଣ କଣ ପରିବର୍ତ୍ତନ ଦେଖନ୍ତି?',
       solution: 'Shadows are longest in early morning and late evening when the sun is low. They are shortest at noon when the sun is overhead.',
       solutionOdia: 'ସୂର୍ଯ୍ୟ ନିମ୍ନରେ ଥିବାବେଳେ ଛାୟା ସକାଳ ଏବଂ ସନ୍ଧ୍ୟାରେ ସବୁଠାରୁ ଲମ୍ବା ହୁଏ। ମଧ୍ୟାହ୍ନରେ ସୂର୍ଯ୍ୟ ଉପରେ ଥିବାବେଳେ ଏହା ସବୁଠାରୁ ଛୋଟ ହୁଏ।',
       steps: [
