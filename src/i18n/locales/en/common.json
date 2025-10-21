@@ -1,0 +1,291 @@
+{
+  "app": {
+    "name": "Adaptive Education Coach",
+    "tagline": "Enhance learning through metacognitive awareness",
+    "version": "1.0.0"
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "assessment": "Assessment",
+    "reflection": "Reflection",
+    "tutor": "AI Tutor",
+    "collaboration": "Collaboration",
+    "progress": "Progress",
+    "settings": "Settings",
+    "admin": "Admin Panel",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "signup": "Sign Up"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to your account",
+      "email": "Email address",
+      "password": "Password",
+      "submit": "Sign In",
+      "forgot": "Forgot your password?",
+      "noAccount": "Don't have an account?",
+      "createAccount": "Create one here"
+    },
+    "signup": {
+      "title": "Create Account",
+      "subtitle": "Join the learning community",
+      "name": "Full name",
+      "email": "Email address",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "role": "I am a...",
+      "student": "Student",
+      "teacher": "Teacher",
+      "submit": "Create Account",
+      "hasAccount": "Already have an account?",
+      "signIn": "Sign in here"
+    },
+    "errors": {
+      "invalid": "Invalid email or password",
+      "required": "This field is required",
+      "emailFormat": "Please enter a valid email address",
+      "passwordLength": "Password must be at least 8 characters",
+      "passwordMatch": "Passwords do not match",
+      "unknown": "An unexpected error occurred"
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {{name}}!",
+    "subtitle": "Continue your learning journey",
+    "stats": {
+      "assessments": "Assessments Completed",
+      "reflections": "Reflections Written",
+      "collaborations": "Collaborations",
+      "progress": "Overall Progress"
+    },
+    "recentActivity": "Recent Activity",
+    "quickActions": "Quick Actions",
+    "startAssessment": "Start Assessment",
+    "writeReflection": "Write Reflection",
+    "askTutor": "Ask AI Tutor",
+    "joinCollaboration": "Join Collaboration"
+  },
+  "assessment": {
+    "title": "Metacognitive Assessment",
+    "description": "Evaluate your learning strategies and thinking processes",
+    "start": "Start Assessment",
+    "continue": "Continue Assessment",
+    "complete": "Complete Assessment",
+    "submit": "Submit Assessment",
+    "question": "Question {{current}} of {{total}}",
+    "next": "Next",
+    "previous": "Previous",
+    "skip": "Skip",
+    "confidence": "How confident are you in this answer?",
+    "strategy": "What strategy did you use?",
+    "difficulty": "How difficult was this question?",
+    "timeSpent": "Time spent: {{time}}",
+    "results": {
+      "title": "Assessment Results",
+      "score": "Score: {{score}}%",
+      "metacognitiveScore": "Metacognitive Awareness: {{score}}%",
+      "strengths": "Strengths",
+      "improvements": "Areas for Improvement",
+      "recommendations": "Recommendations"
+    }
+  },
+  "reflection": {
+    "title": "Learning Reflection",
+    "newEntry": "New Reflection",
+    "prompt": "Reflect on your learning experience...",
+    "questions": {
+      "what": "What did you learn today?",
+      "how": "How did you approach the learning task?",
+      "challenges": "What challenges did you face?",
+      "strategies": "What strategies worked well?",
+      "improvements": "What would you do differently next time?",
+      "goals": "What are your goals for next time?"
+    },
+    "save": "Save Reflection",
+    "edit": "Edit Reflection",
+    "delete": "Delete Reflection",
+    "confirmDelete": "Are you sure you want to delete this reflection?",
+    "tags": "Tags",
+    "mood": "How are you feeling about your learning?",
+    "privacy": {
+      "private": "Private",
+      "shared": "Share with teacher",
+      "public": "Share with class"
+    }
+  },
+  "tutor": {
+    "title": "AI Learning Tutor",
+    "placeholder": "Ask me anything about your learning...",
+    "send": "Send",
+    "thinking": "Thinking...",
+    "suggestions": "Suggested Questions",
+    "examples": [
+      "How can I improve my problem-solving skills?",
+      "What study strategies work best for math?",
+      "Help me understand this concept better",
+      "How can I stay motivated while studying?"
+    ],
+    "feedback": {
+      "helpful": "Was this helpful?",
+      "yes": "Yes",
+      "no": "No",
+      "improve": "How can I improve my response?"
+    }
+  },
+  "collaboration": {
+    "title": "Collaborative Learning",
+    "create": "Create Session",
+    "join": "Join Session",
+    "sessionCode": "Session Code",
+    "participants": "Participants",
+    "activity": "Activity",
+    "chat": "Chat",
+    "whiteboard": "Whiteboard",
+    "screenshare": "Screen Share",
+    "end": "End Session",
+    "leave": "Leave Session",
+    "invite": "Invite Others",
+    "copied": "Session code copied to clipboard"
+  },
+  "progress": {
+    "title": "Learning Progress",
+    "overview": "Overview",
+    "details": "Detailed View",
+    "timeframe": {
+      "week": "This Week",
+      "month": "This Month",
+      "semester": "This Semester",
+      "year": "This Year"
+    },
+    "metrics": {
+      "engagement": "Engagement",
+      "understanding": "Understanding",
+      "metacognition": "Metacognitive Awareness",
+      "collaboration": "Collaboration Skills"
+    },
+    "trends": "Learning Trends",
+    "achievements": "Achievements",
+    "goals": "Learning Goals"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "download": "Download",
+    "upload": "Upload",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "close": "Close",
+    "open": "Open",
+    "yes": "Yes",
+    "no": "No",
+    "ok": "OK",
+    "done": "Done",
+    "continue": "Continue",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "finish": "Finish",
+    "start": "Start",
+    "stop": "Stop",
+    "pause": "Pause",
+    "resume": "Resume",
+    "refresh": "Refresh",
+    "reset": "Reset",
+    "clear": "Clear",
+    "select": "Select",
+    "choose": "Choose",
+    "optional": "Optional",
+    "required": "Required",
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "active": "Active",
+    "inactive": "Inactive",
+    "online": "Online",
+    "offline": "Offline",
+    "available": "Available",
+    "unavailable": "Unavailable"
+  },
+  "dates": {
+    "now": "now",
+    "today": "today",
+    "yesterday": "yesterday",
+    "tomorrow": "tomorrow",
+    "thisWeek": "this week",
+    "lastWeek": "last week",
+    "nextWeek": "next week",
+    "thisMonth": "this month",
+    "lastMonth": "last month",
+    "nextMonth": "next month",
+    "daysAgo": "{{count}} days ago",
+    "hoursAgo": "{{count}} hours ago",
+    "minutesAgo": "{{count}} minutes ago",
+    "secondsAgo": "{{count}} seconds ago"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "minLength": "Must be at least {{min}} characters",
+    "maxLength": "Must be no more than {{max}} characters",
+    "numeric": "Must be a number",
+    "positive": "Must be a positive number",
+    "url": "Must be a valid URL",
+    "phone": "Must be a valid phone number"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markRead": "Mark as read",
+    "markAllRead": "Mark all as read",
+    "clear": "Clear notifications",
+    "empty": "No new notifications",
+    "types": {
+      "assessment": "Assessment",
+      "reflection": "Reflection",
+      "collaboration": "Collaboration",
+      "system": "System",
+      "reminder": "Reminder"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "account": "Account Settings",
+    "preferences": "Preferences",
+    "privacy": "Privacy",
+    "notifications": "Notifications",
+    "language": "Language",
+    "theme": "Theme",
+    "timezone": "Timezone",
+    "units": "Units",
+    "accessibility": "Accessibility"
+  },
+  "errors": {
+    "network": "Network error. Please check your connection.",
+    "server": "Server error. Please try again later.",
+    "notFound": "The requested resource was not found.",
+    "unauthorized": "You are not authorized to access this resource.",
+    "forbidden": "Access to this resource is forbidden.",
+    "validation": "Please check your input and try again.",
+    "timeout": "The request timed out. Please try again.",
+    "unknown": "An unexpected error occurred. Please try again."
+  },
+  "success": {
+    "saved": "Successfully saved!",
+    "updated": "Successfully updated!",
+    "deleted": "Successfully deleted!",
+    "created": "Successfully created!",
+    "uploaded": "Successfully uploaded!",
+    "sent": "Successfully sent!",
+    "completed": "Successfully completed!"
+  }
+}

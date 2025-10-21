@@ -1,0 +1,291 @@
+{
+  "app": {
+    "name": "Entrenador Educativo Adaptativo",
+    "tagline": "Mejora el aprendizaje a través de la conciencia metacognitiva",
+    "version": "1.0.0"
+  },
+  "navigation": {
+    "dashboard": "Panel",
+    "assessment": "Evaluación",
+    "reflection": "Reflexión",
+    "tutor": "Tutor IA",
+    "collaboration": "Colaboración",
+    "progress": "Progreso",
+    "settings": "Configuración",
+    "admin": "Panel Admin",
+    "profile": "Perfil",
+    "logout": "Cerrar Sesión",
+    "login": "Iniciar Sesión",
+    "signup": "Registrarse"
+  },
+  "auth": {
+    "login": {
+      "title": "Bienvenido de Vuelta",
+      "subtitle": "Inicia sesión en tu cuenta",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "submit": "Iniciar Sesión",
+      "forgot": "¿Olvidaste tu contraseña?",
+      "noAccount": "¿No tienes una cuenta?",
+      "createAccount": "Crea una aquí"
+    },
+    "signup": {
+      "title": "Crear Cuenta",
+      "subtitle": "Únete a la comunidad de aprendizaje",
+      "name": "Nombre completo",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "confirmPassword": "Confirmar contraseña",
+      "role": "Soy un...",
+      "student": "Estudiante",
+      "teacher": "Profesor",
+      "submit": "Crear Cuenta",
+      "hasAccount": "¿Ya tienes una cuenta?",
+      "signIn": "Inicia sesión aquí"
+    },
+    "errors": {
+      "invalid": "Correo o contraseña inválidos",
+      "required": "Este campo es requerido",
+      "emailFormat": "Ingresa una dirección de correo válida",
+      "passwordLength": "La contraseña debe tener al menos 8 caracteres",
+      "passwordMatch": "Las contraseñas no coinciden",
+      "unknown": "Ocurrió un error inesperado"
+    }
+  },
+  "dashboard": {
+    "welcome": "¡Bienvenido de vuelta, {{name}}!",
+    "subtitle": "Continúa tu viaje de aprendizaje",
+    "stats": {
+      "assessments": "Evaluaciones Completadas",
+      "reflections": "Reflexiones Escritas",
+      "collaborations": "Colaboraciones",
+      "progress": "Progreso General"
+    },
+    "recentActivity": "Actividad Reciente",
+    "quickActions": "Acciones Rápidas",
+    "startAssessment": "Iniciar Evaluación",
+    "writeReflection": "Escribir Reflexión",
+    "askTutor": "Preguntar al Tutor IA",
+    "joinCollaboration": "Unirse a Colaboración"
+  },
+  "assessment": {
+    "title": "Evaluación Metacognitiva",
+    "description": "Evalúa tus estrategias de aprendizaje y procesos de pensamiento",
+    "start": "Iniciar Evaluación",
+    "continue": "Continuar Evaluación",
+    "complete": "Completar Evaluación",
+    "submit": "Enviar Evaluación",
+    "question": "Pregunta {{current}} de {{total}}",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "skip": "Saltar",
+    "confidence": "¿Qué tan seguro estás de esta respuesta?",
+    "strategy": "¿Qué estrategia utilizaste?",
+    "difficulty": "¿Qué tan difícil fue esta pregunta?",
+    "timeSpent": "Tiempo empleado: {{time}}",
+    "results": {
+      "title": "Resultados de la Evaluación",
+      "score": "Puntuación: {{score}}%",
+      "metacognitiveScore": "Conciencia Metacognitiva: {{score}}%",
+      "strengths": "Fortalezas",
+      "improvements": "Áreas de Mejora",
+      "recommendations": "Recomendaciones"
+    }
+  },
+  "reflection": {
+    "title": "Reflexión de Aprendizaje",
+    "newEntry": "Nueva Reflexión",
+    "prompt": "Reflexiona sobre tu experiencia de aprendizaje...",
+    "questions": {
+      "what": "¿Qué aprendiste hoy?",
+      "how": "¿Cómo abordaste la tarea de aprendizaje?",
+      "challenges": "¿Qué desafíos enfrentaste?",
+      "strategies": "¿Qué estrategias funcionaron bien?",
+      "improvements": "¿Qué harías diferente la próxima vez?",
+      "goals": "¿Cuáles son tus metas para la próxima vez?"
+    },
+    "save": "Guardar Reflexión",
+    "edit": "Editar Reflexión",
+    "delete": "Eliminar Reflexión",
+    "confirmDelete": "¿Estás seguro de que quieres eliminar esta reflexión?",
+    "tags": "Etiquetas",
+    "mood": "¿Cómo te sientes acerca de tu aprendizaje?",
+    "privacy": {
+      "private": "Privado",
+      "shared": "Compartir con profesor",
+      "public": "Compartir con clase"
+    }
+  },
+  "tutor": {
+    "title": "Tutor de Aprendizaje IA",
+    "placeholder": "Pregúntame cualquier cosa sobre tu aprendizaje...",
+    "send": "Enviar",
+    "thinking": "Pensando...",
+    "suggestions": "Preguntas Sugeridas",
+    "examples": [
+      "¿Cómo puedo mejorar mis habilidades de resolución de problemas?",
+      "¿Qué estrategias de estudio funcionan mejor para matemáticas?",
+      "Ayúdame a entender mejor este concepto",
+      "¿Cómo puedo mantenerme motivado mientras estudio?"
+    ],
+    "feedback": {
+      "helpful": "¿Fue útil esto?",
+      "yes": "Sí",
+      "no": "No",
+      "improve": "¿Cómo puedo mejorar mi respuesta?"
+    }
+  },
+  "collaboration": {
+    "title": "Aprendizaje Colaborativo",
+    "create": "Crear Sesión",
+    "join": "Unirse a Sesión",
+    "sessionCode": "Código de Sesión",
+    "participants": "Participantes",
+    "activity": "Actividad",
+    "chat": "Chat",
+    "whiteboard": "Pizarra",
+    "screenshare": "Compartir Pantalla",
+    "end": "Terminar Sesión",
+    "leave": "Salir de Sesión",
+    "invite": "Invitar a Otros",
+    "copied": "Código de sesión copiado al portapapeles"
+  },
+  "progress": {
+    "title": "Progreso de Aprendizaje",
+    "overview": "Resumen",
+    "details": "Vista Detallada",
+    "timeframe": {
+      "week": "Esta Semana",
+      "month": "Este Mes",
+      "semester": "Este Semestre",
+      "year": "Este Año"
+    },
+    "metrics": {
+      "engagement": "Compromiso",
+      "understanding": "Comprensión",
+      "metacognition": "Conciencia Metacognitiva",
+      "collaboration": "Habilidades de Colaboración"
+    },
+    "trends": "Tendencias de Aprendizaje",
+    "achievements": "Logros",
+    "goals": "Objetivos de Aprendizaje"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "warning": "Advertencia",
+    "info": "Información",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "view": "Ver",
+    "download": "Descargar",
+    "upload": "Subir",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "close": "Cerrar",
+    "open": "Abrir",
+    "yes": "Sí",
+    "no": "No",
+    "ok": "OK",
+    "done": "Hecho",
+    "continue": "Continuar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "previous": "Anterior",
+    "finish": "Terminar",
+    "start": "Iniciar",
+    "stop": "Detener",
+    "pause": "Pausar",
+    "resume": "Reanudar",
+    "refresh": "Actualizar",
+    "reset": "Restablecer",
+    "clear": "Limpiar",
+    "select": "Seleccionar",
+    "choose": "Elegir",
+    "optional": "Opcional",
+    "required": "Requerido",
+    "enabled": "Habilitado",
+    "disabled": "Deshabilitado",
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "online": "En línea",
+    "offline": "Fuera de línea",
+    "available": "Disponible",
+    "unavailable": "No disponible"
+  },
+  "dates": {
+    "now": "ahora",
+    "today": "hoy",
+    "yesterday": "ayer",
+    "tomorrow": "mañana",
+    "thisWeek": "esta semana",
+    "lastWeek": "la semana pasada",
+    "nextWeek": "la próxima semana",
+    "thisMonth": "este mes",
+    "lastMonth": "el mes pasado",
+    "nextMonth": "el próximo mes",
+    "daysAgo": "hace {{count}} días",
+    "hoursAgo": "hace {{count}} horas",
+    "minutesAgo": "hace {{count}} minutos",
+    "secondsAgo": "hace {{count}} segundos"
+  },
+  "validation": {
+    "required": "Este campo es requerido",
+    "email": "Ingresa una dirección de correo válida",
+    "minLength": "Debe tener al menos {{min}} caracteres",
+    "maxLength": "No debe tener más de {{max}} caracteres",
+    "numeric": "Debe ser un número",
+    "positive": "Debe ser un número positivo",
+    "url": "Debe ser una URL válida",
+    "phone": "Debe ser un número de teléfono válido"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "markRead": "Marcar como leído",
+    "markAllRead": "Marcar todo como leído",
+    "clear": "Limpiar notificaciones",
+    "empty": "No hay notificaciones nuevas",
+    "types": {
+      "assessment": "Evaluación",
+      "reflection": "Reflexión",
+      "collaboration": "Colaboración",
+      "system": "Sistema",
+      "reminder": "Recordatorio"
+    }
+  },
+  "settings": {
+    "title": "Configuración",
+    "account": "Configuración de Cuenta",
+    "preferences": "Preferencias",
+    "privacy": "Privacidad",
+    "notifications": "Notificaciones",
+    "language": "Idioma",
+    "theme": "Tema",
+    "timezone": "Zona Horaria",
+    "units": "Unidades",
+    "accessibility": "Accesibilidad"
+  },
+  "errors": {
+    "network": "Error de red. Verifica tu conexión.",
+    "server": "Error del servidor. Intenta de nuevo más tarde.",
+    "notFound": "El recurso solicitado no fue encontrado.",
+    "unauthorized": "No estás autorizado para acceder a este recurso.",
+    "forbidden": "El acceso a este recurso está prohibido.",
+    "validation": "Verifica tu entrada e intenta de nuevo.",
+    "timeout": "La solicitud expiró. Intenta de nuevo.",
+    "unknown": "Ocurrió un error inesperado. Intenta de nuevo."
+  },
+  "success": {
+    "saved": "¡Guardado exitosamente!",
+    "updated": "¡Actualizado exitosamente!",
+    "deleted": "¡Eliminado exitosamente!",
+    "created": "¡Creado exitosamente!",
+    "uploaded": "¡Subido exitosamente!",
+    "sent": "¡Enviado exitosamente!",
+    "completed": "¡Completado exitosamente!"
+  }
+}

@@ -38,9 +38,7 @@ export const AppContext = createContext<{
 });
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const { state: authState, session, login, register, logout, updateUserProfile, setUserProfile } = useAuth();
-  } = useAuth();
-  
+  const { currentUser, session, isAuthenticated, isTeacher, isLoading, login, register, logout, updateUserProfile } = useAuth();
   const { classrooms, joinClassroom, createClassroom } = useClassroom();
 
   const state: AppState = {
@@ -77,13 +75,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
             .single();
             
           if (profile) {
-            setCurrentUser({
-              ...profile,
-              preferences: {
-                ...profile.preferences,
-                ...data
-              }
-            });
+            // Update the current user profile
+            // This would need to be implemented based on your auth hook
+          }
         },
         joinClassroom,
         createClassroom: (name: string, description?: string) => 

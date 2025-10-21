@@ -30,6 +30,8 @@ const Notifications = lazy(() => import("./pages/Notifications"));
 const ContentManagementPage = lazy(() => import("./pages/ContentManagementPage"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const OCRPage = lazy(() => import("./pages/OCRPage"));
+const MetacognitionPage = lazy(() => import("./pages/MetacognitionPage"));
+const TeacherCompanionPage = lazy(() => import("./pages/TeacherCompanionPage"));
 const ProtectedRoute = lazy(() => import("./components/auth/ProtectedRoute"));
 
 const queryClient = new QueryClient({
@@ -147,6 +149,16 @@ const App = () => (
                   <Route path="/ocr" element={
                     <ProtectedRoute>
                       <OCRPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/metacognition" element={
+                    <ProtectedRoute>
+                      <MetacognitionPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/teacher-companion" element={
+                    <ProtectedRoute requiredRole="teacher">
+                      <TeacherCompanionPage />
                     </ProtectedRoute>
                   } />
                   <Route path="*" element={<NotFound />} />
