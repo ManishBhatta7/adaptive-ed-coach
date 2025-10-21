@@ -24,9 +24,10 @@ interface DoubtsListProps {
   onNewDoubt: () => void;
   onViewDoubt: (doubt: Doubt) => void;
   onSolveDoubt: (doubt: Doubt) => void;
+  refreshTrigger?: number;
 }
 
-export const DoubtsList = ({ onNewDoubt, onViewDoubt, onSolveDoubt }: DoubtsListProps) => {
+export const DoubtsList = ({ onNewDoubt, onViewDoubt, onSolveDoubt, refreshTrigger }: DoubtsListProps) => {
   const [doubts, setDoubts] = useState<Doubt[]>([]);
   const [filteredDoubts, setFilteredDoubts] = useState<Doubt[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,7 +82,7 @@ export const DoubtsList = ({ onNewDoubt, onViewDoubt, onSolveDoubt }: DoubtsList
 
   useEffect(() => {
     fetchDoubts();
-  }, [state.currentUser?.id]);
+  }, [state.currentUser?.id, refreshTrigger]);
 
   useEffect(() => {
     let filtered = [...doubts];

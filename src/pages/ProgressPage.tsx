@@ -8,7 +8,7 @@ import { ProgressDashboard } from '@/components/progress/ProgressDashboard';
 import { PersonalizedInsights } from '@/components/progress/PersonalizedInsights';
 import { DoubtsList } from '@/components/doubts/DoubtsList';
 import { DoubtForm, DoubtFormData } from '@/components/doubts/DoubtForm';
-import AgenticInterface from '@/components/AgenticInterface';
+import AgenticInterface from '@/components/AgenticInterfaceNew';
 import { ConfidenceScoreTracker } from '@/components/analytics/ConfidenceScoreTracker';
 import { StudyScheduleSuggestions } from '@/components/study/StudyScheduleSuggestions';
 import { DifficultyAdaptation } from '@/components/adaptive/DifficultyAdaptation';
@@ -48,6 +48,7 @@ const ProgressPage = () => {
   const [isSubmittingDoubt, setIsSubmittingDoubt] = useState(false);
   const [isSolvingDoubt, setIsSolvingDoubt] = useState(false);
   const [doubtResponses, setDoubtResponses] = useState<any[]>([]);
+  const [doubtsRefreshTrigger, setDoubtsRefreshTrigger] = useState(0);
   
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -110,6 +111,7 @@ const ProgressPage = () => {
       });
       
       setShowDoubtForm(false);
+      setDoubtsRefreshTrigger(prev => prev + 1);
     } catch (error: any) {
       console.error('Error creating doubt:', error);
       toast({
@@ -152,11 +154,17 @@ const ProgressPage = () => {
       
       toast({
         title: 'AI Solution Generated!',
-        description: 'DeepSeek AI has analyzed your doubt and provided a solution',
+        description: 'Lovable AI has analyzed your doubt and provided a solution',
       });
       
+      // Update the doubt with the new status
+      const updatedDoubt = { ...doubt, status: 'in_progress' as const };
+      
       // Automatically open the doubt to show the solution
-      handleViewDoubt(doubt);
+      await handleViewDoubt(updatedDoubt);
+      
+      // Refresh the doubts list
+      setDoubtsRefreshTrigger(prev => prev + 1);
       
     } catch (error: any) {
       console.error('Error solving doubt:', error);
@@ -285,6 +293,7 @@ const ProgressPage = () => {
                 onNewDoubt={() => setShowDoubtForm(true)}
                 onViewDoubt={handleViewDoubt}
                 onSolveDoubt={handleSolveDoubt}
+                refreshTrigger={doubtsRefreshTrigger}
               />
             </TabsContent>
             

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/lib/supabase';
 import { useAppContext } from '@/context/AppContext';
-import { Bot, Image, Database, BookOpen, Brain, Sparkles, Download, FileText, Copy, RefreshCw } from 'lucide-react';
+import { Bot, Image, Database, BookOpen, Brain, Sparkles, Download, FileText, Copy, RefreshCw, Mic, Volume2, Trash2, Save, Share2, User, Zap, TrendingUp, MessageCircle, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import { MarkdownRenderer } from '@/components/ui/markdown-renderer';

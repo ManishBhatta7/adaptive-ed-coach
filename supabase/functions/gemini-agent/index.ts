@@ -102,9 +102,59 @@ Provide detailed feedback including:
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
       
+    } else if (action === 'analyze_my_progress') {
+      systemPrompt = `You are an expert educational data analyst and learning coach. Analyze student performance data comprehensively and provide actionable insights.`;
+      
+      const performanceData = context.data?.performances || [];
+      const recentActivity = context.data?.recentActivity || [];
+      
+      userPrompt = `Analyze this student's academic performance:
+
+Total Submissions: ${performanceData.length}
+Recent Activity: ${JSON.stringify(recentActivity, null, 2)}
+Learning Style: ${context.data?.learningStyle || 'Not identified'}
+
+Provide a detailed analysis covering:
+1. **Overall Performance Trends**: Are they improving, declining, or staying consistent?
+2. **Subject-Specific Insights**: Strengths and weaknesses by subject
+3. **Key Achievements**: What are they doing well?
+4. **Areas for Improvement**: Specific topics or skills that need work
+5. **Personalized Recommendations**: 3-5 actionable steps they can take
+6. **Motivational Insights**: Encouraging observations and growth opportunities
+
+Format your response with clear headings and bullet points.`;
+      
+    } else if (action === 'create_study_plan') {
+      systemPrompt = `You are an expert study coach and time management specialist. Create personalized, realistic study plans.`;
+      
+      userPrompt = `${context.userMessage}\n\nStudent Context:\nLearning Style: ${context.data?.learningStyle || 'Not specified'}\nRecent Performance: ${context.data?.recentActivity?.length || 0} recent submissions\n\nCreate a comprehensive study plan with:\n1. Daily schedule with time blocks\n2. Subject prioritization based on performance\n3. Study techniques matched to learning style\n4. Break and rest periods\n5. Weekly goals and milestones\n6. Tips for staying motivated`;
+      
+    } else if (action === 'create_quiz') {
+      systemPrompt = `You are an expert educational content creator specializing in assessment design. Create engaging, challenging quizzes.`;
+      
+      userPrompt = `${context.userMessage}\n\nCreate a comprehensive practice quiz with:\n- 10 questions of varying difficulty (easy, medium, hard)\n- Mix of question types (multiple choice, true/false, short answer)\n- Clear, unambiguous questions\n- Detailed explanations for answers\n- Learning objectives for each question\n\nFormat the quiz clearly with numbering and sections.`;
+      
+    } else if (action === 'explain_concept') {
+      systemPrompt = `You are an expert educator who excels at explaining complex concepts simply. Use the Feynman Technique: explain as if teaching a beginner.`;
+      
+      userPrompt = `${context.userMessage}\n\nExplain this concept comprehensively:\n1. **Simple Definition**: What is it in one sentence?\n2. **Core Concepts**: Break down the key ideas\n3. **Real-World Analogy**: Relate it to everyday life\n4. **Step-by-Step Examples**: Show how it works\n5. **Common Misconceptions**: What people get wrong\n6. **Practice Questions**: 2-3 questions to test understanding\n\nUse simple language and visual descriptions where helpful.`;
+      
+    } else if (action === 'help_with_doubts') {
+      systemPrompt = `You are a patient, supportive tutor who helps students overcome learning challenges with empathy and expertise.`;
+      
+      userPrompt = `${context.userMessage}\n\nHelp this student with their learning challenges by:\n1. **Understanding the Issue**: Identify the core problem\n2. **Breaking It Down**: Simplify the difficult parts\n3. **Multiple Approaches**: Offer different ways to understand\n4. **Practice Strategy**: How to improve\n5. **Resources**: Where to learn more\n6. **Encouragement**: Positive reinforcement\n\nBe encouraging and build confidence.`;
+      
     } else {
-      // Default coaching response
-      systemPrompt = `You are an adaptive AI educational coach. Provide personalized, encouraging feedback that helps students learn and grow. Be specific, constructive, and motivating.`;
+      // Default coaching response with context
+      systemPrompt = `You are an adaptive AI educational coach powered by advanced AI. You provide personalized, encouraging feedback that helps students learn and grow. 
+      
+You have access to the student's context:
+- Name: ${context.data?.name || 'Student'}
+- Learning Style: ${context.data?.learningStyle || 'Not identified'}
+- Recent Performance: ${context.data?.recentActivity?.length || 0} submissions
+
+Adapt your response to their needs. Be specific, constructive, motivating, and personalized. Use markdown formatting for clarity.`;
+      
       userPrompt = context.userMessage || 'Please provide guidance.';
     }
 
