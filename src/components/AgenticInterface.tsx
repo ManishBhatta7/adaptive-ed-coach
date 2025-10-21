@@ -115,7 +115,10 @@ const AgenticInterface = () => {
     }
   };
 
-  const handleImageGeneration = async (format: 'png' | 'jpg') => {
+  const handleImageGeneration = async (e: React.MouseEvent, format: 'png' | 'jpg') => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (!imagePrompt.trim()) {
       toast({
         title: "Prompt Required",
@@ -181,7 +184,10 @@ const AgenticInterface = () => {
     }
   };
 
-  const handleQuickAction = (action: string, message?: string) => {
+  const handleQuickAction = (e: React.MouseEvent, action: string, message?: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     const actionMessage = message || `Perform action: ${action}`;
     
     sendToAgent({
@@ -192,7 +198,12 @@ const AgenticInterface = () => {
     });
   };
 
-  const handleCustomMessage = () => {
+  const handleCustomMessage = (e?: React.MouseEvent | React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    
     if (!userInput.trim()) {
       toast({
         title: "Message Required",
@@ -313,17 +324,27 @@ const AgenticInterface = () => {
                     </CardTitle>
                     <div className="flex gap-2">
                       <Button
+                        type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => copyToClipboard(result.rendered_content || result.agent_response?.content || '')}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          copyToClipboard(result.rendered_content || result.agent_response?.content || '');
+                        }}
                       >
                         <Copy className="h-4 w-4 mr-2" />
                         Copy
                       </Button>
                       <Button
+                        type="button"
                         variant="outline"
                         size="sm"
-                        onClick={exportToPDF}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          exportToPDF();
+                        }}
                       >
                         <FileText className="h-4 w-4 mr-2" />
                         Export PDF
@@ -372,9 +393,12 @@ const AgenticInterface = () => {
                       
                       <div className="flex flex-wrap gap-2 justify-center">
                         <Button 
+                          type="button"
                           size="sm" 
                           variant="outline"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             const link = document.createElement('a');
                             link.href = funcResult.result.image_url!;
                             link.download = `ai-generated-image.${funcResult.result.format || 'png'}`;
@@ -385,9 +409,14 @@ const AgenticInterface = () => {
                           Download {(funcResult.result.format || 'PNG').toUpperCase()}
                         </Button>
                         <Button 
+                          type="button"
                           size="sm" 
                           variant="outline"
-                          onClick={() => copyToClipboard(funcResult.result.image_url!)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            copyToClipboard(funcResult.result.image_url!);
+                          }}
                         >
                           <Copy className="h-4 w-4 mr-2" />
                           Copy URL
@@ -455,8 +484,9 @@ const AgenticInterface = () => {
               
               <div className="flex gap-2">
                 <Button
+                  type="button"
                   variant="outline"
-                  onClick={() => handleImageGeneration('png')}
+                  onClick={(e) => handleImageGeneration(e, 'png')}
                   disabled={isGeneratingImage || !imagePrompt.trim()}
                   className="flex items-center gap-2 border-purple-200 text-purple-600 hover:bg-purple-50"
                 >
@@ -465,8 +495,9 @@ const AgenticInterface = () => {
                 </Button>
                 
                 <Button
+                  type="button"
                   variant="outline"
-                  onClick={() => handleImageGeneration('jpg')}
+                  onClick={(e) => handleImageGeneration(e, 'jpg')}
                   disabled={isGeneratingImage || !imagePrompt.trim()}
                   className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50"
                 >
@@ -489,8 +520,9 @@ const AgenticInterface = () => {
           {/* Quick Actions */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             <Button
+              type="button"
               variant="outline"
-              onClick={() => handleQuickAction('analyze_my_progress', 'Analyze my learning progress and provide insights')}
+              onClick={(e) => handleQuickAction(e, 'analyze_my_progress', 'Analyze my learning progress and provide insights')}
               disabled={isProcessing}
               className="flex items-center gap-2 border-green-200 text-green-600 hover:bg-green-50"
             >
@@ -499,8 +531,9 @@ const AgenticInterface = () => {
             </Button>
             
             <Button
+              type="button"
               variant="outline"
-              onClick={() => handleQuickAction('create_quiz', 'Create a practice quiz based on my recent performance')}
+              onClick={(e) => handleQuickAction(e, 'create_quiz', 'Create a practice quiz based on my recent performance')}
               disabled={isProcessing}
               className="flex items-center gap-2 border-blue-200 text-blue-600 hover:bg-blue-50"
             >
@@ -509,8 +542,9 @@ const AgenticInterface = () => {
             </Button>
             
             <Button
+              type="button"
               variant="outline"
-              onClick={() => handleQuickAction('help_with_doubts', 'Help me understand my learning challenges and provide solutions')}
+              onClick={(e) => handleQuickAction(e, 'help_with_doubts', 'Help me understand my learning challenges and provide solutions')}
               disabled={isProcessing}
               className="flex items-center gap-2 border-orange-200 text-orange-600 hover:bg-orange-50"
             >
@@ -519,8 +553,9 @@ const AgenticInterface = () => {
             </Button>
             
             <Button
+              type="button"
               variant="outline"
-              onClick={() => handleQuickAction('create_study_plan', 'Create a personalized study plan for me')}
+              onClick={(e) => handleQuickAction(e, 'create_study_plan', 'Create a personalized study plan for me')}
               disabled={isProcessing}
               className="flex items-center gap-2 border-pink-200 text-pink-600 hover:bg-pink-50"
             >
@@ -529,8 +564,9 @@ const AgenticInterface = () => {
             </Button>
             
             <Button
+              type="button"
               variant="outline"
-              onClick={() => handleQuickAction('explain_concept', 'Explain a difficult concept in simple terms')}
+              onClick={(e) => handleQuickAction(e, 'explain_concept', 'Explain a difficult concept in simple terms')}
               disabled={isProcessing}
               className="flex items-center gap-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50"
             >
@@ -539,8 +575,9 @@ const AgenticInterface = () => {
             </Button>
             
             <Button
+              type="button"
               variant="outline"
-              onClick={() => handleQuickAction('generate_summary', 'Generate a summary of my recent learning activities')}
+              onClick={(e) => handleQuickAction(e, 'generate_summary', 'Generate a summary of my recent learning activities')}
               disabled={isProcessing}
               className="flex items-center gap-2 border-teal-200 text-teal-600 hover:bg-teal-50"
             >
@@ -557,10 +594,20 @@ const AgenticInterface = () => {
               onChange={(e) => setUserInput(e.target.value)}
               rows={3}
               className="border-purple-200 focus:border-purple-500"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (userInput.trim()) {
+                    handleCustomMessage(e as any);
+                  }
+                }
+              }}
             />
             <div className="flex gap-2">
               <Button 
-                onClick={handleCustomMessage}
+                type="button"
+                onClick={(e) => handleCustomMessage(e)}
                 disabled={isProcessing || !userInput.trim()}
                 className="flex-1 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700"
               >
@@ -577,8 +624,13 @@ const AgenticInterface = () => {
                 )}
               </Button>
               <Button
+                type="button"
                 variant="outline"
-                onClick={() => setUserInput('')}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setUserInput('');
+                }}
                 disabled={isProcessing}
                 className="border-gray-200"
               >

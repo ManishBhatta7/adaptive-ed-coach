@@ -6,6 +6,7 @@ import { AppState, Classroom, StudentProfile } from '@/types';
 import { OnboardingData } from '@/types/user';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
+import { offlineContentManager } from '@/lib/offline-content-manager';
 
 const initialState: AppState = {
   currentUser: undefined,
@@ -40,6 +41,33 @@ export const AppContext = createContext<{
 export const AppProvider = ({ children }: { children: ReactNode }) => {
   const { currentUser, session, isAuthenticated, isTeacher, isLoading, login, register, logout, updateUserProfile } = useAuth();
   const { classrooms, joinClassroom, createClassroom } = useClassroom();
+
+  // Initialize offline content manager and cache essential content
+  useEffect(() => {
+    const initOfflineContent = async () => {
+      try {
+        // Initialize the offline content manager
+        await offlineContentManager.init();
+        console.log('Offline content manager initialized');
+
+        // If user is authenticated and has a class, cache essential lessons
+        if (currentUser && currentUser.class) {
+          console.log(`Caching content for class ${currentUser.class}`);
+          await offlineContentManager.cacheEssentialLessons(
+            currentUser.class,
+            ['science', 'mathematics'] // Cache science and math by default
+          );
+          console.log('Essential lessons cached successfully');
+        }
+      } catch (error) {
+        console.error('Failed to initialize offline content:', error);
+      }
+    };
+
+    if (!isLoading && isAuthenticated) {
+      initOfflineContent();
+    }
+  }, [currentUser, isAuthenticated, isLoading]);
 
   const state: AppState = {
     currentUser,

@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import LanguageSelector from '@/components/LanguageSelector';
 import LoadingScreen from '@/components/loading/LoadingScreen';
 import ErrorBoundary from '@/components/error/ErrorBoundary';
+import { OfflineIndicator } from '@/components/offline/OfflineIndicator';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -82,6 +83,9 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 
   return (
     <div className="flex flex-col min-h-screen">
+      {/* Global Offline Indicator */}
+      <OfflineIndicator position="top" />
+      
       <Header />
       <div className="flex flex-col md:flex-row flex-grow">
         {isAuthenticated && (
