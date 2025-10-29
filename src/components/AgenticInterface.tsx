@@ -56,6 +56,24 @@ const AgenticInterface = () => {
     setAgentResponse(null);
     
     try {
+      // Build conversation history for context
+      const formattedHistory = conversationHistory
+        .filter(item => item.type === 'user_action' || item.type === 'agent_response')
+        .slice(-10) // Keep last 10 items (5 exchanges)
+        .map(item => {
+          if (item.type === 'user_action') {
+            return {
+              role: 'user' as const,
+              content: item.message || item.action
+            };
+          } else {
+            return {
+              role: 'assistant' as const,
+              content: item.response?.agent_response?.content || item.response?.rendered_content || 'Response'
+            };
+          }
+        });
+
       // Call the gemini-agent function
       const { data, error } = await supabase.functions.invoke('gemini-agent', {
         body: {
@@ -64,7 +82,8 @@ const AgenticInterface = () => {
             ...actionData.context,
             currentPage: window.location.pathname,
             userRole: state.currentUser?.role || 'student'
-          }
+          },
+          conversationHistory: formattedHistory
         }
       });
 

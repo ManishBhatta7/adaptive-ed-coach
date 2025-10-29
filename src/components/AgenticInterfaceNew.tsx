@@ -219,6 +219,15 @@ const AgenticInterfaceNew = () => {
         name: state.currentUser?.name
       };
 
+      // Build conversation history for context (exclude system messages and limit to recent messages)
+      const conversationHistory = messages
+        .filter(msg => msg.type === 'user' || msg.type === 'assistant')
+        .slice(-10) // Keep last 10 messages (5 exchanges) for context
+        .map(msg => ({
+          role: msg.type === 'user' ? 'user' as const : 'assistant' as const,
+          content: msg.content
+        }));
+
       const { data, error } = await supabase.functions.invoke('gemini-agent', {
         body: {
           action: 'process_user_message',
@@ -227,7 +236,8 @@ const AgenticInterfaceNew = () => {
             currentPage: window.location.pathname,
             userRole: state.currentUser?.role || 'student',
             data: userContext
-          }
+          },
+          conversationHistory: conversationHistory
         }
       });
 
