@@ -7,6 +7,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface Message {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
 interface AgentRequest {
   action: string;
   context: {
@@ -16,6 +21,7 @@ interface AgentRequest {
     data?: any;
   };
   capabilities?: string[];
+  conversationHistory?: Message[];
 }
 
 serve(async (req) => {
@@ -24,7 +30,7 @@ serve(async (req) => {
   }
 
   try {
-    const { action, context, capabilities = [] }: AgentRequest = await req.json();
+    const { action, context, capabilities = [], conversationHistory = [] }: AgentRequest = await req.json();
 
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!lovableApiKey) {
@@ -159,6 +165,33 @@ Adapt your response to their needs. Be specific, constructive, motivating, and p
     }
 
     // Call Lovable AI (Free Gemini)
+    // Build messages array with conversation history
+    const messages: any[] = [];
+    
+    // Add system prompt
+    messages.push({
+      role: 'system',
+      content: systemPrompt
+    });
+    
+    // Add conversation history if available (excluding system messages)
+    if (conversationHistory && conversationHistory.length > 0) {
+      conversationHistory.forEach(msg => {
+        if (msg.role === 'user' || msg.role === 'assistant') {
+          messages.push({
+            role: msg.role,
+            content: msg.content
+          });
+        }
+      });
+    }
+    
+    // Add current user prompt
+    messages.push({
+      role: 'user',
+      content: userPrompt
+    });
+
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -167,16 +200,7 @@ Adapt your response to their needs. Be specific, constructive, motivating, and p
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: userPrompt
-          }
-        ]
+        messages: messages
       })
     });
 
