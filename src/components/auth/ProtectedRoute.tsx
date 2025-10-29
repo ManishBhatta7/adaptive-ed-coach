@@ -32,12 +32,17 @@ const ProtectedRoute = ({
 
   // If user is authenticated but doesn't have required role
   if (requireAuth && isAuthenticated && requiredRole && currentUser?.role !== requiredRole) {
-    return <Navigate to="/dashboard" replace />;
+    // Redirect to appropriate dashboard based on user role
+    const dashboardPath = currentUser?.role === 'teacher' ? '/teacher-dashboard' : 
+                         currentUser?.role === 'admin' ? '/admin' : '/dashboard';
+    return <Navigate to={dashboardPath} replace />;
   }
 
-  // If user is authenticated but trying to access auth pages, redirect to dashboard
+  // If user is authenticated but trying to access auth pages, redirect to appropriate dashboard
   if (!requireAuth && isAuthenticated && (location.pathname === '/login' || location.pathname === '/signup')) {
-    return <Navigate to="/dashboard" replace />;
+    const dashboardPath = currentUser?.role === 'teacher' ? '/teacher-dashboard' : 
+                         currentUser?.role === 'admin' ? '/admin' : '/dashboard';
+    return <Navigate to={dashboardPath} replace />;
   }
 
   return <>{children}</>;

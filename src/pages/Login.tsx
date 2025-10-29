@@ -33,9 +33,11 @@ const Login = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (state.isAuthenticated && !state.isLoading) {
-      navigate('/dashboard');
+      const dashboardPath = state.currentUser?.role === 'teacher' ? '/teacher-dashboard' : 
+                           state.currentUser?.role === 'admin' ? '/admin' : '/dashboard';
+      navigate(dashboardPath);
     }
-  }, [state.isAuthenticated, state.isLoading, navigate]);
+  }, [state.isAuthenticated, state.isLoading, state.currentUser, navigate]);
 
   const {
     errors,
@@ -55,6 +57,9 @@ const Login = () => {
         
         if (success) {
           // Success toast with better styling
+          const dashboardPath = state.currentUser?.role === 'teacher' ? '/teacher-dashboard' : 
+                               state.currentUser?.role === 'admin' ? '/admin' : '/dashboard';
+          
           toast({
             title: "✅ Login successful!",
             description: "Welcome back to AdaptiveEdCoach! Redirecting to dashboard...",
@@ -63,7 +68,7 @@ const Login = () => {
           
           // Delay navigation slightly to show toast
           setTimeout(() => {
-            navigate('/dashboard');
+            navigate(dashboardPath);
           }, 1000);
         } else {
           // More specific error handling

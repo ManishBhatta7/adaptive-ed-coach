@@ -15,6 +15,7 @@ const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard"));
 const LearningStylePage = lazy(() => import("./pages/LearningStylePage"));
 const SubmitAssignment = lazy(() => import("./pages/SubmitAssignment"));
 const ProgressPage = lazy(() => import("./pages/ProgressPage"));
@@ -74,6 +75,11 @@ const App = () => (
                   <Route path="/dashboard" element={
                     <ProtectedRoute>
                       <Dashboard />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/teacher-dashboard" element={
+                    <ProtectedRoute requiredRole="teacher">
+                      <TeacherDashboard />
                     </ProtectedRoute>
                   } />
                   <Route path="/learning-style" element={
