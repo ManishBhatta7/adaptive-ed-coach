@@ -20,7 +20,7 @@ export const AppContext = createContext<{
   state: AppState;
   session: Session | null;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string, role?: 'student' | 'teacher') => Promise<boolean>;
+  register: (name: string, email: string, password: string, role?: 'student' | 'teacher', school?: string) => Promise<boolean>;
   logout: () => Promise<void>;
   updateUserProfile: (profile: Partial<StudentProfile>) => Promise<void>;
   updateOnboarding: (data: OnboardingData) => Promise<void>;
