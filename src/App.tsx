@@ -10,6 +10,8 @@ import AsyncErrorBoundary from "@/components/error/AsyncErrorBoundary";
 import LoadingScreen from "@/components/loading/LoadingScreen";
 
 const Index = lazy(() => import("./pages/Index"));
+const Demo = lazy(() => import("./pages/Demo"));
+const Contact = lazy(() => import("./pages/Contact"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Login = lazy(() => import("./pages/Login"));
 const Signup = lazy(() => import("./pages/Signup"));
@@ -61,6 +63,8 @@ const App = () => (
               <Suspense fallback={<LoadingScreen />}>
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/demo" element={<Demo />} />
+                  <Route path="/contact" element={<Contact />} />
                   <Route path="/onboarding" element={<Onboarding />} />
                   <Route path="/login" element={
                     <ProtectedRoute requireAuth={false}>
