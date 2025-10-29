@@ -50,7 +50,7 @@ const Profile = () => {
     if (currentUser) {
       setEditForm({
         name: currentUser.name || '',
-        bio: '',
+        bio: currentUser.bio || '',
         avatar: currentUser.avatar || '',
         school: currentUser.school || ''
       });
@@ -165,6 +165,7 @@ const Profile = () => {
       await updateUserProfile({
         name: editForm.name,
         avatar: editForm.avatar,
+        bio: editForm.bio || undefined,
         school: editForm.school || undefined // Only include if provided
       });
       
@@ -605,7 +606,7 @@ const Profile = () => {
                     onClick={() => {
                       setEditForm({
                         name: currentUser.name || '',
-                        bio: '',
+                        bio: currentUser.bio || '',
                         avatar: currentUser.avatar || '',
                         school: currentUser.school || ''
                       });
