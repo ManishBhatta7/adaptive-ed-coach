@@ -148,19 +148,24 @@ export const useAuth = () => {
     }
   };
 
-  const register = async (name: string, email: string, password: string, role: 'student' | 'teacher' = 'student'): Promise<boolean> => {
+  const register = async (name: string, email: string, password: string, role: 'student' | 'teacher' = 'student', school?: string): Promise<boolean> => {
     try {
-      console.log('Registering user with role:', role);
+      console.log('Registering user with role:', role, 'and school:', school);
       
       const redirectUrl = `${window.location.origin}/dashboard`;
 
-      // Store role and name in user_metadata for the trigger function
+      // Store role, name, and school in user_metadata for the trigger function
+      const metadata: any = { name, role };
+      if (school) {
+        metadata.school = school;
+      }
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           emailRedirectTo: redirectUrl,
-          data: { name, role },
+          data: metadata,
           // Skip email confirmation for development
           // Remove this in production if you want email verification
           emailRedirectTo: undefined

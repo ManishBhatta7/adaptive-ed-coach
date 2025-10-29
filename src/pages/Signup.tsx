@@ -17,7 +17,8 @@ const signupSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   confirmPassword: z.string().min(1, 'Please confirm your password'),
-  role: z.enum(['student', 'teacher'])
+  role: z.enum(['student', 'teacher']),
+  school: z.string().optional() // Optional school field
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -36,7 +37,8 @@ const Signup = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'student'
+    role: 'student',
+    school: '' // Initialize school field
   });
 
   const {
@@ -54,7 +56,7 @@ const Signup = () => {
       
       try {
         console.log('Starting registration process...');
-        const success = await register(data.name, data.email, data.password, data.role);
+        const success = await register(data.name, data.email, data.password, data.role, data.school);
         console.log('Registration result:', success);
 
         if (success) {
@@ -266,6 +268,17 @@ const Signup = () => {
                   </label>
                 </div>
               </div>
+
+              <ValidatedInput
+                id="school"
+                label="School Name (Optional)"
+                placeholder="e.g., Springfield High School"
+                value={formData.school || ''}
+                onChange={handleInputChange('school')}
+                onBlur={() => markTouched('school')}
+                validator={() => null} // No validation needed for optional field
+                disabled={isSubmitting}
+              />
 
               {showEmailConfirm && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">

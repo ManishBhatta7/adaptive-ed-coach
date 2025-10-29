@@ -9,6 +9,8 @@ export interface StudentProfile {
   email?: string;
   avatar?: string;
   role?: string;
+  school?: string; // Optional school name for school-specific features
+  bio?: string; // Optional bio/description
   primaryLearningStyle?: LearningStyle;
   secondaryLearningStyle?: LearningStyle;
   learningStyleStrengths?: Record<LearningStyle, number>;

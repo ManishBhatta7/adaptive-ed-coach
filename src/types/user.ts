@@ -16,6 +16,7 @@ export interface User {
   name: string;
   email: string;
   role: 'student' | 'teacher' | 'parent';
+  school?: string; // Optional school name
   preferences?: UserPreferences;
   createdAt: string;
   updatedAt: string;
