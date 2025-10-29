@@ -36,7 +36,8 @@ const Profile = () => {
   const [editForm, setEditForm] = useState({
     name: '',
     bio: '',
-    avatar: ''
+    avatar: '',
+    school: ''
   });
 
   useEffect(() => {
@@ -50,7 +51,8 @@ const Profile = () => {
       setEditForm({
         name: currentUser.name || '',
         bio: '',
-        avatar: currentUser.avatar || ''
+        avatar: currentUser.avatar || '',
+        school: currentUser.school || ''
       });
       loadActivityLogs();
     }
@@ -162,7 +164,8 @@ const Profile = () => {
     try {
       await updateUserProfile({
         name: editForm.name,
-        avatar: editForm.avatar
+        avatar: editForm.avatar,
+        school: editForm.school || undefined // Only include if provided
       });
       
       toast({
@@ -332,6 +335,12 @@ const Profile = () => {
                   </Avatar>
                   <CardTitle className="text-xl text-gray-800">{currentUser.name}</CardTitle>
                   <p className="text-sm text-gray-600">{currentUser.email}</p>
+                  {currentUser.school && (
+                    <p className="text-sm text-gray-500 flex items-center justify-center gap-1 mt-1">
+                      <GraduationCap className="h-3 w-3" />
+                      {currentUser.school}
+                    </p>
+                  )}
                   
                   {/* Role Badge */}
                   <div className="flex justify-center mt-3">
@@ -545,6 +554,20 @@ const Profile = () => {
                   />
                 </div>
 
+                {/* School Field */}
+                <div className="space-y-2">
+                  <Label htmlFor="school">School Name</Label>
+                  <Input
+                    id="school"
+                    type="text"
+                    value={editForm.school}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, school: e.target.value }))}
+                    placeholder="e.g., Springfield High School"
+                    className="border-pink-200 focus:border-pink-500"
+                  />
+                  <p className="text-xs text-gray-500">Optional - helps us provide school-specific features</p>
+                </div>
+
                 {/* Read-only Fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -583,7 +606,8 @@ const Profile = () => {
                       setEditForm({
                         name: currentUser.name || '',
                         bio: '',
-                        avatar: currentUser.avatar || ''
+                        avatar: currentUser.avatar || '',
+                        school: currentUser.school || ''
                       });
                       setIsEditing(false);
                     }}

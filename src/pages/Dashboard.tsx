@@ -16,7 +16,8 @@ import { AchievementNotification } from '@/components/gamification/AchievementNo
 import GamificationService, { Achievement } from '@/services/GamificationService';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BookOpen, FileText, TrendingUp, Users, Sparkles } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { BookOpen, FileText, TrendingUp, Users, Sparkles, GraduationCap } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';
 import { useToast } from '@/hooks/use-toast';
 
@@ -121,9 +122,17 @@ const Dashboard = () => {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 Welcome back, {state.currentUser?.name || 'Student'}!
               </h1>
-              <p className="text-gray-600">
-                Track your progress and continue your learning journey
-              </p>
+              <div className="flex items-center gap-3">
+                <p className="text-gray-600">
+                  Track your progress and continue your learning journey
+                </p>
+                {state.currentUser?.school && (
+                  <Badge variant="outline" className="flex items-center gap-1">
+                    <GraduationCap className="h-3 w-3" />
+                    {state.currentUser.school}
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
           
