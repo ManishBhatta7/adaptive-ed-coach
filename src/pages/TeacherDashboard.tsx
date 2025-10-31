@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -67,13 +67,70 @@ const TeacherDashboard = () => {
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (state.currentUser && state.isTeacher) {
-      loadDashboardData();
+  const loadRecentActivity = useCallback(async () => {
+    try {
+      const activities: RecentActivity[] = [];
+      
+      // Get recent submissions
+      const { data: submissions } = await supabase
+        .from('submissions')
+        .select(`
+          id,
+          assignment_type,
+          submitted_at,
+          status,
+          user_id
+        `)
+        .order('submitted_at', { ascending: false })
+        .limit(5);
+      
+      if (submissions) {
+        submissions.forEach(sub => {
+          activities.push({
+            id: sub.id,
+            type: 'submission',
+            title: `New ${sub.assignment_type} submission`,
+            timestamp: sub.submitted_at,
+            status: sub.status,
+          });
+        });
+      }
+      
+      // Get recent doubts
+      const { data: doubts } = await supabase
+        .from('doubts')
+        .select(`
+          id,
+          title,
+          created_at,
+          status
+        `)
+        .order('created_at', { ascending: false })
+        .limit(5);
+      
+      if (doubts) {
+        doubts.forEach(doubt => {
+          activities.push({
+            id: doubt.id,
+            type: 'doubt',
+            title: doubt.title,
+            timestamp: doubt.created_at,
+            status: doubt.status,
+          });
+        });
+      }
+      
+      // Sort all activities by timestamp
+      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+      
+      setRecentActivity(activities.slice(0, 10));
+      
+    } catch (error) {
+      console.error('Error loading recent activity:', error);
     }
-  }, [state.currentUser, state.isTeacher]);
+  }, []);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -132,7 +189,7 @@ const TeacherDashboard = () => {
       // Load recent activity
       await loadRecentActivity();
       
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading dashboard data:', error);
       toast({
         title: 'Error',
@@ -142,70 +199,13 @@ const TeacherDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [state.currentUser?.id, toast, loadRecentActivity]);
 
-  const loadRecentActivity = async () => {
-    try {
-      const activities: RecentActivity[] = [];
-      
-      // Get recent submissions
-      const { data: submissions } = await supabase
-        .from('submissions')
-        .select(`
-          id,
-          assignment_type,
-          submitted_at,
-          status,
-          user_id
-        `)
-        .order('submitted_at', { ascending: false })
-        .limit(5);
-      
-      if (submissions) {
-        submissions.forEach(sub => {
-          activities.push({
-            id: sub.id,
-            type: 'submission',
-            title: `New ${sub.assignment_type} submission`,
-            timestamp: sub.submitted_at,
-            status: sub.status,
-          });
-        });
-      }
-      
-      // Get recent doubts
-      const { data: doubts } = await supabase
-        .from('doubts')
-        .select(`
-          id,
-          title,
-          created_at,
-          status
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5);
-      
-      if (doubts) {
-        doubts.forEach(doubt => {
-          activities.push({
-            id: doubt.id,
-            type: 'doubt',
-            title: doubt.title,
-            timestamp: doubt.created_at,
-            status: doubt.status,
-          });
-        });
-      }
-      
-      // Sort all activities by timestamp
-      activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-      
-      setRecentActivity(activities.slice(0, 10));
-      
-    } catch (error: any) {
-      console.error('Error loading recent activity:', error);
+  useEffect(() => {
+    if (state.currentUser && state.isTeacher) {
+      loadDashboardData();
     }
-  };
+  }, [state.currentUser, state.isTeacher, loadDashboardData]);
 
   const getActivityIcon = (type: string) => {
     switch (type) {
