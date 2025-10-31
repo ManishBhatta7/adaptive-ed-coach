@@ -47,6 +47,35 @@ interface AssignmentWithSubmissions extends Assignment {
   submittedCount?: number;
 }
 
+interface NewAssignmentForm {
+  title: string;
+  description: string;
+  subjectArea: SubjectArea;
+  dueDate: string;
+  classroomId: string;
+  maxPoints: number;
+  instructions: string;
+  descriptionImages: string[];
+}
+
+const getDefaultDueDate = () => {
+  const date = new Date();
+  date.setDate(date.getDate() + 1);
+  date.setHours(9, 0, 0, 0);
+  // Adjust for timezone offset so datetime-local displays correctly
+  const offsetInMinutes = date.getTimezoneOffset();
+  date.setMinutes(date.getMinutes() - offsetInMinutes);
+  return date.toISOString().slice(0, 16);
+};
+
+const readFileAsDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+
 const SubmissionCard = ({ submission }: { submission: SubmissionStatus }) => (
   <Card className="p-4">
     <div className="flex items-center justify-between">
@@ -115,15 +144,16 @@ const Assignments = () => {
   const [isViewSubmissionsOpen, setIsViewSubmissionsOpen] = useState(false);
   
   // Form states for creating assignment
-  const [newAssignment, setNewAssignment] = useState({
+  const [newAssignment, setNewAssignment] = useState<NewAssignmentForm>(() => ({
     title: '',
     description: '',
     subjectArea: SubjectArea.OTHER,
-    dueDate: '',
+    dueDate: getDefaultDueDate(),
     classroomId: '',
     maxPoints: 100,
-    instructions: ''
-  });
+    instructions: '',
+    descriptionImages: []
+  }));
 
   useEffect(() => {
     loadAssignments();
@@ -159,6 +189,7 @@ const Assignments = () => {
         
         assignments.push({
           ...assignment,
+          descriptionImages: assignment.descriptionImages || [],
           totalStudents,
           submittedCount,
           submissions: generateMockSubmissions(totalStudents, assignment)
@@ -174,7 +205,10 @@ const Assignments = () => {
     const assignments: Assignment[] = [];
     state.classrooms.forEach(classroom => {
       classroom.assignments.forEach(assignment => {
-        assignments.push(assignment);
+        assignments.push({
+          ...assignment,
+          descriptionImages: assignment.descriptionImages || []
+        });
       });
     });
     
@@ -229,37 +263,6 @@ const Assignments = () => {
     setFilteredAssignments(filtered);
   }, [allAssignments, filter, subjectFilter, searchQuery]);
 
-  const handleCreateAssignment = useCallback(async () => {
-    try {
-      // Validate form
-      if (!newAssignment.title || !newAssignment.dueDate || !newAssignment.classroomId) {
-        showToast({
-          title: 'Validation Error',
-          description: 'Please fill in all required fields',
-          variant: 'destructive'
-        });
-        return;
-      }
-
-      // In a real app, this would call Supabase
-      showToast({
-        title: 'Success',
-        description: 'Assignment created successfully',
-      });
-      
-      setIsCreateDialogOpen(false);
-      resetForm();
-      loadAssignments();
-    } catch (error) {
-      console.error('Error creating assignment:', error);
-      showToast({
-        title: 'Error',
-        description: 'Failed to create assignment',
-        variant: 'destructive'
-      });
-    }
-  }, [newAssignment, showToast]);
-
   const handleDeleteAssignment = useCallback(async (assignmentId: string) => {
     if (!confirm('Are you sure you want to delete this assignment?')) return;
     
@@ -285,17 +288,188 @@ const Assignments = () => {
       title: '',
       description: '',
       subjectArea: SubjectArea.OTHER,
-      dueDate: '',
+      dueDate: getDefaultDueDate(),
       classroomId: '',
       maxPoints: 100,
-      instructions: ''
+      instructions: '',
+      descriptionImages: []
     });
   }, []);
 
+  const handleInputChange = useCallback(
+    (field: keyof Omit<NewAssignmentForm, 'descriptionImages'>, value: string | number) => {
+      const nextValue = typeof value === 'string' ? value : value;
+      setNewAssignment(prev => ({ ...prev, [field]: nextValue }));
+    },
+    []
+  );
 
-  const handleInputChange = useCallback((field: keyof typeof newAssignment, value: string | number) => {
-    setNewAssignment(prev => ({ ...prev, [field]: value }));
+  const handleDescriptionImageUpload = useCallback(
+    async (files: FileList | null) => {
+      if (!files?.length) return;
+      try {
+        const remainingSlots = Math.max(0, 5 - newAssignment.descriptionImages.length);
+        if (remainingSlots <= 0) {
+          showToast({
+            title: 'Image limit reached',
+            description: 'You can add up to 5 reference images per assignment.',
+            variant: 'destructive'
+          });
+          return;
+        }
+
+        const filesToProcess = Array.from(files).slice(0, remainingSlots);
+        const uploads = await Promise.all(filesToProcess.map(readFileAsDataUrl));
+
+        setNewAssignment(prev => ({
+          ...prev,
+          descriptionImages: [...prev.descriptionImages, ...uploads]
+        }));
+
+        if (files.length > remainingSlots) {
+          showToast({
+            title: 'Extra files skipped',
+            description: 'Only the first few images were added to keep within the 5 image limit.',
+          });
+        }
+      } catch (error) {
+        console.error('Error adding images to assignment:', error);
+        showToast({
+          title: 'Image upload failed',
+          description: 'We could not read one of the selected image files. Please try again.',
+          variant: 'destructive'
+        });
+      }
+    },
+    [newAssignment.descriptionImages.length, showToast]
+  );
+
+  const handleRemoveDescriptionImage = useCallback((index: number) => {
+    setNewAssignment(prev => ({
+      ...prev,
+      descriptionImages: prev.descriptionImages.filter((_, idx) => idx !== index)
+    }));
   }, []);
+
+  const handleDescriptionImageInputChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      handleDescriptionImageUpload(event.target.files);
+      event.target.value = '';
+    },
+    [handleDescriptionImageUpload]
+  );
+
+  const validateNewAssignment = useCallback(() => {
+    if (state.classrooms.length === 0) {
+      showToast({
+        title: 'No classrooms found',
+        description: 'Create a classroom before assigning work to students.',
+        variant: 'destructive'
+      });
+      return false;
+    }
+
+    const missingFields: string[] = [];
+
+    if (!newAssignment.title.trim()) missingFields.push('Title');
+    if (!newAssignment.classroomId) missingFields.push('Classroom');
+    if (!newAssignment.dueDate) missingFields.push('Due date');
+
+    if (missingFields.length > 0) {
+      showToast({
+        title: 'Missing information',
+        description: `Please add: ${missingFields.join(', ')}`,
+        variant: 'destructive'
+      });
+      return false;
+    }
+
+    const dueDateValue = new Date(newAssignment.dueDate);
+    if (Number.isNaN(dueDateValue.getTime())) {
+      showToast({
+        title: 'Invalid due date',
+        description: 'Please choose a valid due date and time.',
+        variant: 'destructive'
+      });
+      return false;
+    }
+
+    if (dueDateValue.getTime() <= Date.now()) {
+      showToast({
+        title: 'Due date in the past',
+        description: 'Set the due date to a future time so students can respond.',
+        variant: 'destructive'
+      });
+      return false;
+    }
+
+    return true;
+  }, [newAssignment, showToast, state.classrooms.length]);
+
+  const handleCreateAssignment = useCallback(async () => {
+    try {
+      if (!validateNewAssignment()) return;
+
+      const dueDateValue = new Date(newAssignment.dueDate);
+      const selectedClassroom = state.classrooms.find((classroom) => classroom.id === newAssignment.classroomId);
+      const totalStudents = selectedClassroom?.studentIds?.length ?? 0;
+      const newAssignmentRecord: AssignmentWithSubmissions = {
+        id: `temp-assignment-${Date.now()}`,
+        title: newAssignment.title.trim(),
+        description: newAssignment.description.trim(),
+        subjectArea: newAssignment.subjectArea,
+        assignmentType: 'custom',
+        dueDate: dueDateValue.toISOString(),
+        createdAt: new Date().toISOString(),
+        teacherId: state.currentUser?.id || 'mock-teacher-id',
+        totalPoints: newAssignment.maxPoints,
+        isActive: true,
+        maxScore: newAssignment.maxPoints,
+        attachments: [],
+        descriptionImages: [...newAssignment.descriptionImages],
+        instructions: newAssignment.instructions.trim(),
+        submissions: [],
+        totalStudents,
+        submittedCount: 0
+      };
+
+      // In a real app, this would call Supabase and refresh the cache
+      setAllAssignments(prev => [newAssignmentRecord, ...prev]);
+
+      showToast({
+        title: 'Assignment created',
+        description: 'Students can now access the new assignment.',
+      });
+      
+      setIsCreateDialogOpen(false);
+      resetForm();
+    } catch (error) {
+      console.error('Error creating assignment:', error);
+      showToast({
+        title: 'Error',
+        description: 'Failed to create assignment',
+        variant: 'destructive'
+      });
+    }
+  }, [newAssignment, resetForm, showToast, state.classrooms, state.currentUser?.id, validateNewAssignment]);
+
+  const handleCreateDialogToggle = useCallback(
+    (open: boolean) => {
+      setIsCreateDialogOpen(open);
+      if (!open) {
+        resetForm();
+      }
+    },
+    [resetForm]
+  );
+
+  const handleCreateDialogClose = useCallback(() => {
+    handleCreateDialogToggle(false);
+  }, [handleCreateDialogToggle]);
+
+  const handleCreateDialogOpen = useCallback(() => {
+    handleCreateDialogToggle(true);
+  }, [handleCreateDialogToggle]);
 
   const isAssignmentOverdue = (dueDate: string) => {
     const now = new Date();
@@ -349,7 +523,7 @@ const Assignments = () => {
           <FileText className="h-6 w-6 text-purple-600" />
           <h2 className="text-2xl font-bold text-gray-800">Assignment Management</h2>
         </div>
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+    <Dialog open={isCreateDialogOpen} onOpenChange={handleCreateDialogToggle}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
               <Plus className="mr-2 h-4 w-4" />
@@ -457,9 +631,48 @@ const Assignments = () => {
                   rows={5}
                 />
               </div>
+
+              <div className="grid gap-2">
+                <Label htmlFor="description-images">Reference Images</Label>
+                <Input
+                  id="description-images"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={handleDescriptionImageInputChange}
+                />
+                <p className="text-xs text-gray-500">
+                  Upload up to 5 images (PNG or JPG) to help students understand the task quickly.
+                </p>
+                {newAssignment.descriptionImages.length > 0 && (
+                  <div className="grid grid-cols-2 gap-3">
+                    {newAssignment.descriptionImages.map((image, index) => (
+                      <div
+                        key={`new-assignment-image-${index}`}
+                        className="relative group border border-gray-200 rounded-md overflow-hidden"
+                      >
+                        <img
+                          src={image}
+                          alt={`Assignment reference ${index + 1}`}
+                          className="h-28 w-full object-cover"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="destructive"
+                          className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleRemoveDescriptionImage(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+              <Button variant="outline" onClick={handleCreateDialogClose}>
                 Cancel
               </Button>
               <Button onClick={handleCreateAssignment} className="bg-gradient-to-r from-purple-600 to-pink-600">
@@ -562,6 +775,26 @@ const Assignments = () => {
                 </CardHeader>
                 
                 <CardContent className="pt-4 space-y-4">
+                  {assignment.descriptionImages?.length ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      {assignment.descriptionImages.map((image, index) => (
+                        <div key={`${assignment.id}-image-${index}`} className="relative h-28 w-full overflow-hidden rounded-md border">
+                          <img
+                            src={image}
+                            alt={`${assignment.title} reference ${index + 1}`}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  {assignment.instructions?.trim() && (
+                    <div className="rounded-md border border-purple-100 bg-purple-50/60 p-3 text-sm text-gray-700">
+                      {assignment.instructions}
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex items-center text-sm text-gray-600">
                       <Calendar className="h-4 w-4 mr-2 text-purple-500" />
@@ -626,7 +859,7 @@ const Assignments = () => {
               {searchQuery ? "Try adjusting your search or filters" : "Create your first assignment to get started"}
             </p>
             <Button 
-              onClick={() => setIsCreateDialogOpen(true)}
+              onClick={handleCreateDialogOpen}
               className="bg-gradient-to-r from-purple-600 to-pink-600"
             >
               <Plus className="mr-2 h-4 w-4" />
@@ -752,8 +985,28 @@ const Assignments = () => {
                   {assignment.description || "No description provided"}
                 </CardDescription>
               </CardHeader>
-              <CardContent className="pt-4">
-                <div className="flex items-center text-sm text-gray-600 mb-2">
+              <CardContent className="pt-4 space-y-3">
+                {assignment.descriptionImages?.length ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    {assignment.descriptionImages.map((image, index) => (
+                      <div key={`${assignment.id}-student-image-${index}`} className="relative h-24 w-full overflow-hidden rounded-md border border-pink-100">
+                        <img
+                          src={image}
+                          alt={`${assignment.title} reference ${index + 1}`}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+
+                {assignment.instructions?.trim() && (
+                  <div className="rounded-md border border-pink-100 bg-pink-50/70 p-3 text-sm text-gray-700">
+                    {assignment.instructions}
+                  </div>
+                )}
+
+                <div className="flex items-center text-sm text-gray-600">
                   <Calendar className="h-4 w-4 mr-2 text-pink-500" />
                   <span>Created: {new Date(assignment.createdAt).toLocaleDateString()}</span>
                 </div>

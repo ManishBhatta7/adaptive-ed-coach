@@ -14,6 +14,8 @@ export interface Assignment {
   isActive: boolean;
   attachments?: string[];
   maxScore?: number;
+  descriptionImages?: string[];
+  instructions?: string;
 }
 
 export interface Submission {
