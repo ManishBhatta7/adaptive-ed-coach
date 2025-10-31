@@ -50,6 +50,11 @@ interface RecentActivity {
   status?: string;
 }
 
+// Constants for dashboard calculations
+const ACTIVE_STUDENT_ESTIMATION_RATE = 0.8; // Estimate 80% of students are active (TODO: Replace with actual activity data)
+const PENDING_DOUBTS_ALERT_THRESHOLD = 5; // Alert when pending doubts exceed this number
+const DAYS_FOR_RECENT_ACTIVITY = 7; // Number of days to consider for recent activity
+
 const TeacherDashboard = () => {
   const { state } = useAppContext();
   const { toast } = useToast();
@@ -66,6 +71,24 @@ const TeacherDashboard = () => {
   
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Helper function to calculate completion rate
+  const calculateCompletionRate = (recentSubmissions: number, totalStudents: number, totalAssignments: number): number => {
+    if (totalAssignments === 0 || totalStudents === 0) return 0;
+    // Calculate as percentage of expected total submissions (students × assignments)
+    const expectedSubmissions = totalStudents * totalAssignments;
+    return Math.min(100, Math.round((recentSubmissions / expectedSubmissions) * 100));
+  };
+
+  // Helper function to calculate active student percentage
+  const calculateActiveStudentPercentage = (totalStudents: number): number => {
+    return totalStudents > 0 ? Math.round(totalStudents * ACTIVE_STUDENT_ESTIMATION_RATE) : 0;
+  };
+
+  // Helper function to calculate percentage safely
+  const calculatePercentage = (value: number, total: number): number => {
+    return total > 0 ? Math.round((value / total) * 100) : 0;
+  };
 
   const loadRecentActivity = useCallback(async () => {
     try {
@@ -167,9 +190,9 @@ const TeacherDashboard = () => {
         .select('*', { count: 'exact', head: true })
         .eq('status', 'open');
       
-      // Get recent submissions count (last 7 days)
+      // Get recent submissions count (last N days)
       const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
+      weekAgo.setDate(weekAgo.getDate() - DAYS_FOR_RECENT_ACTIVITY);
       
       const { count: recentSubmissionsCount } = await supabase
         .from('submissions')
@@ -182,8 +205,8 @@ const TeacherDashboard = () => {
         totalAssignments: assignmentsCount || 0,
         pendingDoubts: doubtsCount || 0,
         recentSubmissions: recentSubmissionsCount || 0,
-        activeStudents: Math.round(totalStudents * 0.8), // Mock calculation - could be based on recent activity
-        completionRate: assignmentsCount ? Math.round((recentSubmissionsCount / (assignmentsCount * Math.max(1, totalStudents))) * 100) : 0,
+        activeStudents: calculateActiveStudentPercentage(totalStudents),
+        completionRate: calculateCompletionRate(recentSubmissionsCount || 0, totalStudents, assignmentsCount || 0),
       });
 
       // Load recent activity
@@ -361,7 +384,7 @@ const TeacherDashboard = () => {
                 <div className="p-3 bg-amber-500 rounded-xl shadow-md">
                   <MessageSquare className="h-6 w-6 text-white" />
                 </div>
-                <AlertTriangle className={`h-5 w-5 ${stats.pendingDoubts > 5 ? 'text-red-500' : 'text-amber-400'}`} />
+                <AlertTriangle className={`h-5 w-5 ${stats.pendingDoubts > PENDING_DOUBTS_ALERT_THRESHOLD ? 'text-red-500' : 'text-amber-400'}`} />
               </div>
               <div>
                 <p className="text-sm font-semibold text-amber-700 mb-1">Student Doubts</p>
@@ -493,7 +516,7 @@ const TeacherDashboard = () => {
             <CardContent>
               <div className="text-5xl font-bold text-cyan-600 mb-2">{stats.activeStudents}</div>
               <p className="text-sm text-cyan-700">Engaged this week</p>
-              <Progress value={stats.totalStudents ? (stats.activeStudents / stats.totalStudents) * 100 : 0} className="mt-3 h-2 bg-cyan-200" />
+              <Progress value={calculatePercentage(stats.activeStudents, stats.totalStudents)} className="mt-3 h-2 bg-cyan-200" />
             </CardContent>
           </Card>
 
