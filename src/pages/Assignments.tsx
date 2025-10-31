@@ -47,6 +47,58 @@ interface AssignmentWithSubmissions extends Assignment {
   submittedCount?: number;
 }
 
+const SubmissionCard = ({ submission }: { submission: SubmissionStatus }) => (
+  <Card className="p-4">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+          submission.status === 'submitted' ? 'bg-green-100' :
+          submission.status === 'late' ? 'bg-amber-100' : 'bg-red-100'
+        }`}>
+          {submission.status === 'submitted' ? (
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+          ) : submission.status === 'late' ? (
+            <AlertCircle className="h-5 w-5 text-amber-600" />
+          ) : (
+            <XCircle className="h-5 w-5 text-red-600" />
+          )}
+        </div>
+        
+        <div>
+          <p className="font-medium">{submission.studentName}</p>
+          <p className="text-sm text-gray-500">
+            {submission.submittedAt 
+              ? `Submitted: ${new Date(submission.submittedAt).toLocaleString()}` 
+              : 'Not submitted'}
+          </p>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-4">
+        {submission.score !== undefined && (
+          <div className="text-right">
+            <p className="text-2xl font-bold text-purple-600">{submission.score}</p>
+            <p className="text-xs text-gray-500">/ 100</p>
+          </div>
+        )}
+        
+        {submission.status !== 'pending' && (
+          <Button size="sm" variant="outline">
+            <Eye className="mr-2 h-4 w-4" />
+            Review
+          </Button>
+        )}
+      </div>
+    </div>
+    
+    {submission.feedback && (
+      <div className="mt-3 p-3 bg-gray-50 rounded-md">
+        <p className="text-sm text-gray-700">{submission.feedback}</p>
+      </div>
+    )}
+  </Card>
+);
+
 const Assignments = () => {
   const { state } = useAppContext();
   const { toast: showToast } = useToast();
@@ -289,7 +341,7 @@ const Assignments = () => {
   };
 
   // Teacher View: Assignment Management
-  const TeacherAssignmentView = () => (
+  const renderTeacherAssignmentView = () => (
     <div className="space-y-6">
       {/* Header with Create Button */}
       <div className="flex justify-between items-center">
@@ -653,61 +705,8 @@ const Assignments = () => {
     </div>
   );
 
-  // Submission Card Component
-  const SubmissionCard = ({ submission }: { submission: SubmissionStatus }) => (
-    <Card className="p-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-            submission.status === 'submitted' ? 'bg-green-100' :
-            submission.status === 'late' ? 'bg-amber-100' : 'bg-red-100'
-          }`}>
-            {submission.status === 'submitted' ? (
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-            ) : submission.status === 'late' ? (
-              <AlertCircle className="h-5 w-5 text-amber-600" />
-            ) : (
-              <XCircle className="h-5 w-5 text-red-600" />
-            )}
-          </div>
-          
-          <div>
-            <p className="font-medium">{submission.studentName}</p>
-            <p className="text-sm text-gray-500">
-              {submission.submittedAt 
-                ? `Submitted: ${new Date(submission.submittedAt).toLocaleString()}` 
-                : 'Not submitted'}
-            </p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          {submission.score !== undefined && (
-            <div className="text-right">
-              <p className="text-2xl font-bold text-purple-600">{submission.score}</p>
-              <p className="text-xs text-gray-500">/ 100</p>
-            </div>
-          )}
-          
-          {submission.status !== 'pending' && (
-            <Button size="sm" variant="outline">
-              <Eye className="mr-2 h-4 w-4" />
-              Review
-            </Button>
-          )}
-        </div>
-      </div>
-      
-      {submission.feedback && (
-        <div className="mt-3 p-3 bg-gray-50 rounded-md">
-          <p className="text-sm text-gray-700">{submission.feedback}</p>
-        </div>
-      )}
-    </Card>
-  );
-
   // Student View: Assignment List
-  const StudentAssignmentView = () => (
+  const renderStudentAssignmentView = () => (
     <div className="space-y-6">
       <div className="flex items-center">
         <FileText className="mr-3 h-6 w-6 text-pink-600" />
@@ -814,7 +813,7 @@ const Assignments = () => {
       className="py-8"
     >
       <div className="container px-6 max-w-7xl mx-auto">
-        {state.isTeacher ? <TeacherAssignmentView /> : <StudentAssignmentView />}
+  {state.isTeacher ? renderTeacherAssignmentView() : renderStudentAssignmentView()}
       </div>
     </PageLayout>
   );
