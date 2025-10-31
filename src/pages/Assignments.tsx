@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -75,7 +75,7 @@ const Assignments = () => {
 
   useEffect(() => {
     loadAssignments();
-  }, [state.classrooms, state.isTeacher]);
+  }, []); // Only load on mount
   
   const loadAssignments = async () => {
     try {
@@ -177,7 +177,7 @@ const Assignments = () => {
     setFilteredAssignments(filtered);
   }, [allAssignments, filter, subjectFilter, searchQuery]);
 
-  const handleCreateAssignment = async () => {
+  const handleCreateAssignment = useCallback(async () => {
     try {
       // Validate form
       if (!newAssignment.title || !newAssignment.dueDate || !newAssignment.classroomId) {
@@ -206,9 +206,9 @@ const Assignments = () => {
         variant: 'destructive'
       });
     }
-  };
+  }, [newAssignment, showToast]);
 
-  const handleDeleteAssignment = async (assignmentId: string) => {
+  const handleDeleteAssignment = useCallback(async (assignmentId: string) => {
     if (!confirm('Are you sure you want to delete this assignment?')) return;
     
     try {
@@ -226,9 +226,9 @@ const Assignments = () => {
         variant: 'destructive'
       });
     }
-  };
+  }, [showToast]);
 
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     setNewAssignment({
       title: '',
       description: '',
@@ -238,8 +238,12 @@ const Assignments = () => {
       maxPoints: 100,
       instructions: ''
     });
-  };
+  }, []);
 
+
+  const handleInputChange = useCallback((field: keyof typeof newAssignment, value: string | number) => {
+    setNewAssignment(prev => ({ ...prev, [field]: value }));
+  }, []);
 
   const isAssignmentOverdue = (dueDate: string) => {
     const now = new Date();
@@ -313,7 +317,7 @@ const Assignments = () => {
                 <Input
                   id="title"
                   value={newAssignment.title}
-                  onChange={(e) => setNewAssignment({ ...newAssignment, title: e.target.value })}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
                   placeholder="e.g., Chapter 5 Quiz"
                 />
               </div>
@@ -323,7 +327,7 @@ const Assignments = () => {
                 <Textarea
                   id="description"
                   value={newAssignment.description}
-                  onChange={(e) => setNewAssignment({ ...newAssignment, description: e.target.value })}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
                   placeholder="Brief description of the assignment"
                   rows={3}
                 />
@@ -334,7 +338,7 @@ const Assignments = () => {
                   <Label htmlFor="subject">Subject *</Label>
                   <Select
                     value={newAssignment.subjectArea}
-                    onValueChange={(value) => setNewAssignment({ ...newAssignment, subjectArea: value as SubjectArea })}
+                    onValueChange={(value) => handleInputChange('subjectArea', value)}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -353,7 +357,7 @@ const Assignments = () => {
                   <Label htmlFor="classroom">Classroom *</Label>
                   <Select
                     value={newAssignment.classroomId}
-                    onValueChange={(value) => setNewAssignment({ ...newAssignment, classroomId: value })}
+                    onValueChange={(value) => handleInputChange('classroomId', value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select classroom" />
@@ -376,7 +380,7 @@ const Assignments = () => {
                     id="dueDate"
                     type="datetime-local"
                     value={newAssignment.dueDate}
-                    onChange={(e) => setNewAssignment({ ...newAssignment, dueDate: e.target.value })}
+                    onChange={(e) => handleInputChange('dueDate', e.target.value)}
                   />
                 </div>
                 
@@ -386,7 +390,7 @@ const Assignments = () => {
                     id="maxPoints"
                     type="number"
                     value={newAssignment.maxPoints}
-                    onChange={(e) => setNewAssignment({ ...newAssignment, maxPoints: parseInt(e.target.value) })}
+                    onChange={(e) => handleInputChange('maxPoints', parseInt(e.target.value) || 0)}
                   />
                 </div>
               </div>
@@ -396,7 +400,7 @@ const Assignments = () => {
                 <Textarea
                   id="instructions"
                   value={newAssignment.instructions}
-                  onChange={(e) => setNewAssignment({ ...newAssignment, instructions: e.target.value })}
+                  onChange={(e) => handleInputChange('instructions', e.target.value)}
                   placeholder="Detailed instructions for students"
                   rows={5}
                 />
