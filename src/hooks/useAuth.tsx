@@ -121,31 +121,29 @@ export const useAuth = () => {
   }, [testMode.enabled, testMode.studentProfile]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    try {
-      console.log('Attempting login with email:', email);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+    // Removed the try...catch block to allow errors to be thrown
+    console.log('Attempting login with email:', email);
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-      if (error) {
-        console.error('Login error:', error);
-        // Don't throw here, let the calling component handle the error
-        return false;
-      }
-
-      console.log('Login successful, session:', data.session);
-      
-      if (data.session) {
-        setSession(data.session);
-        // User profile fetch is handled by the onAuthStateChange listener
-        return true;
-      }
-      return false;
-    } catch (error) {
+    if (error) {
       console.error('Login error:', error);
-      return false;
+      // THROW the error so the component's catch block can handle it
+      throw error;
     }
+
+    console.log('Login successful, session:', data.session);
+    
+    if (data.session) {
+      setSession(data.session);
+      // User profile fetch is handled by the onAuthStateChange listener
+      return true;
+    }
+
+    // Fallback in case no session and no error
+    throw new Error("Login attempt did not return a session or an error.");
   };
 
   const register = async (name: string, email: string, password: string, role: 'student' | 'teacher' = 'student', school?: string): Promise<boolean> => {

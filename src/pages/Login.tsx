@@ -1,11 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // <-- Kept Link
 import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Book, CheckCircle } from 'lucide-react';
+import { Book } from 'lucide-react'; // <-- Cleaned up unused import
 import LoadingSpinner from '@/components/loading/LoadingSpinner';
 import LoadingScreen from '@/components/loading/LoadingScreen';
 import { ValidatedInput } from '@/components/ui/validated-input';
@@ -40,13 +39,12 @@ const Login = () => {
   }, [state.isAuthenticated, state.isLoading, state.currentUser, navigate]);
 
   const {
-    errors,
     isSubmitting,
     hasErrors,
     validateField,
     handleSubmit,
     markTouched,
-    getFieldError
+    // getFieldError is no longer needed here since we use the validator prop
   } = useFormValidation({
     schema: loginSchema,
     onSubmit: async (data) => {
@@ -56,33 +54,19 @@ const Login = () => {
         const success = await login(data.email, data.password);
         
         if (success) {
-          // Success toast with better styling
-          const dashboardPath = state.currentUser?.role === 'teacher' ? '/teacher-dashboard' : 
-                               state.currentUser?.role === 'admin' ? '/admin' : '/dashboard';
-          
           toast({
             title: "✅ Login successful!",
             description: "Welcome back to AdaptiveEdCoach! Redirecting to dashboard...",
             duration: 3000,
           });
-          
-          // Delay navigation slightly to show toast
-          setTimeout(() => {
-            navigate(dashboardPath);
-          }, 1000);
-        } else {
-          // More specific error handling
-          toast({
-            title: "❌ Login failed",
-            description: "Invalid email or password. Please check your credentials and try again.",
-            variant: 'destructive',
-            duration: 5000,
-          });
-        }
+          // Navigation is correctly handled by the useEffect hook
+        } 
+        // The 'else' block for !success is no longer needed,
+        // as the auth hook now throws an error on failure.
       } catch (error: any) {
         console.error('Login error:', error);
         
-        // Handle different error types with specific messages
+        // This CATCH block will now correctly handle errors from the hook
         let errorMessage = "An unexpected error occurred. Please try again.";
         
         if (error.message?.includes('Invalid login credentials')) {
@@ -113,11 +97,10 @@ const Login = () => {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    Object.keys(formData).forEach(key => markTouched(key));
+    Object.keys(formData).forEach(key => markTouched(key as keyof LoginFormData)); // Added type assertion
     handleSubmit(formData);
   };
   
-  // If still checking authentication status, show a loading state
   if (state.isLoading) {
     return <LoadingScreen message="Checking authentication..." fullScreen />;
   }
@@ -143,6 +126,7 @@ const Login = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* === THIS IS THE REVERTED/FIXED CODE === */}
               <ValidatedInput
                 id="email"
                 type="email"
@@ -171,10 +155,11 @@ const Login = () => {
                   <label htmlFor="password" className="text-sm font-medium">
                     Password
                   </label>
-                  <a href="/forgot-password" className="text-xs text-edu-primary hover:underline">
+                  <Link to="/forgot-password" className="text-xs text-edu-primary hover:underline">
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
+                {/* === THIS IS THE REVERTED/FIXED CODE === */}
                 <ValidatedInput
                   id="password"
                   type="password"
@@ -210,9 +195,9 @@ const Login = () => {
               
               <div className="text-center text-sm">
                 Don't have an account?{' '}
-                <a href="/signup" className="text-edu-primary hover:underline font-medium">
+                <Link to="/signup" className="text-edu-primary hover:underline font-medium">
                   Sign up
-                </a>
+                </Link>
               </div>
             </CardFooter>
           </form>

@@ -26,15 +26,15 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIU
 let supabaseClient;
 
 if (shouldUseIntegrationClient()) {
-  // Use the integration client
   const { supabase: integrationClient } = require('@/integrations/supabase/client');
   supabaseClient = integrationClient;
 } else {
+  // STRICT CHECK: Fail if keys are missing instead of faking it
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Supabase credentials are missing. Please check your environment variables.');
-    supabaseClient = createMockClient();
+    throw new Error(
+      'CRITICAL: Supabase credentials are missing. You must create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.'
+    );
   } else {
-    // Create a proper client with the credentials and ensure session persistence
     supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         autoRefreshToken: true,
@@ -46,27 +46,3 @@ if (shouldUseIntegrationClient()) {
 }
 
 export const supabase = supabaseClient;
-
-// Create a mock Supabase client for development/testing
-function createMockClient() {
-  console.warn('Using mock Supabase client. Authentication and database operations will not work.');
-  
-  // Return a mock client with the same interface
-  return {
-    auth: {
-      getSession: () => Promise.resolve({ data: { session: null } }),
-      signInWithPassword: () => Promise.resolve({ data: {}, error: new Error('Mock auth client') }),
-      signUp: () => Promise.resolve({ data: {}, error: new Error('Mock auth client') }),
-      signOut: () => Promise.resolve({ error: null }),
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
-    },
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          single: () => Promise.resolve({ data: null, error: null })
-        }),
-        insert: () => Promise.resolve({ error: new Error('Mock database client') })
-      })
-    })
-  } as any;
-}

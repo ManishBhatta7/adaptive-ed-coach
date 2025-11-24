@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
@@ -9,6 +8,9 @@ import { useToast } from '@/hooks/use-toast';
 import AnswerSheetFeedback from '@/components/answer-sheet/AnswerSheetFeedback';
 import AnswerSheetUploader from '@/components/answer-sheet/AnswerSheetUploader';
 import { SubmissionService } from '@/services/SubmissionService';
+// ADDED: Import Supabase client and UUID
+import { supabase } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 
 const AnswerSheetPage = () => {
   const navigate = useNavigate();
@@ -28,43 +30,65 @@ const AnswerSheetPage = () => {
     improvements: string[];
   } | null>(null);
   
-  // Redirect to login if not authenticated
   if (!isAuthenticated) {
     navigate('/login');
     return null;
   }
 
-  const handleTextExtracted = async (text: string, imgUrl: string) => {
+  // UPDATED: Receives File object instead of string URL
+  const handleTextExtracted = async (text: string, file: File) => {
     if (!currentUser) return;
 
     setExtractedText(text);
-    setImageUrl(imgUrl);
+    // Create a local preview URL for UI
+    const localPreview = URL.createObjectURL(file);
+    setImageUrl(localPreview);
     setIsAnalyzing(true);
 
     try {
-      // Create submission record
+      // 1. Upload Image to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUser.id}/answers/${uuidv4()}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('submissions')
+        .upload(fileName, file);
+
+      if (uploadError) {
+        console.error('Upload Error:', uploadError);
+        throw new Error('Failed to upload image. Please try again.');
+      }
+
+      // 2. Get Public URL
+      const { data: urlData } = supabase.storage
+        .from('submissions')
+        .getPublicUrl(uploadData.path);
+        
+      const publicUrl = urlData.publicUrl;
+
+      // 3. Create submission record with the PUBLIC URL
       const submission = await SubmissionService.createSubmission(
         currentUser.id,
         {
           assignmentType: 'answer_sheet',
           contentData: {
             extractedText: text,
-            imageUrl: imgUrl
+            imageUrl: publicUrl // Saving the link, not the file itself
           }
         }
       );
 
       if (!submission) {
-        throw new Error('Failed to create submission record');
+        throw new Error('Failed to save submission record');
       }
 
       setSubmissionId(submission.id);
 
-      // Start AI analysis
+      // 4. Start AI analysis
       const analysisResult = await SubmissionService.analyzeSubmission(
         submission.id,
         text,
-        'General', // Could be made configurable
+        'General',
         'answer_sheet'
       );
 
@@ -74,7 +98,7 @@ const AnswerSheetPage = () => {
 
       const analysis = analysisResult.analysis;
       
-      // Convert analysis to feedback format
+      // 5. Convert analysis to feedback format
       setFeedback({
         content: [analysis.overall_feedback || 'Analysis completed'],
         completed: true,
@@ -96,7 +120,6 @@ const AnswerSheetPage = () => {
         variant: 'destructive',
       });
 
-      // Show basic feedback as fallback
       setFeedback({
         content: ['Unable to complete full analysis. Please try again.'],
         completed: true,
@@ -113,14 +136,6 @@ const AnswerSheetPage = () => {
     setFeedback(null);
     setExtractedText('');
     setSubmissionId(null);
-  };
-
-  const resetAll = () => {
-    setExtractedText('');
-    setImageUrl('');
-    setFeedback(null);
-    setSubmissionId(null);
-    setIsAnalyzing(false);
   };
 
   return (
