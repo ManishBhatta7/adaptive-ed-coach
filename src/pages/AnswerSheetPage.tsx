@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import MainLayout from '@/components/layout/MainLayout';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import AnswerSheetFeedback from '@/components/answer-sheet/AnswerSheetFeedback';
 import AnswerSheetUploader from '@/components/answer-sheet/AnswerSheetUploader';
 import { SubmissionService } from '@/services/SubmissionService';
-// ADDED: Import Supabase client and UUID
 import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
+import { Loader2, Sparkles } from 'lucide-react';
 
 const AnswerSheetPage = () => {
   const navigate = useNavigate();
@@ -18,184 +17,156 @@ const AnswerSheetPage = () => {
   const { isAuthenticated, currentUser } = state;
   const { toast } = useToast();
   
-  const [extractedText, setExtractedText] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [submissionId, setSubmissionId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<{
-    content: string[];
-    completed: boolean;
-    score: number;
-    strengths: string[];
-    improvements: string[];
-  } | null>(null);
+  // Files
+  const [studentFile, setStudentFile] = useState<File | null>(null);
+  const [questionPaper, setQuestionPaper] = useState<File | null>(null);
+  const [markingScheme, setMarkingScheme] = useState<File | null>(null);
   
-  if (!isAuthenticated) {
-    navigate('/login');
-    return null;
-  }
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [feedback, setFeedback] = useState<any>(null);
 
-  // UPDATED: Receives File object instead of string URL
-  const handleTextExtracted = async (text: string, file: File) => {
-    if (!currentUser) return;
+  // Helper to upload a single file
+  const uploadFile = async (file: File, folder: string) => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${currentUser?.id}/${folder}/${uuidv4()}.${fileExt}`;
+    const { error: uploadError } = await supabase.storage
+      .from('submissions')
+      .upload(fileName, file);
+    
+    if (uploadError) throw uploadError;
+    
+    const { data } = supabase.storage.from('submissions').getPublicUrl(fileName);
+    return data.publicUrl;
+  };
 
-    setExtractedText(text);
-    // Create a local preview URL for UI
-    const localPreview = URL.createObjectURL(file);
-    setImageUrl(localPreview);
+  const handleAnalyze = async () => {
+    if (!currentUser || !studentFile) return;
+    
     setIsAnalyzing(true);
+    setFeedback(null);
 
     try {
-      // 1. Upload Image to Supabase Storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${currentUser.id}/answers/${uuidv4()}.${fileExt}`;
+      // 1. Upload Student Answer (Mandatory)
+      const studentFileUrl = await uploadFile(studentFile, 'answers');
       
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('submissions')
-        .upload(fileName, file);
-
-      if (uploadError) {
-        console.error('Upload Error:', uploadError);
-        throw new Error('Failed to upload image. Please try again.');
+      // 2. Upload Context Files (Optional)
+      let questionPaperUrl = undefined;
+      if (questionPaper) {
+        questionPaperUrl = await uploadFile(questionPaper, 'questions');
       }
 
-      // 2. Get Public URL
-      const { data: urlData } = supabase.storage
-        .from('submissions')
-        .getPublicUrl(uploadData.path);
-        
-      const publicUrl = urlData.publicUrl;
+      let markingSchemeUrl = undefined;
+      if (markingScheme) {
+        markingSchemeUrl = await uploadFile(markingScheme, 'rubrics');
+      }
 
-      // 3. Create submission record with the PUBLIC URL
-      const submission = await SubmissionService.createSubmission(
-        currentUser.id,
-        {
-          assignmentType: 'answer_sheet',
-          contentData: {
-            extractedText: text,
-            imageUrl: publicUrl // Saving the link, not the file itself
-          }
+      // 3. Create Submission Record
+      const submission = await SubmissionService.createSubmission(currentUser.id, {
+        assignmentType: 'answer_sheet',
+        contentData: {
+          fileUrl: studentFileUrl,
+          questionPaperUrl,
+          markingSchemeUrl,
+          fileName: studentFile.name
         }
-      );
+      });
 
-      if (!submission) {
-        throw new Error('Failed to save submission record');
-      }
+      if (!submission) throw new Error("Failed to create submission record");
 
-      setSubmissionId(submission.id);
+      toast({ title: "Files Uploaded", description: "AI is now grading your submission..." });
 
-      // 4. Start AI analysis
-      const analysisResult = await SubmissionService.analyzeSubmission(
+      // 4. Trigger AI Analysis
+      const { analysis, error } = await SubmissionService.analyzeSubmission(
         submission.id,
-        text,
+        "IMAGE_ANALYSIS",
         'General',
-        'answer_sheet'
+        'answer_sheet',
+        undefined, 
+        undefined, 
+        studentFileUrl,
+        questionPaperUrl,
+        markingSchemeUrl
       );
 
-      if (!analysisResult.success) {
-        throw new Error(analysisResult.error || 'Analysis failed');
-      }
-
-      const analysis = analysisResult.analysis;
-      
-      // 5. Convert analysis to feedback format
-      setFeedback({
-        content: [analysis.overall_feedback || 'Analysis completed'],
-        completed: true,
-        score: analysis.score || 0,
-        strengths: analysis.strengths || analysis.correct_concepts || [],
-        improvements: analysis.improvements || analysis.errors || []
-      });
-
-      toast({
-        title: 'Analysis Complete',
-        description: 'Your answer sheet has been analyzed successfully',
-      });
-
-    } catch (error) {
-      console.error('Error analyzing submission:', error);
-      toast({
-        title: 'Analysis Failed',
-        description: error instanceof Error ? error.message : 'Failed to analyze your submission',
-        variant: 'destructive',
-      });
+      if (error) throw new Error(error);
 
       setFeedback({
-        content: ['Unable to complete full analysis. Please try again.'],
+        content: analysis.line_by_line_feedback || [analysis.overall_feedback],
         completed: true,
-        score: 0,
-        strengths: ['Submission received'],
-        improvements: ['Try uploading a clearer image']
+        score: analysis.score,
+        strengths: analysis.strengths || [],
+        improvements: analysis.missing_concepts || analysis.improvements || []
       });
+
+      toast({ title: "Grading Complete!", description: `You scored ${analysis.score}/100` });
+
+    } catch (error: any) {
+      console.error(error);
+      toast({ title: 'Error', description: error.message || 'Analysis failed', variant: 'destructive' });
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  const handleProcessingStart = () => {
-    setFeedback(null);
-    setExtractedText('');
-    setSubmissionId(null);
-  };
+  if (!isAuthenticated) {
+    navigate('/login');
+    return null;
+  }
 
   return (
     <MainLayout>
-      <div className="container px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Answer Sheet Feedback</h1>
-            <p className="text-gray-600 mt-2">
-              Upload your handwritten answer and get detailed AI feedback
-            </p>
-          </div>
-          
-          <Tabs defaultValue={feedback ? "feedback" : "upload"}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="upload">Upload Answer</TabsTrigger>
-              <TabsTrigger value="feedback" disabled={!feedback}>AI Feedback</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="upload">
-              <AnswerSheetUploader 
-                onTextExtracted={handleTextExtracted}
-                onProcessingStart={handleProcessingStart}
-              />
-              
-              {extractedText && (
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle>Extracted Text</CardTitle>
-                    <CardDescription>
-                      The text extracted from your handwritten answer
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="bg-gray-50 p-4 rounded-md whitespace-pre-line max-h-64 overflow-y-auto">
-                      {extractedText}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {isAnalyzing && (
-                <Card className="mt-6">
-                  <CardContent className="py-6">
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mr-3"></div>
-                      <span>Analyzing your answer with AI...</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="feedback">
-              {feedback && (
-                <AnswerSheetFeedback feedback={feedback} />
-              )}
-            </TabsContent>
-          </Tabs>
+      <div className="container px-4 py-8 max-w-5xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Smart Grader (Multi-File)</h1>
+          <p className="text-gray-600">Upload your answer sheet along with the question paper for precise grading.</p>
         </div>
+
+        <div className="grid lg:grid-cols-3 gap-6 mb-8">
+          {/* Left Column: Context */}
+          <div className="lg:col-span-1 space-y-4">
+            <h2 className="font-semibold text-gray-800 flex items-center">
+              <Sparkles className="w-4 h-4 mr-2 text-edu-secondary"/>
+              Set Context (Optional)
+            </h2>
+            
+            <AnswerSheetUploader 
+              title="1. Question Paper"
+              description="Upload the original test PDF."
+              onFileSelected={setQuestionPaper}
+              isProcessing={isAnalyzing}
+            />
+            
+            <AnswerSheetUploader 
+              title="2. Marking Scheme"
+              description="Upload correct answers/rubric."
+              onFileSelected={setMarkingScheme}
+              isProcessing={isAnalyzing}
+            />
+          </div>
+
+          {/* Right Column: Student Work */}
+          <div className="lg:col-span-2 space-y-4">
+            <h2 className="font-semibold text-gray-800">Student Submission (Required)</h2>
+            
+            <AnswerSheetUploader 
+              title="3. Student Answer Sheet"
+              description="Upload the handwritten work to be graded."
+              onFileSelected={setStudentFile}
+              isProcessing={isAnalyzing}
+            />
+
+            <Button 
+              size="lg" 
+              className="w-full mt-4" 
+              onClick={handleAnalyze} 
+              disabled={isAnalyzing || !studentFile}
+            >
+              {isAnalyzing ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Grading with Gemini 2.0...</> : "Analyze & Grade"}
+            </Button>
+          </div>
+        </div>
+
+        {feedback && <AnswerSheetFeedback feedback={feedback} />}
       </div>
     </MainLayout>
   );

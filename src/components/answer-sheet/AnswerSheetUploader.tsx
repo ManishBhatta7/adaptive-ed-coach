@@ -1,117 +1,89 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, AlertCircle, FileType, X } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import Tesseract from 'tesseract.js';
-
-// PDF.js Imports
-import { getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
-
-// Set up the worker using a stable CDN link to avoid build errors
-if (typeof window !== 'undefined') {
-  // Using a hardcoded version (4.x) ensures compatibility
-  GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.mjs`;
-}
+import { Upload, FileText, X, CheckCircle2 } from 'lucide-react';
 
 interface AnswerSheetUploaderProps {
-  onTextExtracted: (text: string, file: File) => void;
-  onProcessingStart: () => void;
+  onFileSelected: (file: File | null) => void;
+  isProcessing: boolean;
+  title?: string;
+  description?: string;
+  acceptedFileTypes?: string;
 }
 
-const AnswerSheetUploader = ({ onTextExtracted, onProcessingStart }: AnswerSheetUploaderProps) => {
+const AnswerSheetUploader = ({ 
+  onFileSelected, 
+  isProcessing,
+  title = "Upload Answer Sheet",
+  description = "Upload handwritten notes or PDFs.",
+  acceptedFileTypes = "image/*,application/pdf"
+}: AnswerSheetUploaderProps) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (file) {
+      setSelectedFile(file);
+      onFileSelected(file);
+    }
+  };
 
-    // Reset state
-    setSelectedFile(file);
-    setError(null);
-    setIsProcessing(true);
-    onProcessingStart();
-    setProgress(10);
+  const clearFile = () => {
+    setSelectedFile(null);
+    onFileSelected(null);
+  };
 
-    try {
-      let extractedText = '';
-
-      // === OPTION A: PDF PROCESSING ===
-      if (file.type === 'application/pdf') {
-        toast({ title: "Processing PDF", description: "Extracting text from document..." });
-        
-        const arrayBuffer = await file.arrayBuffer();
-        
-        // Load the document
-        // Cast to 'any' to prevent TypeScript "implicit any" errors
-        const loadingTask: any = getDocument({ data: arrayBuffer });
-        const pdf = await loadingTask.promise;
-        
-            let fullText = '';
-            const totalPages = pdf.numPages;
-    
-            // Loop through all pages
-            for (let i = 1; i <= totalPages; i++) {
-              const page = await pdf.getPage(i);
-              const textContent = await page.getTextContent();
-              
-              // Extract text items safely
-              const pageText = textContent.items
-                .map((item: any) => item.str || '') // Handle potential missing 'str'
-                .join(' ');
-              
-              fullText += `--- Page ${i} ---\n${pageText}\n\n`;
-              
-              // Update progress
-              setProgress(10 + Math.round((i / totalPages) * 80));
-            }
-    
-            extractedText = fullText;
-          }
-          // You can add more file type handling here (e.g., images for OCR)
-    
-          // Call the callback with the extracted text
-          onTextExtracted(extractedText, file);
-          setProgress(100);
-          setIsProcessing(false);
-          } catch (err: any) {
-            setError('Failed to process file.');
-            setIsProcessing(false);
-            setProgress(0);
-            toast({
-              title: "Error",
-              description: err?.message || "An error occurred while processing the file.",
-              variant: "destructive",
-            });
-          }
-        };
-  
-        // Minimal UI: file input and progress display
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload Answer Sheet</CardTitle>
-              <CardDescription>Upload a PDF or image to extract text.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <input
-                type="file"
-                accept="application/pdf,image/*"
-                onChange={handleFileChange}
-                disabled={isProcessing}
-              />
-              <div style={{ marginTop: 12 }}>
-                <Progress value={progress} />
+  return (
+    <Card className="border-dashed">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center">
+          {selectedFile ? <CheckCircle2 className="h-4 w-4 mr-2 text-green-600"/> : <Upload className="h-4 w-4 mr-2 text-edu-primary" />}
+          {title}
+        </CardTitle>
+        <CardDescription className="text-xs">
+          {description}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {!selectedFile ? (
+          <div className="text-center hover:bg-gray-50 transition-colors rounded-md cursor-pointer relative py-6 border-2 border-transparent hover:border-edu-primary/10">
+            <input
+              type="file" 
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              accept={acceptedFileTypes}
+              onChange={handleFileChange} 
+              disabled={isProcessing}
+            />
+            <div className="flex flex-col items-center pointer-events-none">
+              <FileText className="h-8 w-8 text-gray-300 mb-2" />
+              <span className="text-xs font-medium text-gray-600">
+                Click to upload
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between p-2 border rounded-md bg-white shadow-sm">
+            <div className="flex items-center overflow-hidden">
+              <div className="bg-edu-primary/10 p-2 rounded mr-3">
+                <FileText className="h-4 w-4 text-edu-primary flex-shrink-0" />
               </div>
-              {error && <div style={{ marginTop: 12, color: 'red' }}>{error}</div>}
-            </CardContent>
-          </Card>
-        );
-      };
-  
-      export default AnswerSheetUploader;
+              <div className="truncate">
+                <p className="text-sm font-medium truncate max-w-[150px]">{selectedFile.name}</p>
+                <p className="text-[10px] text-gray-500">
+                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
+            </div>
+            {!isProcessing && (
+              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={clearFile}>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+export default AnswerSheetUploader;

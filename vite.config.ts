@@ -13,9 +13,8 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // ADD THIS SECTION:
   build: {
-    target: "esnext" 
+    target: "esnext", // Required for modern web features
   },
   optimizeDeps: {
     esbuildOptions: {
