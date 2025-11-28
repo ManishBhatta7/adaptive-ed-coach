@@ -1,0 +1,10 @@
+{
+  "welcome": "स्वागत हे",
+  "dashboard": "डैशबोर्ड",
+  "submit_work": "कार्य जमा करें",
+  "progress": "प्रगति",
+  "settings": {
+    "language": "भाषा",
+    "theme": "थीम"
+  }
+}

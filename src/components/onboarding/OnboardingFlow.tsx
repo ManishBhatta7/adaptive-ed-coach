@@ -1,186 +1,203 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { useAppContext } from '@/context/AppContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import { GraduationCap, School, Users, ChevronRight, ChevronLeft } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Brain, Ear, Eye, Hand, ArrowRight, Sparkles, Loader2 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
-interface OnboardingOption {
-  value: string;
-  label: string;
-  icon?: JSX.Element;
-  description?: string;
-}
-
-const userTypes: OnboardingOption[] = [
-  {
-    value: 'student',
-    label: 'Student',
-    icon: <GraduationCap className="w-6 h-6" />,
-    description: 'I want to improve my learning and academic performance'
-  },
-  {
-    value: 'teacher',
-    label: 'Teacher',
-    icon: <School className="w-6 h-6" />,
-    description: 'I want to use AI to enhance my teaching and reduce workload'
-  },
-  {
-    value: 'parent',
-    label: 'Parent',
-    icon: <Users className="w-6 h-6" />,
-    description: 'I want to support my child\'s learning journey'
-  }
-];
-
-const boards: OnboardingOption[] = [
-  { value: 'cbse', label: 'CBSE' },
-  { value: 'icse', label: 'ICSE' },
-  { value: 'state', label: 'State Board' },
-  { value: 'other', label: 'Other' }
-];
-
-const subjects: OnboardingOption[] = [
-  { value: 'mathematics', label: 'Mathematics' },
-  { value: 'science', label: 'Science' },
-  { value: 'english', label: 'English' },
-  { value: 'social_studies', label: 'Social Studies' },
-  { value: 'computer_science', label: 'Computer Science' },
-  { value: 'other', label: 'Other' }
-];
-
-export function OnboardingFlow() {
+export const OnboardingFlow = () => {
   const navigate = useNavigate();
+  const { state, updateUserProfile } = useAppContext();
   const [step, setStep] = useState(1);
-  const [userType, setUserType] = useState('');
-  const [board, setBoard] = useState('');
-  const [subject, setSubject] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const progress = (step / 3) * 100;
+  // Micro Assessment State
+  const [learningPref, setLearningPref] = useState<'Visual' | 'Auditory'>('Visual');
+  const [actionPref, setActionPref] = useState<'Kinesthetic' | 'Read/Write'>('Kinesthetic');
+  const [hardestSubject, setHardestSubject] = useState('');
 
-  const handleNext = () => {
-    if (step < 3) {
-      setStep(step + 1);
-    } else {
-      // Save onboarding data
-      const onboardingData = {
-        userType,
-        board,
-        subject,
-        completedAt: new Date().toISOString()
+  const handleFinish = async () => {
+    setLoading(true);
+    try {
+      // 1. Determine Learning Style (Simple Logic for Micro Assessment)
+      // If they prefer Visual + Kinesthetic -> Visual
+      // If they prefer Auditory + Read/Write -> Auditory (Simplified)
+      // Real logic can be more complex, but this is for Day 1 speed.
+      const dominantStyle = learningPref; 
+
+      // 2. Save Profile Data
+      const updates = {
+        primaryLearningStyle: dominantStyle,
+        hardestSubject: hardestSubject,
+        preferredCoachingMode: 'Encouraging' as const, // Default for new users
+        currentStreak: 1 // Instant gratification
       };
-      localStorage.setItem('onboarding', JSON.stringify(onboardingData));
+      
+      await updateUserProfile(updates);
+
+      // 3. THE MAGIC MOMENT: Generate "Visual Roadmap"
+      // We simulate a submission so the dashboard isn't empty
+      const roadmapPrompt = `Create a text-based visual roadmap for learning ${hardestSubject} for a ${dominantStyle} learner. Use emojis and arrows (->) to visualize the path.`;
+      
+      // Call Agent to generate content
+      const { data: agentData } = await supabase.functions.invoke('gemini-agent', {
+        body: {
+          messages: [{ role: 'user', content: roadmapPrompt }],
+          mode: 'tutor',
+          studentProfile: { ...state.currentUser, ...updates }
+        }
+      });
+
+      // Create a "Submission" record so the dashboard has data
+      if (state.currentUser?.id && agentData?.reply) {
+        await supabase.from('submissions').insert({
+          user_id: state.currentUser.id,
+          assignment_type: 'roadmap',
+          score: 100, // First win!
+          content_data: { 
+            title: `Roadmap: ${hardestSubject}`,
+            notes: "AI Generated Study Plan" 
+          },
+          ai_feedback: {
+            overall_feedback: agentData.reply,
+            strengths: ["Taking Initiative", "Goal Setting"],
+            improvements: ["Follow the roadmap step-by-step"]
+          },
+          status: 'processed',
+          submitted_at: new Date().toISOString(),
+          processed_at: new Date().toISOString()
+        });
+      }
+
+      // 4. Redirect to Dashboard
       navigate('/dashboard');
-    }
-  };
 
-  const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1);
-    }
-  };
-
-  const isNextDisabled = () => {
-    switch (step) {
-      case 1:
-        return !userType;
-      case 2:
-        return !board;
-      case 3:
-        return !subject;
-      default:
-        return true;
+    } catch (error) {
+      console.error("Onboarding Error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-4">
-      <div className="max-w-md mx-auto">
-        <div className="mb-8">
-          <Progress value={progress} className="h-2" />
-          <p className="text-sm text-gray-500 mt-2">Step {step} of 3</p>
-        </div>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Card className="border-2">
-              <CardHeader>
-                <CardTitle>
-                  {step === 1 && "Welcome! Let's personalize your experience"}
-                  {step === 2 && "Which board are you following?"}
-                  {step === 3 && "What subject do you want to focus on first?"}
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent>
-                <RadioGroup
-                  value={
-                    step === 1 ? userType :
-                    step === 2 ? board :
-                    subject
-                  }
-                  onValueChange={
-                    step === 1 ? setUserType :
-                    step === 2 ? setBoard :
-                    setSubject
-                  }
-                  className="space-y-3"
-                >
-                  {(step === 1 ? userTypes :
-                    step === 2 ? boards :
-                    subjects).map((option) => (
-                    <div key={option.value} className="flex items-center space-x-2 p-3 rounded-lg border cursor-pointer hover:bg-gray-50">
-                      <RadioGroupItem value={option.value} id={option.value} />
-                      <Label htmlFor={option.value} className="flex-1 cursor-pointer">
-                        <div className="flex items-center gap-3">
-                          {option.icon}
-                          <div>
-                            <div className="font-medium">{option.label}</div>
-                            {option.description && (
-                              <div className="text-sm text-gray-500">{option.description}</div>
-                            )}
-                          </div>
-                        </div>
-                      </Label>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <Card className="w-full max-w-lg shadow-xl border-0">
+        
+        {/* STEP 1: PREFERENCE */}
+        {step === 1 && (
+          <>
+            <CardHeader>
+              <CardTitle>How do you prefer to learn?</CardTitle>
+              <CardDescription>Help us tailor the experience for you.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <RadioGroup value={learningPref} onValueChange={(v) => setLearningPref(v as any)}>
+                <div className={`flex items-center space-x-2 border p-4 rounded-lg cursor-pointer transition-all ${learningPref === 'Visual' ? 'border-purple-500 bg-purple-50' : ''}`}>
+                  <RadioGroupItem value="Visual" id="visual" />
+                  <Label htmlFor="visual" className="flex items-center gap-2 cursor-pointer w-full">
+                    <Eye className="w-5 h-5 text-blue-500" />
+                    <div>
+                      <div className="font-medium">Charts & Diagrams</div>
+                      <div className="text-xs text-gray-500">I like to see things mapped out.</div>
                     </div>
-                  ))}
-                </RadioGroup>
-              </CardContent>
+                  </Label>
+                </div>
+                <div className={`flex items-center space-x-2 border p-4 rounded-lg cursor-pointer transition-all ${learningPref === 'Auditory' ? 'border-purple-500 bg-purple-50' : ''}`}>
+                  <RadioGroupItem value="Auditory" id="auditory" />
+                  <Label htmlFor="auditory" className="flex items-center gap-2 cursor-pointer w-full">
+                    <Ear className="w-5 h-5 text-orange-500" />
+                    <div>
+                      <div className="font-medium">Podcasts & Lectures</div>
+                      <div className="text-xs text-gray-500">I learn best by listening.</div>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+              <Button onClick={() => setStep(2)} className="w-full">Next <ArrowRight className="ml-2 w-4 h-4"/></Button>
+            </CardContent>
+          </>
+        )}
 
-              <CardFooter className="flex justify-between">
-                <Button
-                  variant="ghost"
-                  onClick={handleBack}
-                  disabled={step === 1}
-                >
-                  <ChevronLeft className="w-4 h-4 mr-2" />
-                  Back
-                </Button>
-                <Button
-                  onClick={handleNext}
-                  disabled={isNextDisabled()}
-                >
-                  {step === 3 ? 'Get Started' : 'Continue'}
-                  <ChevronRight className="w-4 h-4 ml-2" />
-                </Button>
-              </CardFooter>
-            </Card>
-          </motion.div>
-        </AnimatePresence>
+        {/* STEP 2: ACTIVITY */}
+        {step === 2 && (
+          <>
+            <CardHeader>
+              <CardTitle>How do you engage?</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <RadioGroup value={actionPref} onValueChange={(v) => setActionPref(v as any)}>
+                <div className={`flex items-center space-x-2 border p-4 rounded-lg cursor-pointer transition-all ${actionPref === 'Kinesthetic' ? 'border-purple-500 bg-purple-50' : ''}`}>
+                  <RadioGroupItem value="Kinesthetic" id="kinesthetic" />
+                  <Label htmlFor="kinesthetic" className="flex items-center gap-2 cursor-pointer w-full">
+                    <Hand className="w-5 h-5 text-green-500" />
+                    <div>
+                      <div className="font-medium">Hands-on</div>
+                      <div className="text-xs text-gray-500">I learn by doing and building.</div>
+                    </div>
+                  </Label>
+                </div>
+                <div className={`flex items-center space-x-2 border p-4 rounded-lg cursor-pointer transition-all ${actionPref === 'Read/Write' ? 'border-purple-500 bg-purple-50' : ''}`}>
+                  <RadioGroupItem value="Read/Write" id="readwrite" />
+                  <Label htmlFor="readwrite" className="flex items-center gap-2 cursor-pointer w-full">
+                    <Brain className="w-5 h-5 text-purple-500" />
+                    <div>
+                      <div className="font-medium">Reading & Writing</div>
+                      <div className="text-xs text-gray-500">I take notes and read articles.</div>
+                    </div>
+                  </Label>
+                </div>
+              </RadioGroup>
+              <div className="flex gap-3">
+                <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+                <Button onClick={() => setStep(3)} className="flex-1">Next <ArrowRight className="ml-2 w-4 h-4"/></Button>
+              </div>
+            </CardContent>
+          </>
+        )}
 
-        <p className="text-center text-sm text-gray-500 mt-4">
-          You can always change these preferences later in your settings
-        </p>
-      </div>
+        {/* STEP 3: CONTEXT & MAGIC MOMENT */}
+        {step === 3 && (
+          <>
+            <CardHeader>
+              <CardTitle>One last thing...</CardTitle>
+              <CardDescription>What is your hardest subject right now?</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label>Subject Name</Label>
+                <Input 
+                  placeholder="e.g. Calculus, Organic Chemistry, History"
+                  value={hardestSubject}
+                  onChange={(e) => setHardestSubject(e.target.value)}
+                />
+              </div>
+
+              <Button 
+                onClick={handleFinish} 
+                disabled={!hardestSubject || loading}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:opacity-90"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
+                    Building your {hardestSubject} Roadmap...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Create My Learning Plan
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </>
+        )}
+
+      </Card>
     </div>
   );
-}
+};

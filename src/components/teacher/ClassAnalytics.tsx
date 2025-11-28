@@ -10,7 +10,12 @@ interface AggregatedData {
   totalStudents: number;
   commonGaps: { concept: string; count: number }[];
   questionStats: { question: string; failureRate: number }[];
-  atRiskStudents: any[];
+  atRiskStudents: {
+    name: string | undefined;
+    score: number | undefined;
+    id: string;
+    weakness: string;
+  }[];
 }
 
 const ClassAnalytics = () => {
@@ -36,12 +41,16 @@ const ClassAnalytics = () => {
       // 2. Gaps
       const conceptMap: Record<string, number> = {};
       submissions.forEach(sub => {
+        // Safe optional chaining with typed interface
         const missing = sub.aiFeedback?.missing_concepts || [];
-        // Safety check: ensure missing is an array
+        
         if (Array.isArray(missing)) {
-          missing.forEach((concept: string) => {
-            const key = concept.toLowerCase().trim().replace(/[^\w\s]/gi, '');
-            if (key) conceptMap[key] = (conceptMap[key] || 0) + 1;
+          missing.forEach((concept) => {
+            // Ensure concept is a string
+            if (typeof concept === 'string') {
+              const key = concept.toLowerCase().trim().replace(/[^\w\s]/gi, '');
+              if (key) conceptMap[key] = (conceptMap[key] || 0) + 1;
+            }
           });
         }
       });
@@ -57,7 +66,6 @@ const ClassAnalytics = () => {
         const improvements = sub.aiFeedback?.improvements || [];
         const feedbackLines = sub.aiFeedback?.line_by_line_feedback || [];
         
-        // Safety check
         if (Array.isArray(improvements) && Array.isArray(feedbackLines)) {
           const combinedText = [...improvements, ...feedbackLines].join(' ');
           const matches = combinedText.match(/Q\d+|Question\s+\d+/gi);
@@ -113,7 +121,6 @@ const ClassAnalytics = () => {
 
   return (
     <div className="space-y-6">
-      {/* Top Stats Row */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -158,10 +165,8 @@ const ClassAnalytics = () => {
         </Card>
       </div>
 
-      {/* Detailed Charts Row */}
+      {/* Detailed Charts */}
       <div className="grid gap-6 md:grid-cols-2">
-        
-        {/* 1. Common Mistakes */}
         <Card>
           <CardHeader>
             <CardTitle>Most Common Missing Concepts</CardTitle>
@@ -185,7 +190,6 @@ const ClassAnalytics = () => {
           </CardContent>
         </Card>
 
-        {/* 2. Question Difficulty */}
         <Card>
           <CardHeader>
             <CardTitle>Hardest Questions</CardTitle>
@@ -207,30 +211,6 @@ const ClassAnalytics = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* At Risk List */}
-      {data.atRiskStudents.length > 0 && (
-        <Card className="border-red-100">
-          <CardHeader>
-            <CardTitle className="text-red-600">Intervention Needed</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="divide-y divide-gray-100">
-              {data.atRiskStudents.map((student) => (
-                <div key={student.id} className="flex items-center justify-between py-3">
-                  <div>
-                    <p className="font-medium">{student.name}</p>
-                    <p className="text-xs text-gray-500">Struggles with: {student.weakness}</p>
-                  </div>
-                  <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
-                    Score: {student.score}
-                  </Badge>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };

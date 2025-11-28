@@ -1,5 +1,5 @@
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import ProgressChart from '@/components/dashboard/ProgressChart';
 import RecentSubmissions from '@/components/dashboard/RecentSubmissions';
@@ -15,19 +15,31 @@ import { DailyGoalsWidget } from '@/components/gamification/DailyGoalsWidget';
 import { AchievementNotification } from '@/components/gamification/AchievementNotification';
 import GamificationService, { Achievement } from '@/services/GamificationService';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, FileText, TrendingUp, Users, Sparkles, GraduationCap } from 'lucide-react';
+// === FIX: Added Button import ===
+import { Button } from '@/components/ui/button';
+// === FIX: Added ArrowRight import ===
+import { BookOpen, FileText, TrendingUp, Users, Sparkles, GraduationCap, ArrowRight } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';
 import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
 
 const Dashboard = () => {
   const { state } = useAppContext();
-  const { isLoading } = state;
+  const { isLoading, currentUser } = state;
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  // Gamification state (mock data - replace with real data from database)
-  const [totalXP, setTotalXP] = useState(250); // Mock XP
+  // === GUARD: REDIRECT TEACHERS ===
+  if (!isLoading && currentUser?.role === 'teacher') {
+    // Use a small timeout or just render null to prevent render loop warnings
+    setTimeout(() => navigate('/teacher-dashboard'), 0);
+    return null;
+  }
+
+  // Gamification state
+  const [totalXP, setTotalXP] = useState(250); 
   const [achievementToShow, setAchievementToShow] = useState<Achievement | null>(null);
   
   const level = GamificationService.calculateLevel(totalXP);
@@ -40,8 +52,8 @@ const Dashboard = () => {
 
   const [dailyGoals, setDailyGoals] = useState([
     { id: '1', title: 'Submit 1 assignment', description: 'Complete and submit your work', completed: false, xpReward: 50, icon: '📝' },
-    { id: '2', title: 'Complete learning quiz', description: 'Test your knowledge', completed: false, xpReward: 40, icon: '📚' },
-    { id: '3', title: 'Study for 30 minutes', description: 'Consistent daily practice', completed: false, xpReward: 30, icon: '⏰' },
+    { id: '2', title: 'Complete learning quiz', description: 'Test your knowledge', completed: false, xpReward: 40, icon: '🧠' },
+    { id: '3', title: 'Study for 30 minutes', description: 'Consistent daily practice', completed: false, xpReward: 30, icon: '⏱️' },
   ]);
 
   const handleGoalComplete = (goalId: string) => {
@@ -52,298 +64,145 @@ const Dashboard = () => {
     const goal = dailyGoals.find(g => g.id === goalId);
     if (goal) {
       setTotalXP(prev => prev + goal.xpReward);
-      
-      toast({
-        title: `+${goal.xpReward} XP!`,
-        description: goal.title + ' completed!',
-      });
-
-      // Check for achievements
-      const newAchievements = GamificationService.checkAchievements(state.currentUser || {} as any);
-      if (newAchievements.length > 0) {
-        setTimeout(() => setAchievementToShow(newAchievements[0]), 500);
-      }
+      toast({ title: `+${goal.xpReward} XP!`, description: goal.title + ' completed!' });
     }
   };
 
-  if (isLoading) {
-    return (
-      <PageLayout 
-        title="Dashboard" 
-        subtitle="Track your learning progress and personalized insights"
-        className="py-8"
-      >
-        <div className="container mx-auto px-6 max-w-7xl">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading dashboard...</p>
-            </div>
-          </div>
-        </div>
-      </PageLayout>
-    );
-  }
+  if (isLoading) return <div className="h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500" /></div>;
 
-  if (!state.currentUser) {
+  if (!currentUser) {
     return (
-      <PageLayout 
-        title="Dashboard" 
-        subtitle="Track your learning progress and personalized insights"
-        className="py-8"
-      >
-        <div className="container mx-auto px-6 max-w-7xl">
-          <div className="flex items-center justify-center py-12">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to AdaptiveEdCoach</h1>
-              <p className="text-gray-600 mb-6">Please log in to access your dashboard</p>
-              <button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-6 py-2 rounded-lg" onClick={() => window.location.href = '/login'}>
-                Login
-              </button>
-            </div>
-          </div>
-        </div>
-      </PageLayout>
+      <div className="h-screen flex flex-col items-center justify-center gap-4">
+        <h1 className="text-2xl font-bold">Welcome to AdaptiveEdCoach</h1>
+        <Link to="/login">
+          <Button className="bg-purple-600 text-white px-6">Login</Button>
+        </Link>
+      </div>
     );
   }
 
   return (
-    <PageLayout 
-      title="Dashboard" 
-      subtitle="Track your learning progress and personalized insights"
-      className="py-8"
-    >
-      <div className="container mx-auto px-6 max-w-7xl">
+    <PageLayout title="Learning Hub" subtitle="Overview" className="bg-gray-50/50">
+      <div className="container mx-auto px-6 max-w-7xl py-8 space-y-8">
 
-        {/* Header with Gamification */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Welcome back, {state.currentUser?.name || 'Student'}!
-              </h1>
-              <div className="flex items-center gap-3">
-                <p className="text-gray-600">
-                  Track your progress and continue your learning journey
-                </p>
-                {state.currentUser?.school && (
-                  <Badge variant="outline" className="flex items-center gap-1">
-                    <GraduationCap className="h-3 w-3" />
-                    {state.currentUser.school}
-                  </Badge>
-                )}
-              </div>
-            </div>
+        {/* === WELCOME HEADER === */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col md:flex-row md:items-end justify-between gap-4"
+        >
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              Hello, {currentUser.name}! 👋
+            </h1>
+            <p className="text-gray-600 mt-1">Here's what's happening with your learning today.</p>
           </div>
           
-          {/* Gamification Status Bar */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-            <XPProgressBar 
-              level={level}
-              animated={true}
-              onLevelUp={() => {
-                toast({
-                  title: 'Level Up! 🎉',
-                  description: `You're now a ${level.title}!`,
-                });
-              }}
-            />
-            <StreakCounter streak={streak} compact={false} animated={true} />
+          <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-100">
+            {currentUser.primaryLearningStyle && (
+              <Badge variant="secondary" className="bg-purple-50 text-purple-700 hover:bg-purple-100">
+                <Sparkles className="w-3 h-3 mr-1" />
+                {currentUser.primaryLearningStyle} Learner
+              </Badge>
+            )}
+            {currentUser.school && (
+              <Badge variant="outline" className="border-gray-200 text-gray-600">
+                <GraduationCap className="w-3 h-3 mr-1" />
+                {currentUser.school}
+              </Badge>
+            )}
           </div>
+        </motion.div>
+
+        {/* === GAMIFICATION BAR === */}
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-4"
+        >
+          <XPProgressBar level={level} animated={true} />
+          <StreakCounter streak={streak} compact={false} animated={true} />
+        </motion.div>
+
+        {/* === QUICK COMMANDS === */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { title: 'New Submission', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50', link: '/submit' },
+            { title: 'View Progress', icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50', link: '/progress' },
+            { title: 'Smart Scanner', icon: BookOpen, color: 'text-purple-600', bg: 'bg-purple-50', link: '/ocr' },
+            { title: 'Classrooms', icon: Users, color: 'text-orange-600', bg: 'bg-orange-50', link: '/classrooms' },
+          ].map((item, i) => (
+            <Link to={item.link} key={i}>
+              <motion.div 
+                whileHover={{ y: -2 }}
+                className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer flex items-center gap-4"
+              >
+                <div className={`p-3 rounded-lg ${item.bg}`}>
+                  <item.icon className={`w-6 h-6 ${item.color}`} />
+                </div>
+                <div className="font-semibold text-gray-700">{item.title}</div>
+              </motion.div>
+            </Link>
+          ))}
         </div>
 
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-2 bg-edu-light rounded-lg">
-                  <FileText className="h-6 w-6 text-edu-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Submit Work</h3>
-                  <p className="text-sm text-gray-600">Upload assignments</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-2 bg-edu-light rounded-lg">
-                  <TrendingUp className="h-6 w-6 text-edu-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">View Progress</h3>
-                  <p className="text-sm text-gray-600">Track performance</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-2 bg-edu-light rounded-lg">
-                  <BookOpen className="h-6 w-6 text-edu-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Reading Practice</h3>
-                  <p className="text-sm text-gray-600">Voice analysis</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-2 bg-edu-light rounded-lg">
-                  <Users className="h-6 w-6 text-edu-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Classrooms</h3>
-                  <p className="text-sm text-gray-600">Join classes</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Learning Style Indicator */}
-        {state.currentUser?.primaryLearningStyle && (
-          <div className="mb-8 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-4 border border-purple-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Sparkles className="h-5 w-5 text-purple-600" />
-                <div>
-                  <p className="font-medium text-purple-900">AI-Optimized for Your Learning Style</p>
-                  <p className="text-sm text-purple-700">All feedback and content is personalized based on your preferences</p>
-                </div>
-              </div>
-              <LearningStyleBadge 
-                learningStyle={state.currentUser.primaryLearningStyle} 
-                variant="default"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Main Content Grid */}
+        {/* === MAIN BENTO GRID === */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-          {/* Left Column - Progress Chart & Insights */}
+          
+          {/* Left Column: Main Stats */}
           <div className="xl:col-span-2 space-y-8">
-            <ProgressChart 
-              performances={state.currentUser?.performances || []} 
-              title="Academic Progress"
-              description="Your performance across different subjects over time"
-            />
-            <PersonalizedInsights 
-              studentProfile={state.currentUser}
-              timeRange="month"
-            />
-            <ConfidenceScoreTracker studentProfile={state.currentUser} />
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <ProgressChart 
+                performances={currentUser.performances || []} 
+                title="Academic Trajectory"
+                description="Your graded performance over the last 30 days"
+              />
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <PersonalizedInsights studentProfile={currentUser} timeRange="month" />
+              <ConfidenceScoreTracker studentProfile={currentUser} />
+            </div>
+            
+            <RecentSubmissions performances={currentUser.performances || []} limit={5} />
           </div>
 
-          {/* Right Column - Learning Style Summary & AI Features */}
-          <div className="space-y-8">
-            <DailyGoalsWidget 
-              goals={dailyGoals}
-              onGoalComplete={handleGoalComplete}
-            />
+          {/* Right Column: Sidebar Widgets */}
+          <div className="space-y-6">
+            <DailyGoalsWidget goals={dailyGoals} onGoalComplete={handleGoalComplete} />
+            
+            <Card className="bg-gradient-to-br from-purple-600 to-indigo-700 text-white border-none">
+              <CardContent className="p-6">
+                <h3 className="font-bold text-lg mb-2">Next Study Session</h3>
+                <p className="text-purple-100 text-sm mb-4">Based on your recent "Physics" errors, we recommend reviewing:</p>
+                <div className="bg-white/10 rounded-lg p-3 mb-4 backdrop-blur-sm">
+                  <div className="font-medium">Chapter 4: Thermodynamics</div>
+                  <div className="text-xs text-purple-200">15 min read • 3 practice questions</div>
+                </div>
+                <Button variant="secondary" className="w-full bg-white text-purple-700 hover:bg-gray-100">
+                  Start Session <ArrowRight className="ml-2 w-4 h-4"/>
+                </Button>
+              </CardContent>
+            </Card>
+
             <LearningStyleSummary
-              primaryStyle={state.currentUser?.primaryLearningStyle}
-              secondaryStyle={state.currentUser?.secondaryLearningStyle}
-              styleStrengths={state.currentUser?.learningStyleStrengths}
-            />
-            <DifficultyAdaptation 
-              studentProfile={state.currentUser}
-              onLevelChange={(newLevel) => {
-                toast({
-                  title: 'Difficulty Level Updated',
-                  description: `Content difficulty adjusted to ${newLevel} level`,
-                });
-              }}
+              primaryStyle={currentUser.primaryLearningStyle}
+              secondaryStyle={currentUser.secondaryLearningStyle}
+              styleStrengths={currentUser.learningStyleStrengths}
             />
           </div>
         </div>
 
-        {/* Achievement Notification */}
         <AchievementNotification
           achievement={achievementToShow}
           onClose={() => setAchievementToShow(null)}
           autoClose={true}
-          closeDelay={5000}
         />
-
-        {/* Study Schedule */}
-        <div className="mt-8">
-          <StudyScheduleSuggestions 
-            studentProfile={state.currentUser}
-            onScheduleAccept={(schedule) => {
-              toast({
-                title: 'Schedule Accepted!',
-                description: 'Your personalized study schedule has been saved.',
-              });
-            }}
-          />
-        </div>
-
-        {/* Recent Submissions */}
-        <div className="mt-8">
-          <RecentSubmissions 
-            performances={state.currentUser?.performances || []} 
-            limit={5}
-          />
-        </div>
-
-        {/* Performance Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Total Submissions</CardTitle>
-              <CardDescription>All time</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-edu-primary">
-                {state.currentUser?.performances?.length || 0}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Average Score</CardTitle>
-              <CardDescription>Last 10 submissions</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-edu-primary">
-                {state.currentUser?.performances?.length ? 
-                  Math.round(
-                    state.currentUser.performances
-                      .slice(-10)
-                      .filter(p => p.score !== undefined)
-                      .reduce((sum, p) => sum + (p.score || 0), 0) / 
-                    Math.max(1, state.currentUser.performances.slice(-10).filter(p => p.score !== undefined).length)
-                  ) : 0}%
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Active Subjects</CardTitle>
-              <CardDescription>Currently studying</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-edu-primary">
-                {state.currentUser?.performances ? 
-                  new Set(state.currentUser.performances.map(p => p.subjectArea)).size : 0}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </PageLayout>
   );

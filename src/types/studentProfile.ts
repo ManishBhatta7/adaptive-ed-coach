@@ -1,28 +1,32 @@
+import { LearningStyle } from "./index";
 
-import type { LearningStyle } from "./learningStyles";
-import type { PerformanceRecord } from "./performance";
-
-// Student profile
 export interface StudentProfile {
   id: string;
   name: string;
-  email?: string;
-  avatar?: string;
-  role?: string;
-  school?: string; // Optional school name for school-specific features
-  bio?: string; // Optional bio/description
+  email: string;
+  role: 'student' | 'teacher' | 'admin';
+  school?: string;
+  grade?: string;
+  
+  // Student Fields
   primaryLearningStyle?: LearningStyle;
   secondaryLearningStyle?: LearningStyle;
   learningStyleStrengths?: Record<LearningStyle, number>;
-  performances: PerformanceRecord[];
-  joinedAt: string;
-  lastActive: string;
-  preferences?: {
-    userType: string;
-    board: string;
-    subject: string;
-    theme?: 'light' | 'dark';
-    notifications?: boolean;
-    language?: string;
-  };
+  hardestSubject?: string;
+  preferredCoachingMode?: 'Encouraging' | 'Analytical' | 'Creative' | 'Structured';
+  
+  // === NEW: TEACHER FIELDS ===
+  teachingSubjects?: string[];
+  gradingStyle?: 'Strict' | 'Lenient' | 'Balanced' | 'Growth-Oriented';
+  classroomGoals?: string; // e.g. "Prepare for SATs"
+  
+  // Gamification
+  currentStreak?: number;
+  totalXP?: number;
+  level?: number;
+  
+  createdAt?: string;
+  lastActive?: string;
+  
+  performances?: any[];
 }

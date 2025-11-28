@@ -2,26 +2,22 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 // Import your translation files
+// If these files are empty, the app might crash. Ensure they have at least {}
 import enCommon from './locales/en/common.json';
-// import esCommon from './locales/es/common.json'; // Spanish removed
+import esCommon from './locales/es/common.json';
 import orCommon from './locales/or/common.json';
 
-// NOTE: You must create this file: src/i18n/locales/hi/common.json
-// If you don't have it yet, you can temporarily use enCommon as a placeholder:
-// import hiCommon from './locales/en/common.json'; 
-import hiCommon from './locales/hi/common.json'; 
-
-// === EXPORTED CONSTANTS ===
+// === EXPORTED CONSTANTS (Fixes "Import Missing" Error) ===
 export const supportedLanguages = [
   { code: 'en', name: 'English', nativeName: 'English', flag: '🇺🇸' },
-  { code: 'hi', name: 'Hindi', nativeName: 'हिन्दी', flag: '🇮🇳' },
+  { code: 'es', name: 'Spanish', nativeName: 'Español', flag: '🇪🇸' },
   { code: 'or', name: 'Odia', nativeName: 'ଓଡ଼ିଆ', flag: '🇮🇳' },
 ];
 
 export const getCultureConfig = (code: string) => {
   switch (code) {
-    case 'hi':
-      return { currency: 'INR', dateFormat: 'dd/MM/yyyy', timeFormat: 'h:mm tt', direction: 'ltr' };
+    case 'es':
+      return { currency: 'EUR', dateFormat: 'dd/MM/yyyy', timeFormat: 'HH:mm', direction: 'ltr' };
     case 'or':
       return { currency: 'INR', dateFormat: 'dd-MM-yyyy', timeFormat: 'h:mm tt', direction: 'ltr' };
     default:
@@ -35,7 +31,7 @@ i18n
   .init({
     resources: {
       en: { common: enCommon },
-      hi: { common: hiCommon },
+      es: { common: esCommon },
       or: { common: orCommon },
     },
     lng: localStorage.getItem('preferred-language') || 'en',
@@ -45,11 +41,11 @@ i18n
     defaultNS: 'common',
 
     interpolation: {
-      escapeValue: false, 
+      escapeValue: false, // React already safe from XSS
     },
     
     react: {
-      useSuspense: false 
+      useSuspense: false // Prevents loading issues
     }
   });
 
