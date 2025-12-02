@@ -39,7 +39,7 @@ const PageLayout = ({
               <Book className="h-5 w-5 text-white" />
             </div>
             <Link to="/" className="text-xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
-              AdaptiveEdCoach
+              RetainLearn
             </Link>
           </div>
           
@@ -153,7 +153,7 @@ const PageLayout = ({
               <div className="w-8 h-8 rounded-lg bg-gradient-to-r from-pink-500 to-purple-600 flex items-center justify-center">
                 <Book className="h-5 w-5 text-white" />
               </div>
-              <span className="text-xl font-bold">AdaptiveEdCoach</span>
+              <span className="text-xl font-bold">RetainLearn</span>
             </div>
             <div className="flex gap-8">
               <Link to="/about" className="text-gray-300 hover:text-pink-400 text-sm">About</Link>
@@ -163,7 +163,7 @@ const PageLayout = ({
             </div>
           </div>
           <div className="text-center mt-8 text-sm text-gray-400">
-            &copy; {new Date().getFullYear()} AdaptiveEdCoach. All rights reserved.
+            &copy; {new Date().getFullYear()} RetainLearn. All rights reserved.
           </div>
         </div>
       </footer>

@@ -104,7 +104,7 @@ async function handleStartCommand(supabase: any, chatId: number, username?: stri
 
   await sendMessage(
     chatId,
-    `👋 *Welcome to AdaptiveEdCoach!*\n\nTo link your Telegram account, please reply with your registered email address.\n\nExample: student@school.com`,
+    `👋 *Welcome to RetainLearn!*\n\nTo link your Telegram account, please reply with your registered email address.\n\nExample: student@school.com`,
     'Markdown'
   );
 
@@ -235,7 +235,7 @@ async function handleStatusCommand(supabase: any, chatId: number) {
 
 async function handleHelpCommand(chatId: number) {
   const helpText = `
-📚 *AdaptiveEdCoach Bot Commands*
+📚 *RetainLearn Bot Commands*
 
 /start - Link your Telegram account
 /ask <question> - Submit a new doubt

@@ -63,7 +63,7 @@ const Signup = () => {
           // Success toast with better styling
           toast({
             title: "🎉 Account created successfully!",
-            description: `Welcome to AdaptiveEdCoach, ${data.name}! Redirecting to your dashboard...`,
+            description: `Welcome to RetainLearn, ${data.name}! Redirecting to your dashboard...`,
             duration: 3000,
           });
           

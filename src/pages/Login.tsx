@@ -109,7 +109,7 @@ const Login = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <Book className="h-8 w-8 text-edu-primary" />
-            <span className="text-2xl font-bold">AdaptiveEdCoach</span>
+            <span className="text-2xl font-bold">RetainLearn</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
           <p className="text-gray-600 mt-2">Sign in to continue</p>

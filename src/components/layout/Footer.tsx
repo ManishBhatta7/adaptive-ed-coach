@@ -10,7 +10,7 @@ const Footer = () => {
           <div className="mb-6 md:mb-0">
             <Link to="/" className="flex items-center gap-2">
               <Book className="h-6 w-6 text-edu-primary" />
-              <span className="text-xl font-bold">AdaptiveEdCoach</span>
+              <span className="text-xl font-bold">RetainLearn</span>
             </Link>
             <p className="mt-2 text-sm text-gray-600 max-w-md">
               Personalized AI coaching that adapts to your learning style and tracks your progress over time.
@@ -90,7 +90,7 @@ const Footer = () => {
         
         <div className="mt-8 border-t border-gray-200 pt-8 flex flex-col md:flex-row items-center justify-between">
           <p className="text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} AdaptiveEdCoach. All rights reserved.
+            &copy; {new Date().getFullYear()} RetainLearn. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-gray-500 hover:text-edu-primary">

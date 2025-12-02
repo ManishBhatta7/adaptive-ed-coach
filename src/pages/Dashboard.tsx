@@ -123,7 +123,7 @@ const Dashboard = () => {
         <div className="container mx-auto px-6 max-w-7xl">
           <div className="flex items-center justify-center py-12">
             <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to AdaptiveEdCoach</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">Welcome to RetainLearn</h1>
               <p className="text-gray-600 mb-6">Please log in to access your dashboard</p>
               <button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-6 py-2 rounded-lg" onClick={() => window.location.href = '/login'}>
                 Login
