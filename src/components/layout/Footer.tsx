@@ -27,8 +27,8 @@ const Footer = () => {
                   </Link>
                 </li>
                 <li>
-                  <Link to="/progress" className="text-gray-600 hover:text-edu-primary text-sm">
-                    Progress Tracking
+                  <Link to="/ai-tutor" className="text-gray-600 hover:text-edu-primary text-sm">
+                    AI Tutor
                   </Link>
                 </li>
                 <li>

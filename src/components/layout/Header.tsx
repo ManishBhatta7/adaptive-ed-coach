@@ -33,6 +33,9 @@ const Header = () => {
           <Link to="/dashboard" className="text-sm font-medium hover:text-edu-primary transition-colors">
             Dashboard
           </Link>
+          <Link to="/ai-tutor" className="text-sm font-medium hover:text-edu-primary transition-colors">
+            AI Tutor
+          </Link>
           <Link to="/learning-style" className="text-sm font-medium hover:text-edu-primary transition-colors">
             Learning Style
           </Link>
@@ -154,6 +157,13 @@ const Header = () => {
             onClick={() => setMobileMenuOpen(false)}
           >
             Dashboard
+          </Link>
+          <Link 
+            to="/ai-tutor" 
+            className="block py-2 text-sm font-medium hover:text-edu-primary transition-colors"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            AI Tutor
           </Link>
           <Link 
             to="/learning-style" 

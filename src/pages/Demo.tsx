@@ -10,7 +10,7 @@ const Demo = () => {
       <header className="w-full py-4 px-6 flex justify-between items-center bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <Link to="/" className="flex items-center gap-2">
           <GraduationCap className="h-8 w-8 text-purple-600" />
-          <span className="text-2xl font-bold text-purple-900">Adaptive Ed Coach</span>
+          <span className="text-2xl font-bold text-purple-900">RetainLearn</span>
         </Link>
         <Link to="/">
           <Button variant="ghost">
@@ -24,7 +24,7 @@ const Demo = () => {
       <div className="container mx-auto px-6 py-16">
         <div className="max-w-4xl mx-auto text-center mb-12">
           <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-            See Adaptive Ed Coach in Action
+            See RetainLearn in Action
           </h1>
           <p className="text-xl text-gray-600">
             Watch how our AI-powered platform transforms learning

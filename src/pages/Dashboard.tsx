@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, memo } from 'react'; // FIX: Import useMemo and memo
+import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import ProgressChart from '@/components/dashboard/ProgressChart';
 import RecentSubmissions from '@/components/dashboard/RecentSubmissions';
@@ -16,7 +17,7 @@ import GamificationService, { Achievement } from '@/services/GamificationService
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, FileText, TrendingUp, Users, Sparkles, GraduationCap } from 'lucide-react';
+import { BookOpen, FileText, TrendingUp, Users, Sparkles, GraduationCap, Bot } from 'lucide-react';
 import PageLayout from '@/components/layout/PageLayout';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,6 +27,7 @@ const MemoizedInsights = memo(PersonalizedInsights);
 const MemoizedXPBar = memo(XPProgressBar);
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const { state } = useAppContext();
   const { isLoading, currentUser } = state; // Destructure explicitly
   const { toast } = useToast();
@@ -183,6 +185,20 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/ai-tutor')}>
+            <CardContent className="p-6">
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Bot className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">AI Tutor</h3>
+                  <p className="text-sm text-gray-600">Get personalized help</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           <Card className="hover:shadow-md transition-shadow cursor-pointer">
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
@@ -218,22 +234,8 @@ const Dashboard = () => {
                   <BookOpen className="h-6 w-6 text-edu-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">Reading Practice</h3>
-                  <p className="text-sm text-gray-600">Voice analysis</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:shadow-md transition-shadow cursor-pointer">
-            <CardContent className="p-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-2 bg-edu-light rounded-lg">
-                  <Users className="h-6 w-6 text-edu-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Classrooms</h3>
-                  <p className="text-sm text-gray-600">Join classes</p>
+                  <h3 className="font-semibold">Learning Resources</h3>
+                  <p className="text-sm text-gray-600">Study materials</p>
                 </div>
               </div>
             </CardContent>

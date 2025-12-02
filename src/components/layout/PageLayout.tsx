@@ -48,6 +48,9 @@ const PageLayout = ({
             <Link to="/dashboard" className="text-sm font-medium hover:text-pink-600 transition-colors">
               Dashboard
             </Link>
+            <Link to="/ai-tutor" className="text-sm font-medium hover:text-pink-600 transition-colors">
+              AI Tutor
+            </Link>
             <Link to="/learning-style" className="text-sm font-medium hover:text-pink-600 transition-colors">
               Learning Style
             </Link>

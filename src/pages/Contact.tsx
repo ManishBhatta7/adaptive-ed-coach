@@ -32,7 +32,7 @@ const Contact = () => {
       <header className="w-full py-4 px-6 flex justify-between items-center bg-white/80 backdrop-blur-sm sticky top-0 z-50 shadow-sm">
         <Link to="/" className="flex items-center gap-2">
           <GraduationCap className="h-8 w-8 text-purple-600" />
-          <span className="text-2xl font-bold text-purple-900">Adaptive Ed Coach</span>
+          <span className="text-2xl font-bold text-purple-900">RetainLearn</span>
         </Link>
         <Link to="/">
           <Button variant="ghost">
