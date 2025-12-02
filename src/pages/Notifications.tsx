@@ -41,7 +41,7 @@ const MOCK_NOTIFICATIONS = [
     date: "2025-04-19T15:45:00",
     read: false,
     type: "feedback",
-    action: "/progress"
+    action: "/ai-tutor"
   }
 ];
 

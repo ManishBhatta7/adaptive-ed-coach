@@ -473,7 +473,7 @@ const Profile = () => {
                           </div>
                         ))}
                         <Button variant="outline" className="w-full mt-4" asChild>
-                          <a href="/progress">View All Performance Data</a>
+                          <a href="/ai-tutor">View All Performance Data</a>
                         </Button>
                       </div>
                     ) : (
@@ -722,7 +722,7 @@ const Profile = () => {
                         </a>
                       </Button>
                       <Button variant="outline" className="w-full justify-start" asChild>
-                        <a href="/progress">
+                        <a href="/ai-tutor">
                           <FileText className="h-4 w-4 mr-2" />
                           View Progress Report
                         </a>

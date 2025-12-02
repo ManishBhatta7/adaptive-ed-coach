@@ -21,7 +21,6 @@ const AITutorPage = lazy(() => import("./pages/AITutorPage"));
 const TeacherDashboard = lazy(() => import("./pages/TeacherDashboard"));
 const LearningStylePage = lazy(() => import("./pages/LearningStylePage"));
 const SubmitAssignment = lazy(() => import("./pages/SubmitAssignment"));
-const ProgressPage = lazy(() => import("./pages/ProgressPage"));
 const VoiceReadingPage = lazy(() => import("./pages/VoiceReadingPage"));
 const ReportUploadPage = lazy(() => import("./pages/ReportUploadPage"));
 const EssayCheckerPage = lazy(() => import("./pages/EssayCheckerPage"));
@@ -100,11 +99,6 @@ const App = () => (
                   <Route path="/submit" element={
                     <ProtectedRoute>
                       <SubmitAssignment />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/progress" element={
-                    <ProtectedRoute>
-                      <ProgressPage />
                     </ProtectedRoute>
                   } />
                   <Route path="/reading" element={

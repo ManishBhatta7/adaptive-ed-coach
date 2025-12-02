@@ -140,7 +140,7 @@ const OCRPage = () => {
 
     const contextText = items.map(i => `Q: ${i.question}\nA: ${i.solution}`).join('\n\n');
 
-    navigate('/progress', { // Navigate to Progress Page (where AI Tutor lives)
+    navigate('/ai-tutor', { // Navigate to AI Tutor Page
       state: { 
         initialPrompt: "Create a practice quiz based on these scanned questions. Focus on concepts I might find difficult.",
         contextData: contextText,
