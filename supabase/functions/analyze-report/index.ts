@@ -1,354 +1,190 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { encode as encodeBase64 } from "https://deno.land/std@0.168.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
-// FIX: Enhanced System Prompt for Strategic Coaching
-const aiPrompt = `
-You are an expert Educational Strategist & Academic Coach. Analyze this student report card to provide data-driven, actionable insights.
-
-CORE TASKS:
-1. Extract standard data (Name, School, Grades).
-2. **Analyze the "Why":** Correlate grades with specific teacher comments. (e.g., If Math is low and comment says "missing work", the issue is discipline, not aptitude. If comment says "struggling with concepts", the issue is foundational).
-3. **Generate Actionable Insights:** Create specific tasks, not generic advice.
-
-JSON OUTPUT FORMAT:
-{
-  "studentName": string | null,
-  "schoolName": string | null,
-  "gradeLevel": string | null,
-  "term": string | null,
-  "gpa": string | null,
-  "subjects": {
-    [subjectName: string]: {
-      "score": number | null,
-      "letterGrade": string | null,
-      "comments": string | null
-    }
-  },
-  "overallAssessment": string,
-  "recommendations": [
-    {
-      "type": "Immediate" | "Strategic" | "Habit",
-      "title": string,
-      "action": string
-    }
-  ]
-}
-If you cannot find certain information, include the field with null.
-`
+const MODEL_NAME = 'gemini-2.0-flash-lite';
+const API_VERSION = 'v1beta';
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  // 1. Handle CORS Preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders })
-  }
-
-  if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { 
-      status: 405,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // Initialize Supabase client with service role key
-    const supabase = getSupabaseClient()
-    if (!supabase) {
-      return errorResponse('Supabase credentials are not configured', 500)
+    // 2. Setup & Validation
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+
+    if (!supabaseUrl || !supabaseServiceKey || !geminiApiKey) {
+      throw new Error('Server Config Error: Missing Keys');
     }
 
-    // Get JWT token from request headers and verify
-    const token = getAuthToken(req)
-    if (!token.ok) return errorResponse(token.error!, 401)
-    const { user, error: userError } = await getUserFromToken(supabase, token.value!)
-    if (userError || !user) {
-      return errorResponse('Unauthorized: Invalid token', 401)
-    }
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get OpenAI API key
-    const openAiApiKey = getOpenAiApiKey()
-    if (!openAiApiKey) {
-      return errorResponse('OpenAI API key not configured', 500)
-    }
+    // 3. Auth Check
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) throw new Error('Missing Authorization header');
+    
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
-    // Parse the incoming file and userId
-    const { file, userId, reqError } = await extractFileAndUserId(req)
-    if (reqError) return errorResponse(reqError, 400)
-    if (!file || !userId) return errorResponse('File and userId are required', 400)
-    if (userId !== user.id) return errorResponse('User ID mismatch', 403)
+    if (userError || !user) throw new Error('Unauthorized: Invalid token');
 
-    // Ensure the storage bucket exists
-    const bucketStatus = await ensureStudentBucket(supabase)
-    if (!bucketStatus.ok && bucketStatus.fatal) {
-      return errorResponse(bucketStatus.error || 'Bucket creation error', 500)
-    }
-
-    // Store file in Supabase Storage
-    const fileBuffer = await file.arrayBuffer()
-    const fileName = `${userId}_${Date.now()}_${file.name}`
-    const filePath = `report-cards/${fileName}`
-    const uploadResult = await uploadReportImage(supabase, fileBuffer, file, filePath)
-    if (!uploadResult.ok) {
-      // Fallback to simulated data if upload fails
-      const fallbackResult = generateFallbackAnalysis(userId, 'Upload failed')
-      return successJsonResponse(fallbackResult)
-    }
-    const publicUrl = getPublicUrl(supabase, filePath)
-
-    // Convert file to base64 for OpenAI Vision API
-    const base64Image = toBase64(fileBuffer)
-
-    // Analyze image with OpenAI Vision API
+    // 4. Handle File Upload
+    let formData;
     try {
-      const analysisResult = await analyzeWithAI(openAiApiKey, file, base64Image)
-      
-      // FIX: Removed the hardcoded generateRecommendations() call. 
-      // We now rely on the AI's "recommendations" array from the prompt.
-      
-      // Fallback: If AI returns no recommendations (rare), add a safe default.
-      if (!analysisResult.recommendations || analysisResult.recommendations.length === 0) {
-         analysisResult.recommendations = [{
-           type: "General",
-           title: "Review Syllabus",
-           action: "Compare your lowest grades against the syllabus requirements to identify gaps."
-         }];
-      }
-
-      // Store analysis results in the database
-      await insertAnalysisDb(supabase, userId, publicUrl, analysisResult)
-      
-      return successJsonResponse({
-        ...analysisResult,
-        reportUrl: publicUrl
-      })
-    } catch (aiError) {
-      console.error('AI analysis error:', aiError)
-      // If AI fails, return a more basic analysis as fallback
-      const fallbackResult = generateFallbackAnalysis(userId, publicUrl)
-      return successJsonResponse(fallbackResult)
+      formData = await req.formData();
+    } catch (e) {
+      throw new Error('Invalid request: Expected FormData with a file.');
     }
-  } catch (error) {
-    console.error('General error:', error)
-    return errorResponse(error instanceof Error ? error.message : 'Unknown error', 500)
-  }
-})
 
-// --- Helper functions below ---
+    const file = formData.get('file');
+    const userId = formData.get('userId');
 
-function getSupabaseClient() {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-  if (!supabaseUrl || !supabaseServiceKey) return null
-  return createClient(supabaseUrl, supabaseServiceKey)
-}
+    if (!file || !(file instanceof File)) throw new Error('No file uploaded');
+    if (!userId) throw new Error('User ID is required');
 
-function getOpenAiApiKey() {
-  return Deno.env.get('OPENAI_API_KEY')
-}
+    // 5. Upload to Supabase Storage
+    const fileBuffer = await file.arrayBuffer();
+    // Sanitize filename to prevent issues
+    const safeName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const fileName = `${userId}_${Date.now()}_${safeName}`;
+    const filePath = `report-cards/${fileName}`;
 
-function getAuthToken(req: Request): { ok: true, value: string } | { ok: false, error: string } {
-  const authHeader = req.headers.get('Authorization')
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return { ok: false, error: 'Missing or invalid authorization header' }
-  }
-  return { ok: true, value: authHeader.replace('Bearer ', '') }
-}
-
-async function getUserFromToken(supabase: any, token: string) {
-  const { data: { user }, error } = await supabase.auth.getUser(token)
-  return { user, error }
-}
-
-async function extractFileAndUserId(req: Request): Promise<{
-  file?: File,
-  userId?: string,
-  reqError?: string
-}> {
-  try {
-    const formData = await req.formData()
-    const file = formData.get('file') as File
-    const userId = formData.get('userId') as string
-    if (!file) return { reqError: 'No file uploaded' }
-    if (!userId) return { reqError: 'User ID is required' }
-    return { file, userId }
-  } catch (e) {
-    return { reqError: 'Malformed request' }
-  }
-}
-
-async function ensureStudentBucket(supabase: any): Promise<{ ok: boolean, error?: string, fatal?: boolean }> {
-  try {
-    const { data: buckets, error } = await supabase.storage.listBuckets()
-    if (error) {
-      console.error('Error listing buckets:', error)
-      return { ok: false, error: error.message, fatal: false }
+    // Ensure bucket exists
+    const { data: buckets } = await supabase.storage.listBuckets();
+    if (!buckets?.find((b: any) => b.name === 'student-documents')) {
+      await supabase.storage.createBucket('student-documents', { public: true });
     }
-    const bucketExists = buckets?.some((b: any) => b.name === 'student-documents')
-    if (bucketExists) return { ok: true }
-    // Try to create
-    const { error: createBucketError } = await supabase.storage.createBucket('student-documents', { public: true })
-    if (createBucketError) {
-      console.error('Create bucket error:', createBucketError)
-      return { ok: false, error: createBucketError.message, fatal: false }
-    }
-    return { ok: true }
-  } catch (err) {
-    return { ok: false, error: err instanceof Error ? err.message : 'Unknown bucket error', fatal: true }
-  }
-}
 
-async function uploadReportImage(supabase: any, fileBuffer: ArrayBuffer, file: File, filePath: string) {
-  const { error: uploadError } = await supabase.storage
-    .from('student-documents')
-    .upload(filePath, fileBuffer, {
-      contentType: file.type,
-      cacheControl: '3600',
-    })
-  if (uploadError) {
-    console.error('Storage upload error:', uploadError)
-    return { ok: false, error: uploadError.message }
-  }
-  return { ok: true }
-}
+    const { error: uploadError } = await supabase.storage
+      .from('student-documents')
+      .upload(filePath, fileBuffer, {
+        contentType: file.type,
+        upsert: false
+      });
 
-function getPublicUrl(supabase: any, filePath: string): string {
-  const { data: { publicUrl } } = supabase.storage
-    .from('student-documents')
-    .getPublicUrl(filePath)
-  return publicUrl
-}
+    if (uploadError) throw new Error(`Storage Error: ${uploadError.message}`);
 
-function toBase64(buffer: ArrayBuffer): string {
-  return btoa(
-    String.fromCharCode(...new Uint8Array(buffer))
-  )
-}
+    const { data: { publicUrl } } = supabase.storage
+      .from('student-documents')
+      .getPublicUrl(filePath);
 
-async function analyzeWithAI(openAiApiKey: string, file: File, base64Image: string) {
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${openAiApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'gpt-4o', 
-      messages: [
-        {
-          role: "system",
-          content: aiPrompt
+    // 6. Analyze with Gemini Vision
+    // FIX: Use standard library encodeBase64 to avoid stack overflow on large files
+    const base64Image = encodeBase64(fileBuffer);
+    
+    // UPDATED PROMPT: Requesting actionable insights & explicit RetainLearn persona
+    const prompt = `
+      You are RetainLearn AI, an expert academic counselor. Analyze this report card image.
+      
+      Extract the data into this EXACT JSON structure:
+      {
+        "studentName": "string or null",
+        "schoolName": "string or null",
+        "gradeLevel": "string or null",
+        "gpa": "string or null",
+        "subjects": {
+          "Subject Name": {
+            "score": number,
+            "letterGrade": "string",
+            "comments": "string"
+          }
         },
-        {
-          role: "user",
-          content: [
+        "overallAssessment": "string (A short encouraging summary)",
+        "areasOfStrength": ["string"],
+        "areasNeedingImprovement": ["string"],
+        "actionableInsights": ["string (Specific, practical steps to improve weak areas)"],
+        "recommendedFocusAreas": ["string (Topics to prioritize)"]
+      }
+      If a field is not found, use null. Do not use markdown formatting.
+    `;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/${API_VERSION}/models/${MODEL_NAME}:generateContent?key=${geminiApiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [
+            { text: prompt },
             {
-              type: "text",
-              text: "Analyze this report card and extract the information described in my system prompt."
-            },
-            {
-              type: "image_url",
-              image_url: {
-                url: `data:${file.type};base64,${base64Image}`
+              inline_data: {
+                mime_type: file.type || 'image/jpeg',
+                data: base64Image
               }
             }
           ]
+        }],
+        generationConfig: {
+          response_mime_type: "application/json"
         }
-      ],
-      max_tokens: 1500,
-      temperature: 0.3
-    })
-  })
+      })
+    });
 
-  if (!response.ok) {
-    const error = await response.json()
-    throw new Error(`OpenAI API error: ${JSON.stringify(error)}`)
-  }
-
-  const data = await response.json()
-
-  // Parse the AI response
-  let analysisResult
-  try {
-    const aiResponseText = data.choices[0].message?.content || '{}'
-    // Extract JSON from the response (the AI might wrap it in markdown)
-    const jsonMatch = aiResponseText.match(/```json\n([\s\S]*?)\n```/) ||
-                      aiResponseText.match(/```\n([\s\S]*?)\n```/) ||
-                      [null, aiResponseText]
-    const jsonText = jsonMatch[1] || aiResponseText
-    analysisResult = JSON.parse(jsonText.trim())
-  } catch (parseError) {
-    console.error('Error parsing AI response:', parseError)
-    analysisResult = {
-      error: 'Failed to parse AI analysis',
-      studentName: 'Unknown',
-      schoolName: 'Unknown',
-      subjects: {}
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Gemini API Error: ${errText}`);
     }
-  }
-  return analysisResult
-}
 
-async function insertAnalysisDb(supabase: any, userId: string, publicUrl: string, analysisResult: any) {
-  const { error: dbError } = await supabase
-    .from('report_analyses')
-    .insert({
+    const data = await response.json();
+    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    
+    let analysisResult;
+    try {
+      analysisResult = JSON.parse(resultText);
+    } catch (e) {
+      console.error("JSON Parse Error:", resultText);
+      analysisResult = { error: "Failed to parse AI response", raw: resultText };
+    }
+
+    // Add local recommendations if AI missed them
+    if (!analysisResult.actionableInsights || analysisResult.actionableInsights.length === 0) {
+      analysisResult.actionableInsights = generateFallbackInsights(analysisResult);
+    }
+
+    // 7. Save to Database
+    const { error: dbError } = await supabase.from('report_analyses').insert({
       user_id: userId,
       report_url: publicUrl,
       analysis_results: analysisResult,
       created_at: new Date().toISOString()
-    })
-  if (dbError) {
-    console.error('Database insert error:', dbError)
+    });
+    
+    if (dbError) console.error("DB Insert Error:", dbError);
+
+    return new Response(JSON.stringify({
+      ...analysisResult,
+      reportUrl: publicUrl
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
+  } catch (error: any) {
+    console.error('Function Error:', error.message);
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
-}
+});
 
-// --- Response & Helper composition functions ---
-
-function successJsonResponse(data: any) {
-  return new Response(JSON.stringify(data), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-  })
-}
-
-function errorResponse(message: string, status = 500) {
-  return new Response(JSON.stringify({ error: message }), {
-    status,
-    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-  })
-}
-
-function generateFallbackAnalysis(userId: string, reportUrl: string) {
-  return {
-    studentName: 'Student Name (AI extraction failed)',
-    schoolName: 'School Name (AI extraction failed)',
-    grade: 'Grade Level',
-    term: 'Current Term',
-    gpa: 'N/A',
-    subjects: {
-      Mathematics: {
-        score: Math.floor(Math.random() * 30) + 70,
-        letterGrade: 'B',
-        comments: 'AI extraction failed, please try uploading a clearer image.'
-      },
-      Science: {
-        score: Math.floor(Math.random() * 30) + 70,
-        letterGrade: 'B+',
-        comments: 'AI extraction failed, please try uploading a clearer image.'
+function generateFallbackInsights(data: any) {
+  const insights = [];
+  if (data.subjects) {
+    Object.entries(data.subjects).forEach(([sub, details]: [string, any]) => {
+      const score = Number(details.score);
+      if (!isNaN(score) && score < 75) {
+        insights.push(`Dedicate 20 mins/day to ${sub} practice problems.`);
       }
-    },
-    recommendations: [
-      {
-        type: "System",
-        title: "Upload Error",
-        action: "Try uploading a clearer image of your report card. Make sure all text is visible."
-      }
-    ],
-    reportUrl: reportUrl,
-    note: 'AI processing failed. This is a fallback analysis.'
+    });
   }
+  if (insights.length === 0) insights.push("Maintain your current study schedule and help peers.");
+  return insights;
 }

@@ -1,119 +1,111 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
-
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY')
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
-const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')
+// Modern Deno.serve implementation - No imports required
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+};
 
-serve(async (req) => {
-  // 1. Handle CORS preflight
+// You can use 'gemini-1.5-flash' or 'gemini-2.0-flash-lite'
+const MODEL_NAME = 'gemini-1.5-flash'; 
+const API_VERSION = 'v1beta';
+
+Deno.serve(async (req) => {
+  // 1. Handle CORS Preflight
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    // 2. Initialize Supabase Client with the USER'S Auth Context
-    // We use the Authorization header so RLS policies still apply if needed
-    const authHeader = req.headers.get('Authorization')!
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
-      global: { headers: { Authorization: authHeader } },
-    })
-
-    // 3. Verify User & Get ID
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) throw new Error('Unauthorized')
-
-    // 4. Parse Request Body
-    const { prompt, sessionId } = await req.json()
-
-    if (!prompt || !sessionId) throw new Error('Missing prompt or sessionId')
-
-    // 5. SECURELY Fetch Context (Server-Side)
-    // We fetch the profile and recent history here. The client CANNOT fake this.
-    const [profileRes, historyRes] = await Promise.all([
-      supabase.from('profiles').select('learning_style, mastery_level').eq('id', user.id).single(),
-      supabase.from('ai_tutor_interactions')
-        .select('interaction_type, student_input, ai_response')
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: true })
-        .limit(10) // Context window of last 10 messages
-    ])
-
-    const learningStyle = profileRes.data?.learning_style || 'General'
-    const masteryLevel = profileRes.data?.mastery_level || 'Intermediate'
-
-    // 6. Construct the System Prompt (The "Secret Sauce")
-    const systemInstruction = `
-      You are AdaptiveEd, an AI Tutor.
-      Target Audience: ${masteryLevel} student.
-      Learning Style: ${learningStyle}.
-      
-      Instructions:
-      1. If the style is 'Visual', use ASCII diagrams or vivid metaphors.
-      2. If 'Kinesthetic', suggest real-world experiments.
-      3. Do NOT provide answers directly. Ask guiding questions (Socratic method).
-      4. Keep responses concise (max 150 words).
-    `
-
-    // 7. Format History for Gemini
-    // Gemini expects specific role formats ('user' vs 'model')
-    const chatHistory = (historyRes.data || []).flatMap(msg => [
-      { role: 'user', parts: [{ text: msg.student_input }] },
-      { role: 'model', parts: [{ text: msg.ai_response }] }
-    ])
-
-    // Add current user prompt
-    const finalPayload = {
-      contents: [
-        ...chatHistory,
-        { role: 'user', parts: [{ text: prompt }] }
-      ],
-      system_instruction: {
-        parts: [{ text: systemInstruction }]
-      }
+    // 2. Validate Method & Body
+    if (req.method !== 'POST') {
+      throw new Error(`Method ${req.method} not allowed`);
     }
 
-    // 8. Call Gemini API
-    const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(finalPayload),
-      }
-    )
+    let body;
+    try {
+      body = await req.json();
+    } catch (e) {
+      throw new Error('Invalid JSON body');
+    }
 
-    const geminiData = await geminiRes.json()
+    const { prompt, systemPrompt } = body;
+
+    if (!prompt) {
+      throw new Error('Missing required field: prompt');
+    }
+
+    // 3. API Key Check
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    if (!geminiApiKey) {
+      console.error('Server Error: GEMINI_API_KEY is not set.');
+      throw new Error('Server configuration error: API Key missing');
+    }
+
+    // 4. Construct Payload
+    // Use the provided system prompt or a default one
+    const finalSystemPrompt = systemPrompt || "You are a helpful AI assistant.";
     
-    // Extract text (add error handling for safety ratings if needed)
-    const aiText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text || "I'm having trouble thinking right now. Try again?"
+    const payload = {
+      contents: [{
+        parts: [{
+          text: `${finalSystemPrompt}\n\nUser: ${prompt}`
+        }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 2048,
+      },
+      // Optional safety settings (can be adjusted as needed)
+      safetySettings: [
+        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_MEDIUM_AND_ABOVE" },
+        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_MEDIUM_AND_ABOVE" }
+      ]
+    };
 
-    // 9. PERSISTENCE LAYER (Server-Side)
-    // Save to DB immediately. Even if the client disconnects, data is safe.
-    const { error: dbError } = await supabase.from('ai_tutor_interactions').insert({
-      session_id: sessionId,
-      interaction_type: 'question',
-      student_input: prompt,
-      ai_response: aiText,
-      confidence_score: 0.95 // You can parse this from Gemini metadata if available
-    })
+    // 5. Call Gemini API
+    const response = await fetch(`https://generativelanguage.googleapis.com/${API_VERSION}/models/${MODEL_NAME}:generateContent?key=${geminiApiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-    if (dbError) console.error('Failed to log conversation:', dbError)
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Gemini API Error (${response.status}):`, errorText);
+      throw new Error(`Gemini Provider Error: ${response.statusText}`);
+    }
 
-    // 10. Return Response to Client
-    return new Response(JSON.stringify({ response: aiText }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+    const data = await response.json();
+    
+    // Safety check for empty response
+    if (!data.candidates || data.candidates.length === 0) {
+      console.error('Gemini returned no candidates:', JSON.stringify(data));
+      throw new Error('No response generated by AI.');
+    }
 
-  } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    const generatedText = data.candidates[0].content?.parts?.[0]?.text || "No text returned.";
+
+    // 6. Return Success Response
+    return new Response(JSON.stringify({
+      success: true,
+      response: generatedText,
+      usage: data.usageMetadata || null
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+
+  } catch (error: any) {
+    console.error('Function Error:', error.message);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error.message || 'Unknown error'
+    }), {
       status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
   }
-})
+});

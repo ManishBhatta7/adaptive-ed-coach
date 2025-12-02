@@ -88,7 +88,7 @@ const OCRPage = () => {
       const result = await SubmissionService.processSmartOCR(urlData.publicUrl);
       
       if (result && result.items.length > 0) {
-        const cleanItems = result.items.map(item => ({
+        const cleanItems = result.items.map((item: any) => ({
           ...item,
           question: formatText(item.question),
           solution: formatText(item.solution)
@@ -140,7 +140,7 @@ const OCRPage = () => {
 
     const contextText = items.map(i => `Q: ${i.question}\nA: ${i.solution}`).join('\n\n');
 
-    navigate('/ai-tutor', { // Navigate to AI Tutor Page
+    navigate('/progress', { 
       state: { 
         initialPrompt: "Create a practice quiz based on these scanned questions. Focus on concepts I might find difficult.",
         contextData: contextText,
