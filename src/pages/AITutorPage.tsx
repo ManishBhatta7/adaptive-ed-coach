@@ -96,10 +96,25 @@ const AITutorPage = () => {
 
   // Load conversations on mount
   useEffect(() => {
-    if (state.currentUser) {
-      loadConversations();
-    }
-  }, [state.currentUser]);
+    let isMounted = true; // Prevent state update on unmounted component
+    
+    const load = async () => {
+      if (state.currentUser && isMounted) {
+        try {
+          await loadConversations();
+        } catch (error) {
+          console.error('Failed to load conversations:', error);
+        }
+      }
+    };
+
+    load();
+
+    // Cleanup function to prevent memory leak
+    return () => {
+      isMounted = false;
+    };
+  }, [state.currentUser?.id]); // Add proper dependency
 
   const loadConversations = async () => {
     try {
@@ -146,45 +161,74 @@ const AITutorPage = () => {
       return;
     }
 
-    // Create a new session
-    const sessionId = await AITutorService.createSession(
-      state.currentUser.id,
-      selectedTopic || topic || 'General Learning',
-      sessionGoal || 'Learn and improve',
-      difficultyLevel,
-      tutorPersonality
-    );
+    try {
+      // Create a new session
+      const sessionId = await AITutorService.createSession(
+        state.currentUser.id,
+        selectedTopic || topic || 'General Learning',
+        sessionGoal || 'Learn and improve',
+        difficultyLevel,
+        tutorPersonality
+      );
 
-    if (!sessionId) {
+      if (!sessionId) {
+        toast({
+          title: 'Error',
+          description: 'Failed to create a new chat session',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setCurrentConversationId(sessionId);
+      setMessages([]);
+      setInputValue('');
+      setShowNewChatDialog(false);
+      
+      if (topic) {
+        setInputValue(`I want to learn about ${topic}. `);
+        inputRef.current?.focus();
+      }
+
+      toast({
+        title: 'New Chat Started',
+        description: `Chat session created for ${selectedTopic || 'General Learning'}`,
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Error starting new chat:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create a new chat session',
+        description: 'Failed to start a new chat. Please try again.',
         variant: 'destructive',
       });
-      return;
     }
-
-    setCurrentConversationId(sessionId);
-    setMessages([]);
-    setInputValue('');
-    setShowNewChatDialog(false);
-    
-    if (topic) {
-      setInputValue(`I want to learn about ${topic}. `);
-      inputRef.current?.focus();
-    }
-
-    toast({
-      title: 'New Chat Started',
-      description: `Chat session created for ${selectedTopic || 'General Learning'}`,
-      duration: 2000,
-    });
   };
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate input and conversation state
     if (!inputValue.trim() || isLoading) return;
+    
+    if (!currentConversationId) {
+      toast({
+        title: 'Error',
+        description: 'Please start a new chat first',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validate input length and content
+    if (inputValue.trim().length > 5000) {
+      toast({
+        title: 'Error',
+        description: 'Message is too long (max 5000 characters)',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -198,26 +242,26 @@ const AITutorPage = () => {
     setInputValue('');
     setIsLoading(true);
 
-    try {
-      // Simulate streaming response
-      const assistantMessageId = (Date.now() + 1).toString();
-      const assistantMessage: Message = {
-        id: assistantMessageId,
-        role: 'assistant',
-        content: '',
-        timestamp: new Date(),
-        type: 'text',
-        metadata: {
-          confidence: 0.95,
-        },
-      };
+    const assistantMessageId = (Date.now() + 1).toString();
+    const assistantMessage: Message = {
+      id: assistantMessageId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date(),
+      type: 'text',
+      metadata: {
+        confidence: 0.95,
+      },
+    };
 
+    try {
+      // Add assistant message placeholder
       setMessages(prev => [...prev, assistantMessage]);
 
       // Call AI API
       const response = await callAIAPI(userMessage.content);
       
-      // Simulate streaming by updating message
+      // Update assistant message with response
       if (response) {
         setMessages(prev => 
           prev.map(msg => 
@@ -234,8 +278,8 @@ const AITutorPage = () => {
         description: 'Failed to get response from AI tutor',
         variant: 'destructive',
       });
-      // Remove the assistant message on error
-      setMessages(prev => prev.slice(0, -1));
+      // Rollback: remove both user and assistant messages on error
+      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id && msg.id !== assistantMessageId));
     } finally {
       setIsLoading(false);
     }
@@ -244,8 +288,15 @@ const AITutorPage = () => {
   const callAIAPI = async (userInput: string): Promise<string> => {
     try {
       if (!currentConversationId) {
-        console.error('No conversation ID');
-        return 'Please start a new chat first.';
+        const error = new Error('No conversation ID');
+        console.error(error);
+        throw error;
+      }
+
+      // Sanitize user input
+      const sanitizedInput = userInput.trim();
+      if (!sanitizedInput) {
+        throw new Error('Empty input');
       }
 
       // Generate system context
@@ -258,39 +309,49 @@ const AITutorPage = () => {
 
       // Call the selected AI model
       const response = await AITutorService.callAI(
-        userInput,
+        sanitizedInput,
         selectedModel,
         currentConversationId,
         systemContext,
         temperature
       );
 
+      // Handle API errors
       if (response.error) {
+        const errorMsg = response.error || 'Unknown error from AI service';
+        console.error('AI API returned error:', errorMsg);
         toast({
           title: 'AI Error',
-          description: response.error,
+          description: errorMsg,
           variant: 'destructive',
         });
         return response.response;
       }
 
-      // Save interaction to database
+      // Validate response
+      if (!response.response || response.response.length === 0) {
+        throw new Error('Empty response from AI service');
+      }
+
+      // Save interaction to database (non-blocking)
       if (state.currentUser?.id) {
-        await AITutorService.saveInteraction(
+        // Fire and forget - don't block on this
+        AITutorService.saveInteraction(
           currentConversationId,
           state.currentUser.id,
-          userInput,
+          sanitizedInput,
           response.response,
           selectedModel,
           0.95,
           response.tokens
-        );
+        ).catch(err => console.error('Failed to save interaction:', err));
       }
 
       return response.response;
     } catch (error) {
-      console.error('Error calling AI API:', error);
-      return 'Failed to get response from AI tutor. Please try again.';
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error calling AI API:', errorMessage);
+      throw error; // Re-throw to be handled by sendMessage
     }
   };
 
@@ -317,6 +378,37 @@ const AITutorPage = () => {
       description: 'Message copied to clipboard',
       duration: 2000,
     });
+  };
+
+  const speakMessage = (text: string) => {
+    // Check if browser supports Speech Synthesis API
+    if (!('speechSynthesis' in window)) {
+      toast({
+        title: 'Not Supported',
+        description: 'Text-to-speech is not supported in your browser',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Cancel any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event.error);
+      toast({
+        title: 'Error',
+        description: 'Failed to speak message',
+        variant: 'destructive',
+      });
+    };
+
+    window.speechSynthesis.speak(utterance);
   };
 
   const deleteConversation = (id: string) => {
@@ -531,7 +623,13 @@ const AITutorPage = () => {
                         max="1"
                         step="0.1"
                         value={temperature}
-                        onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value);
+                          // Validate temperature is within 0-1 range
+                          if (value >= 0 && value <= 1) {
+                            setTemperature(value);
+                          }
+                        }}
                         className="w-full accent-purple-500"
                       />
                       <p className="text-xs text-gray-600 mt-1">
@@ -637,7 +735,9 @@ const AITutorPage = () => {
                           <Button
                             variant="ghost"
                             size="sm"
+                            onClick={() => speakMessage(message.content)}
                             className="h-6 px-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50"
+                            title="Read aloud"
                           >
                             <Volume2 className="w-4 h-4" />
                           </Button>
