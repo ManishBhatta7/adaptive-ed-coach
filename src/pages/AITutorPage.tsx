@@ -80,7 +80,7 @@ const AITutorPage = () => {
   const [temperature, setTemperature] = useState(0.7);
   const [selectedTopic, setSelectedTopic] = useState('General Learning');
   const [sessionGoal, setSessionGoal] = useState('Learn and improve');
-  const [difficultyLevel, setDifficultyLevel] = useState('Intermediate');
+  const [difficultyLevel, setDifficultyLevel] = useState(3); // Changed to number
   const [tutorPersonality, setTutorPersonality] = useState('Encouraging');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
