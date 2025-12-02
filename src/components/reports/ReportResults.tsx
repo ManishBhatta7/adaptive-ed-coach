@@ -1,11 +1,11 @@
-
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
-import { FileText, Download } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { FileText, Download, Lightbulb, Target, Clock } from 'lucide-react';
 import PdfReportGenerator from './PdfReportGenerator';
 import { supabase } from '@/lib/supabase';
 
@@ -27,26 +27,15 @@ const ReportResults = ({ data }: ReportResultsProps) => {
       </Alert>
     );
   }
-
-  const getLowestSubject = () => {
-    if (!data.subjects || Object.keys(data.subjects).length === 0) {
-      return 'subjects needing improvement';
+  
+  // Helper for recommendation icons based on "type"
+  const getIconForType = (type: string) => {
+    switch(type?.toLowerCase()) {
+      case 'immediate': return <Target className="h-4 w-4 text-red-500" />;
+      case 'habit': return <Clock className="h-4 w-4 text-blue-500" />;
+      case 'strategic': return <Lightbulb className="h-4 w-4 text-amber-500" />;
+      default: return <Lightbulb className="h-4 w-4 text-gray-500" />;
     }
-    
-    let lowestSubject = '';
-    let lowestScore = 100;
-    
-    Object.entries(data.subjects).forEach(([subject, subjectData]: [string, any]) => {
-      const score = typeof subjectData.score === 'number' ? subjectData.score : 
-                    typeof subjectData.score === 'string' ? parseFloat(subjectData.score) : 0;
-                    
-      if (score < lowestScore) {
-        lowestScore = score;
-        lowestSubject = subject;
-      }
-    });
-    
-    return lowestSubject || 'subjects needing improvement';
   };
 
   const saveResults = async () => {
@@ -89,7 +78,7 @@ const ReportResults = ({ data }: ReportResultsProps) => {
   };
 
   return (
-    <Card>
+    <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
         <CardTitle>Extracted Report Data</CardTitle>
         <CardDescription>
@@ -113,6 +102,39 @@ const ReportResults = ({ data }: ReportResultsProps) => {
           <p className="text-sm">Grade: {data.grade || 'Not detected'}</p>
           <p className="text-sm">Term: {data.term || 'Not detected'}</p>
           <p className="text-sm font-medium">Overall GPA: {data.gpa || 'Not detected'}</p>
+        </div>
+        
+        {/* FIX: Enhanced Actionable Insights Section */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100">
+          <h3 className="flex items-center gap-2 font-semibold text-lg text-blue-900 mb-4">
+            <Lightbulb className="h-5 w-5 text-yellow-500" />
+            AI Strategic Action Plan
+          </h3>
+          
+          <div className="grid gap-4">
+            {data.recommendations && data.recommendations.length > 0 ? (
+              data.recommendations.map((rec: any, index: number) => (
+                <div key={index} className="bg-white p-4 rounded-lg shadow-sm border border-blue-100 flex gap-4 items-start">
+                  <div className="mt-1 p-2 bg-gray-50 rounded-full">
+                    {getIconForType(rec.type)}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant="outline" className="text-xs font-normal border-blue-200 text-blue-700 bg-blue-50">
+                        {rec.type || 'Insight'}
+                      </Badge>
+                      <h4 className="font-semibold text-gray-900">{rec.title || 'Recommendation'}</h4>
+                    </div>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      {rec.action || (typeof rec === 'string' ? rec : 'Review this area.')}
+                    </p>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500">No specific recommendations generated.</p>
+            )}
+          </div>
         </div>
         
         <div className="space-y-4">
@@ -146,36 +168,18 @@ const ReportResults = ({ data }: ReportResultsProps) => {
             </Alert>
           )}
         </div>
-        
-        <div className="bg-edu-primary/10 p-4 rounded-md">
-          <h3 className="font-medium mb-2 text-edu-primary">AI Analysis & Recommendations</h3>
-          <p className="text-sm mb-3">
-            Based on your grades, we recommend focusing on {getLowestSubject()} to improve your overall performance.
-          </p>
-          <ul className="list-disc pl-5 space-y-1">
-            {data.recommendations && data.recommendations.length > 0 ? (
-              data.recommendations.map((recommendation: string, index: number) => (
-                <li key={index} className="text-sm">{recommendation}</li>
-              ))
-            ) : (
-              <>
-                <li className="text-sm">Schedule dedicated study time for challenging subjects</li>
-                <li className="text-sm">Consider utilizing our AI tutoring for areas needing improvement</li>
-                <li className="text-sm">Practice regularly with our subject-specific exercises</li>
-              </>
-            )}
-          </ul>
-        </div>
       </CardContent>
-      <CardFooter className="flex-col space-y-2">
-        <Button className="w-full" onClick={saveResults}>
+      <CardFooter className="flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
+        <Button className="w-full flex-1" onClick={saveResults}>
           Save Results to My Profile
         </Button>
-        <PdfReportGenerator
-          studentName={data.studentName || 'Student'}
-          data={data}
-          reportType="report-card"
-        />
+        <div className="w-full flex-1">
+          <PdfReportGenerator
+            studentName={data.studentName || 'Student'}
+            data={data}
+            reportType="report-card"
+          />
+        </div>
       </CardFooter>
     </Card>
   );

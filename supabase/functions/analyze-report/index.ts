@@ -7,20 +7,39 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// FIX: Enhanced System Prompt for Strategic Coaching
 const aiPrompt = `
-You are an AI designed to analyze student report cards. Extract the following information:
-- Student's full name
-- School name
-- Grade level
-- Term/semester
-- GPA (if available)
-- List of subjects with their scores and letter grades
-- Teacher comments for each subject (if available)
-- Overall assessment
-- Areas of strength
-- Areas needing improvement
+You are an expert Educational Strategist & Academic Coach. Analyze this student report card to provide data-driven, actionable insights.
 
-Format the response as a JSON object with these fields. If you cannot find certain information, include the field with null or an empty value.
+CORE TASKS:
+1. Extract standard data (Name, School, Grades).
+2. **Analyze the "Why":** Correlate grades with specific teacher comments. (e.g., If Math is low and comment says "missing work", the issue is discipline, not aptitude. If comment says "struggling with concepts", the issue is foundational).
+3. **Generate Actionable Insights:** Create specific tasks, not generic advice.
+
+JSON OUTPUT FORMAT:
+{
+  "studentName": string | null,
+  "schoolName": string | null,
+  "gradeLevel": string | null,
+  "term": string | null,
+  "gpa": string | null,
+  "subjects": {
+    [subjectName: string]: {
+      "score": number | null,
+      "letterGrade": string | null,
+      "comments": string | null
+    }
+  },
+  "overallAssessment": string,
+  "recommendations": [
+    {
+      "type": "Immediate" | "Strategic" | "Habit",
+      "title": string,
+      "action": string
+    }
+  ]
+}
+If you cannot find certain information, include the field with null.
 `
 
 serve(async (req) => {
@@ -87,10 +106,22 @@ serve(async (req) => {
     // Analyze image with OpenAI Vision API
     try {
       const analysisResult = await analyzeWithAI(openAiApiKey, file, base64Image)
-      // Enhance with recommendations
-      analysisResult.recommendations = generateRecommendations(analysisResult)
+      
+      // FIX: Removed the hardcoded generateRecommendations() call. 
+      // We now rely on the AI's "recommendations" array from the prompt.
+      
+      // Fallback: If AI returns no recommendations (rare), add a safe default.
+      if (!analysisResult.recommendations || analysisResult.recommendations.length === 0) {
+         analysisResult.recommendations = [{
+           type: "General",
+           title: "Review Syllabus",
+           action: "Compare your lowest grades against the syllabus requirements to identify gaps."
+         }];
+      }
+
       // Store analysis results in the database
       await insertAnalysisDb(supabase, userId, publicUrl, analysisResult)
+      
       return successJsonResponse({
         ...analysisResult,
         reportUrl: publicUrl
@@ -206,7 +237,7 @@ async function analyzeWithAI(openAiApiKey: string, file: File, base64Image: stri
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4.1-2025-04-14',
+      model: 'gpt-4o', 
       messages: [
         {
           role: "system",
@@ -228,7 +259,7 @@ async function analyzeWithAI(openAiApiKey: string, file: File, base64Image: stri
           ]
         }
       ],
-      max_completion_tokens: 1500,
+      max_tokens: 1500,
       temperature: 0.3
     })
   })
@@ -291,36 +322,6 @@ function errorResponse(message: string, status = 500) {
   })
 }
 
-// --- Recommendation and fallback logic (unchanged, clear helpers) ---
-
-function generateRecommendations(analysisData: any) {
-  const recommendations = []
-  let weakestSubject = null
-  let weakestScore = 100
-
-  // Find the weakest subject
-  if (analysisData.subjects) {
-    for (const [subject, data] of Object.entries(analysisData.subjects)) {
-      const score = (data as any).score
-      if (score && typeof score === 'number' && score < weakestScore) {
-        weakestScore = score
-        weakestSubject = subject
-      }
-    }
-  }
-
-  if (weakestSubject) {
-    recommendations.push(`Focus on improving your ${weakestSubject} skills with dedicated study time`)
-  }
-
-  // Add general recommendations
-  recommendations.push('Set up a regular study schedule for all subjects')
-  recommendations.push('Consider using AI-powered tutoring for challenging topics')
-  recommendations.push('Track your progress with our analytics tools')
-
-  return recommendations
-}
-
 function generateFallbackAnalysis(userId: string, reportUrl: string) {
   return {
     studentName: 'Student Name (AI extraction failed)',
@@ -341,9 +342,11 @@ function generateFallbackAnalysis(userId: string, reportUrl: string) {
       }
     },
     recommendations: [
-      'Try uploading a clearer image of your report card',
-      'Make sure all text in the report is clearly visible',
-      'Consider manually entering your grades for more accurate analysis'
+      {
+        type: "System",
+        title: "Upload Error",
+        action: "Try uploading a clearer image of your report card. Make sure all text is visible."
+      }
     ],
     reportUrl: reportUrl,
     note: 'AI processing failed. This is a fallback analysis.'
